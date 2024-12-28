@@ -2,8 +2,7 @@
   "name": "schedule-line-reminder",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest",
-    "dotenv": "^16.4.7"
+    "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
