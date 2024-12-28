@@ -130,4 +130,4 @@ dist
 .pnp.*
 
 # secrets
-assertion-private.key.json
+assertion-private.key
