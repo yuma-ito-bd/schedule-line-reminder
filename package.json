@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "module": "index.ts",
   "scripts": {
+    "deploy": "sam deploy",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "devDependencies": {
