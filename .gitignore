@@ -131,3 +131,6 @@ dist
 
 # secrets
 assertion-private.key
+
+# AWS SAM build directory
+.aws-sam
