@@ -1,8 +1,14 @@
 {
   "name": "schedule-line-reminder",
+  "version": "0.0.1",
   "module": "index.ts",
+  "scripts": {
+    "deploy": "sam deploy",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "jest": "^29.2.1"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -10,5 +16,20 @@
   "type": "module",
   "dependencies": {
     "jose": "^5.9.6"
+  },
+  "jest": {
+    "testMatch": [
+      "**/__tests__/**/*.[jt]s?(x)",
+      "**/?(*.)+(spec|test).[jt]s?(x)",
+      "**/__tests__/**/*.mjs?(x)",
+      "**/?(*.)+(spec|test).mjs?(x)"
+    ],
+    "moduleFileExtensions": [
+      "mjs",
+      "js"
+    ],
+    "testPathIgnorePatterns": [
+      ".aws-sam"
+    ]
   }
 }
