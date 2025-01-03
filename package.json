@@ -15,6 +15,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@googleapis/calendar": "^9.7.9",
     "jose": "^5.9.6"
   },
   "jest": {
