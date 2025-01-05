@@ -48,10 +48,17 @@ export class CalendarEventsNotifier {
   }
 
   private notifyEvents(events: Event[]) {
+    if (events.length === 0) {
+      console.log("予定はありません");
+      return;
+    }
+
     events.forEach((event) => {
-      console.log(`Event: ${event.summary}`);
-      console.log(`Start: ${event.startDateTime?.toISOString()}`);
-      console.log(`End: ${event.endDateTime?.toISOString()}`);
+      console.log({
+        title: event.summary,
+        start: event.startDateTime?.toISOString(),
+        end: event.endDateTime?.toISOString(),
+      });
     });
   }
 }
