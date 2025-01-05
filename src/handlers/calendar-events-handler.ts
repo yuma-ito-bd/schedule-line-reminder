@@ -5,5 +5,3 @@ export const calendarEventsHandler = async () => {
   const googleCalendarApi = new GoogleCalendarApiAdapter();
   new CalendarEventsNotifier(googleCalendarApi).call();
 };
-
-await calendarEventsHandler();
