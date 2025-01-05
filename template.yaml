@@ -38,6 +38,9 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - src/handlers/calendar-events-handler.ts
+        Banner:
+          # モジュールの解決エラーを解決するために、esbuildのバナーにNode.jsのrequireを追加する
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
     Properties:
