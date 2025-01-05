@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "module": "index.ts",
   "scripts": {
-    "deploy": "sam deploy",
+    "build": "sam build",
+    "deploy": "sam deploy --profile private-admin",
     "test": "bun test"
   },
   "devDependencies": {
