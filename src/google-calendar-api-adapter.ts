@@ -4,6 +4,7 @@ import type {
   Schema$GoogleCalendarApiAdapter,
 } from "./types/google-calendar-api-adapter";
 import { GoogleApiClient } from "./google-api-client";
+import { Config } from "./lib/config";
 
 export class GoogleCalendarApiAdapter
   implements Schema$GoogleCalendarApiAdapter
@@ -11,8 +12,9 @@ export class GoogleCalendarApiAdapter
   private readonly calendarClient;
 
   constructor() {
-    const accessToken = process.env.GOOGLE_ACCESS_TOKEN ?? "";
-    const refreshToken = process.env.GOOGLE_REFRESH_TOKEN ?? "";
+    const config = Config.getInstance();
+    const accessToken = config.GOOGLE_ACCESS_TOKEN;
+    const refreshToken = config.GOOGLE_REFRESH_TOKEN;
     const googleApiClient = new GoogleApiClient({ accessToken, refreshToken });
     const authClient = googleApiClient.authClient;
     this.calendarClient = calendar({ version: "v3", auth: authClient });
