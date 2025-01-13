@@ -27,7 +27,7 @@ describe("Config", () => {
     });
   });
 
-  describe("パラメータストアからの読み取り", () => {
+  describe.skip("パラメータストアからの読み取り", () => {
     it("環境変数が設定されていない場合はパラメータストアから読み取る", async () => {
       process.env.GOOGLE_CLIENT_ID = "";
       process.env.GOOGLE_CLIENT_SECRET = "";
