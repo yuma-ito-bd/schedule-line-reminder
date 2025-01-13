@@ -11,6 +11,8 @@ export const fetchParameter = async (name: string): Promise<string> => {
     withDecryption: "true", // 暗号化されたパラメータを復号化する
   });
   const url = `${PARAMETER_STORE_URL}?${queryParams.toString()}`;
+  console.log("fetch called", url);
+
   const response = await fetch(url, {
     method: "GET",
     headers: {

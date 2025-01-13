@@ -16,7 +16,6 @@ describe("fetchParameter", () => {
       name: encodeURIComponent(`/schedule-line-reminder/${parameterName}`),
       withDecryption: "true",
     });
-    console.log({ fetchMock });
     console.log({ mock: fetchMock.mock });
     expect(fetchMock).toHaveBeenCalledWith(
       `http://localhost:2773/systemsmanager/parameters/get?${queryParams.toString()}`,
