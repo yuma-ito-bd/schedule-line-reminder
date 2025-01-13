@@ -18,3 +18,6 @@ jobs:
 
       - name: Run tests
         run: bun run test
+
+      - name: Run only the tests that failed
+        run: bun run test --only-failures
