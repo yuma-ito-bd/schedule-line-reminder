@@ -1,7 +1,7 @@
 import { describe, it, expect, mock } from "bun:test";
-import { fetchParameter } from "../../src/lib/parameter-fetcher";
+import { ParameterFetcher } from "../../src/lib/parameter-fetcher";
 
-describe("fetchParameter", () => {
+describe("ParameterFetcher", () => {
   it("正しいURLにリクエストを送信すること", async () => {
     const fetchMock = mock().mockResolvedValue({
       ok: true,
@@ -10,7 +10,7 @@ describe("fetchParameter", () => {
     global.fetch = fetchMock;
 
     const parameterName = "test";
-    await fetchParameter(parameterName);
+    await new ParameterFetcher().call(parameterName);
 
     const queryParams = new URLSearchParams({
       name: encodeURIComponent(`/schedule-line-reminder/${parameterName}`),
@@ -35,7 +35,7 @@ describe("fetchParameter", () => {
     });
     global.fetch = fetchMock;
 
-    const result = await fetchParameter("test");
+    const result = await new ParameterFetcher().call("test");
 
     expect(result).toBe("value");
   });
@@ -47,7 +47,7 @@ describe("fetchParameter", () => {
     });
     global.fetch = fetchMock;
 
-    const result = await fetchParameter("test");
+    const result = await new ParameterFetcher().call("test");
 
     expect(result).toBe("");
   });
@@ -59,6 +59,7 @@ describe("fetchParameter", () => {
     });
     global.fetch = fetchMock;
 
-    expect(fetchParameter("test")).rejects.toThrow("Failed to fetch parameter");
+    const fetcher = new ParameterFetcher();
+    expect(fetcher.call("test")).rejects.toThrow("Failed to fetch parameter");
   });
 });

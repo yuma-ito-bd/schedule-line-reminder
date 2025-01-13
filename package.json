@@ -5,8 +5,7 @@
   "scripts": {
     "build": "sam build",
     "deploy": "sam deploy --profile private-admin",
-    "test_comment": "module.mockでモックすると他のテストに影響が出てしまうため、テストファイルごとに実行する(https://github.com/oven-sh/bun/issues/7823)",
-    "test": "find __tests__ -name '*.test.ts' | xargs -I {} sh -c 'bun test {} || exit 255'"
+    "test": "bun test"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -1,6 +1,7 @@
-import { fetchParameter } from "./parameter-fetcher";
+import { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
 
 export class Config {
+  private paramsFetcher!: Schema$ParameterFetcher;
   private static instance: Config;
   private constructor() {}
 
@@ -22,7 +23,9 @@ export class Config {
    * 初期化処理
    * 値を取得する前に必ず呼び出すこと
    */
-  async init() {
+  async init(paramsFetcher: Schema$ParameterFetcher) {
+    this.paramsFetcher = paramsFetcher;
+
     const [
       google_client_id,
       google_client_secret,
@@ -51,6 +54,6 @@ export class Config {
       return envValue;
     }
 
-    return fetchParameter(name);
+    return this.paramsFetcher.call(name);
   }
 }
