@@ -63,14 +63,14 @@ Resources:
     Properties:
       Description: LINEからのWebhookを処理するLambda関数
       Runtime: nodejs22.x
-      Handler: app.lambdaHandler
+      Handler: line-webhook-handler.handler
       Architectures:
         - x86_64
       Events:
-        Webhook:
+        LineWebhook:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /hello
+            Path: /webhook
             Method: get
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -82,7 +82,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - src/handlers/app.ts
+          - src/handlers/line-webhook-handler.ts
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
     Properties:
@@ -102,7 +102,7 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   WebhookApi:
     Description: API Gateway endpoint URL for Prod stage for Webhook function
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/webhook/"
   WebhookFunction:
     Description: Webhook Lambda Function ARN
     Value: !GetAtt WebhookFunction.Arn

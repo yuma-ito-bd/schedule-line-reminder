@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { lambdaHandler } from "../src/handlers/webhook-handler";
+import { handler } from "../src/handlers/line-webhook-handler";
 
 describe("Unit test for app handler", function () {
   it("verifies successful response", async () => {
@@ -53,7 +53,7 @@ describe("Unit test for app handler", function () {
       resource: "",
       stageVariables: {},
     };
-    const result: APIGatewayProxyResult = await lambdaHandler(event);
+    const result: APIGatewayProxyResult = await handler(event);
 
     expect(result.statusCode).toEqual(200);
     expect(result.body).toEqual(
