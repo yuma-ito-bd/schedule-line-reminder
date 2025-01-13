@@ -5,6 +5,7 @@
   "scripts": {
     "build": "sam build",
     "deploy": "sam deploy --profile private-admin",
+    "build_and_deploy": "bun run build && bun run deploy",
     "test": "bun test __tests__ --coverage"
   },
   "devDependencies": {
