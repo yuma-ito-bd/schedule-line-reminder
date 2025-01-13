@@ -54,5 +54,3 @@ export class Config {
     return fetchParameter(name);
   }
 }
-
-console.log("Config loaded");
