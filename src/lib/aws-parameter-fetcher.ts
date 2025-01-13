@@ -1,4 +1,4 @@
-import { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
+import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
 
 export class AwsParameterFetcher implements Schema$ParameterFetcher {
   private readonly AWS_SESSION_TOKEN = process.env.AWS_SESSION_TOKEN ?? "";

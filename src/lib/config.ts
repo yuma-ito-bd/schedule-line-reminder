@@ -1,4 +1,4 @@
-import { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
+import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
 
 export class Config {
   private paramsFetcher!: Schema$ParameterFetcher;
