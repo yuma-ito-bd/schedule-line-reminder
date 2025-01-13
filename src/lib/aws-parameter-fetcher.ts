@@ -1,6 +1,6 @@
 import { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
 
-export class ParameterFetcher implements Schema$ParameterFetcher {
+export class AwsParameterFetcher implements Schema$ParameterFetcher {
   private readonly AWS_SESSION_TOKEN = process.env.AWS_SESSION_TOKEN ?? "";
   private readonly PARAMETER_STORE_URL =
     "http://localhost:2773/systemsmanager/parameters/get";
