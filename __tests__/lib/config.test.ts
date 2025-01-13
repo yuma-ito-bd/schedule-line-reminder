@@ -1,5 +1,4 @@
 import { describe, it, expect, mock } from "bun:test";
-
 import { Config } from "../../src/lib/config";
 
 describe("Config", () => {
