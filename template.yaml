@@ -103,12 +103,6 @@ Outputs:
   WebhookApi:
     Description: API Gateway endpoint URL for Prod stage for Webhook function
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/webhook/"
-  WebhookFunction:
-    Description: Webhook Lambda Function ARN
-    Value: !GetAtt WebhookFunction.Arn
-  WebhookFunctionIamRole:
-    Description: Implicit IAM Role created for Webhook function
-    Value: !GetAtt WebhookFunction.Arn
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
