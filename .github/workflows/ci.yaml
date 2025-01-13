@@ -17,9 +17,6 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run tests
-        run: bun run test
-        # 失敗しても次のステップを実行する
-        continue-on-error: true
-
-      - name: Run only parameter-fetcher test
-        run: bun run test __tests__/lib/parameter-fetcher.test.ts
+        # module.mockでモックすると他のテストに影響が出てしまうため、テストファイルごとに実行する
+        # https://github.com/oven-sh/bun/issues/7823
+        run: find __tests__ -name \"*.test.ts\" | xargs -I {} sh -c 'bun test {} || exit 255'
