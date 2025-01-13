@@ -30,3 +30,5 @@ export const fetchParameter = async (name: string): Promise<string> => {
     throw new Error("Failed to fetch parameter");
   }
 };
+
+console.log("fetchParameter loaded");

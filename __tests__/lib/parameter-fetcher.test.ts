@@ -10,6 +10,7 @@ describe("fetchParameter", () => {
     global.fetch = fetchMock;
 
     const parameterName = "test";
+    console.log("call fetchParameter");
     await fetchParameter(parameterName);
 
     const queryParams = new URLSearchParams({
