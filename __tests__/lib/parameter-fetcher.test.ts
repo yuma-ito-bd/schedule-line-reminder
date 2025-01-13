@@ -2,7 +2,7 @@ import { describe, it, expect, mock } from "bun:test";
 import { fetchParameter } from "../../src/lib/parameter-fetcher";
 
 describe("fetchParameter", () => {
-  it("正しいURLにリクエストを送信すること", async () => {
+  it.only("正しいURLにリクエストを送信すること", async () => {
     const fetchMock = mock().mockResolvedValue({
       ok: true,
       json: async () => ({ Parameter: { Value: "value" } }),
@@ -16,6 +16,8 @@ describe("fetchParameter", () => {
       name: encodeURIComponent(`/schedule-line-reminder/${parameterName}`),
       withDecryption: "true",
     });
+    console.log({ fetchMock });
+    console.log({ mock: fetchMock.mock });
     expect(fetchMock).toHaveBeenCalledWith(
       `http://localhost:2773/systemsmanager/parameters/get?${queryParams.toString()}`,
       {
