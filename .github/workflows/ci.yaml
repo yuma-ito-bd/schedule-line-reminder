@@ -16,10 +16,10 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: print test files
+        run: find __tests__ -name "*.test.ts"
+
       - name: Run tests
         # module.mockでモックすると他のテストに影響が出てしまうため、テストファイルごとに実行する
         # https://github.com/oven-sh/bun/issues/7823
-        run: find __tests__ -name \"*.test.ts\" | xargs -I {} sh -c 'bun test {} || exit 255'
-
-      - name: print test files
-        run: find __tests__ -name \"*.test.ts\"
+        run: find __tests__ -name "*.test.ts" | xargs -I {} sh -c 'bun test {} || exit 255'
