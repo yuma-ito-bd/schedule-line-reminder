@@ -8,4 +8,5 @@ console.info("test-preloader loaded");
 
 afterEach(() => {
   mock.restore();
+  console.log("mock restored");
 });
