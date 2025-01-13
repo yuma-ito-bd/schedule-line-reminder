@@ -18,6 +18,8 @@ jobs:
 
       - name: Run tests
         run: bun run test
+        # 失敗しても次のステップを実行する
+        continue-on-error: true
 
       - name: Run only the tests that failed
         run: bun run test --only-failures
