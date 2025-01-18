@@ -10,6 +10,7 @@ export class Config {
   GOOGLE_REDIRECT_URI: string = "";
   GOOGLE_ACCESS_TOKEN: string = "";
   GOOGLE_REFRESH_TOKEN: string = "";
+  LINE_CHANNEL_ACCESS_TOKEN: string = "";
 
   static getInstance() {
     if (!this.instance) {
