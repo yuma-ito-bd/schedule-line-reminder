@@ -1,7 +1,8 @@
 import { messagingApi } from "@line/bot-sdk";
 import { Config } from "./lib/config";
+import type { Schema$LineMessagingApiClient } from "./types/line-messaging-api-adapter";
 
-export class LineMessagingApiClient {
+export class LineMessagingApiClient implements Schema$LineMessagingApiClient {
   private readonly client;
 
   constructor() {
