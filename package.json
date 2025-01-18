@@ -19,6 +19,7 @@
   "type": "module",
   "dependencies": {
     "@googleapis/calendar": "^9.7.9",
+    "@line/bot-sdk": "^9.5.1",
     "jose": "^5.9.6"
   }
 }
