@@ -1,14 +1,12 @@
 import type { Schema$GoogleCalendarApiAdapter } from "./types/google-calendar-api-adapter";
-
-type Event = {
-  summary: string;
-  startDateTime: Date | null;
-  endDateTime: Date | null;
-};
+import type { Schema$LineMessagingApiClient } from "./types/line-messaging-api-adapter";
+import type { Event } from "./types/event";
+import { CalendarMessageBuilder } from "./calendar-message-builder";
 
 export class CalendarEventsNotifier {
   constructor(
-    private readonly googleCalendarApi: Schema$GoogleCalendarApiAdapter
+    private readonly googleCalendarApi: Schema$GoogleCalendarApiAdapter,
+    private readonly lineMessagingApiClient: Schema$LineMessagingApiClient
   ) {}
 
   async call() {
@@ -48,17 +46,8 @@ export class CalendarEventsNotifier {
   }
 
   private notifyEvents(events: Event[]) {
-    if (events.length === 0) {
-      console.log("予定はありません");
-      return;
-    }
-
-    events.forEach((event) => {
-      console.log({
-        title: event.summary,
-        start: event.startDateTime?.toISOString(),
-        end: event.endDateTime?.toISOString(),
-      });
-    });
+    const userId = "user-id";
+    const message = new CalendarMessageBuilder(events).build();
+    this.lineMessagingApiClient.pushTextMessages(userId, [message]);
   }
 }
