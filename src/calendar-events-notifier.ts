@@ -12,7 +12,7 @@ export class CalendarEventsNotifier {
 
   async call() {
     const events = await this.fetchEvents();
-    this.notifyEvents(events);
+    await this.notifyEvents(events);
   }
 
   private async fetchEvents(): Promise<Event[]> {
@@ -50,6 +50,6 @@ export class CalendarEventsNotifier {
   private notifyEvents(events: Event[]) {
     const userId = Config.getInstance().LINE_USER_ID;
     const message = new CalendarMessageBuilder(events).build();
-    this.lineMessagingApiClient.pushTextMessages(userId, [message]);
+    return this.lineMessagingApiClient.pushTextMessages(userId, [message]);
   }
 }
