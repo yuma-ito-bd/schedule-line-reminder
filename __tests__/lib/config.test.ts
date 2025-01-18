@@ -17,6 +17,7 @@ describe("Config", () => {
       process.env.GOOGLE_ACCESS_TOKEN = "access-token";
       process.env.GOOGLE_REFRESH_TOKEN = "refresh-token";
       process.env.LINE_CHANNEL_ACCESS_TOKEN = "channel-access-token";
+      process.env.LINE_USER_ID = "line-user-id";
 
       const config = Config.getInstance();
       await config.init(new ParameterFetcherMock());
@@ -26,6 +27,7 @@ describe("Config", () => {
       expect(config.GOOGLE_ACCESS_TOKEN).toBe("access-token");
       expect(config.GOOGLE_REFRESH_TOKEN).toBe("refresh-token");
       expect(config.LINE_CHANNEL_ACCESS_TOKEN).toBe("channel-access-token");
+      expect(config.LINE_USER_ID).toBe("line-user-id");
     });
   });
 
@@ -37,6 +39,7 @@ describe("Config", () => {
       process.env.GOOGLE_ACCESS_TOKEN = "";
       process.env.GOOGLE_REFRESH_TOKEN = "";
       process.env.LINE_CHANNEL_ACCESS_TOKEN = "";
+      process.env.LINE_USER_ID = "";
 
       const config = Config.getInstance();
       await config.init(new ParameterFetcherMock());
@@ -48,6 +51,7 @@ describe("Config", () => {
       expect(config.LINE_CHANNEL_ACCESS_TOKEN).toBe(
         "mock-line-channel-access-token"
       );
+      expect(config.LINE_USER_ID).toBe("mock-line-user-id");
     });
   });
 });

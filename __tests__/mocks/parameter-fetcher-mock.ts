@@ -15,6 +15,8 @@ export class ParameterFetcherMock implements Schema$ParameterFetcher {
         return "mock-google-refresh-token";
       case "line-channel-access-token":
         return "mock-line-channel-access-token";
+      case "line-user-id":
+        return "mock-line-user-id";
       default:
         throw new Error(`Unknown parameter name: ${name}`);
     }
