@@ -1,4 +1,4 @@
-import { describe, it, expect, mock, spyOn } from "bun:test";
+import { describe, it, expect, mock } from "bun:test";
 import { LineMessagingApiClient } from "../src/line-messaging-api-client";
 
 describe("LineMessagingApiClient", () => {
