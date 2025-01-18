@@ -21,6 +21,9 @@ export class LineMessagingApiClient implements Schema$LineMessagingApiClient {
       to: userId,
       messages,
     };
-    return this.client.pushMessage(request);
+    console.debug(request);
+    const response = await this.client.pushMessageWithHttpInfo(request);
+    console.debug(response);
+    return response.body;
   }
 }

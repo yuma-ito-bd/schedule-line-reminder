@@ -32,6 +32,7 @@ export class CalendarEventsNotifier {
       from,
       to,
     });
+    console.debug(events);
 
     const eventSummaries = events.map((event) => {
       const summary = event.summary || "タイトルなし";

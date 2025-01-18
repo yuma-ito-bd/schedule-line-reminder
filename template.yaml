@@ -44,6 +44,8 @@ Resources:
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/da90619d-ebf1-43ae-903d-5035b8ff19e4",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
                 ]
+      LoggingConfig:
+        ApplicationLogLevel: DEBUG
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
