@@ -14,4 +14,5 @@ export const calendarEventsHandler = async () => {
     googleCalendarApi,
     lineMessagingApiClient
   ).call();
+  console.info("End calendar events handler");
 };
