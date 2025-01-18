@@ -23,8 +23,8 @@ Resources:
         CloudWatchEvent:
           Type: Schedule
           Properties:
-            # 10分ごとに実行する
-            Schedule: cron(0/10 * * * ? *)
+            # 毎日21時に実行する
+            Schedule: cron(0 12 * * ? *)
       MemorySize: 128
       Timeout: 100
       Layers:
