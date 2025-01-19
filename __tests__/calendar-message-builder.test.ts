@@ -18,7 +18,7 @@ describe("CalendarMessageBuilder", () => {
   });
 
   describe("build", () => {
-    it("メッセージが作成されること", () => {
+    it("1週間分の予定が記載されたメッセージが作成されること", () => {
       const events: Event[] = [
         {
           summary: "予定1",
@@ -34,7 +34,12 @@ describe("CalendarMessageBuilder", () => {
       const builder = new CalendarMessageBuilder(events);
       const message = builder.build();
       expect(message).toBe(
-        "明日から1週間の予定です。\n2021/01/01 09:00 - 10:00: 予定1\n2021/01/02 09:00 - 10:00: 予定2"
+        `明日から1週間の予定です。
+2021/01/01
+09:00-10:00: 予定1
+
+2021/01/02
+09:00-10:00: 予定2`
       );
     });
   });
