@@ -14,7 +14,7 @@ describe("LineMessagingApiClient", () => {
       const lineMessagingApiClient = new LineMessagingApiClient();
       const pushMessageMock = mock().mockResolvedValue({});
       const lineClientMock = {
-        pushMessage: pushMessageMock,
+        pushMessageWithHttpInfo: pushMessageMock,
       };
       (lineMessagingApiClient as any).client = lineClientMock;
 
