@@ -1,19 +1,18 @@
 import type { Schema$GoogleCalendarApiAdapter } from "./types/google-calendar-api-adapter";
-
-type Event = {
-  summary: string;
-  startDateTime: Date | null;
-  endDateTime: Date | null;
-};
+import type { Schema$LineMessagingApiClient } from "./types/line-messaging-api-adapter";
+import type { Event } from "./types/event";
+import { CalendarMessageBuilder } from "./calendar-message-builder";
+import { Config } from "./lib/config";
 
 export class CalendarEventsNotifier {
   constructor(
-    private readonly googleCalendarApi: Schema$GoogleCalendarApiAdapter
+    private readonly googleCalendarApi: Schema$GoogleCalendarApiAdapter,
+    private readonly lineMessagingApiClient: Schema$LineMessagingApiClient
   ) {}
 
   async call() {
     const events = await this.fetchEvents();
-    this.notifyEvents(events);
+    await this.notifyEvents(events);
   }
 
   private async fetchEvents(): Promise<Event[]> {
@@ -33,6 +32,7 @@ export class CalendarEventsNotifier {
       from,
       to,
     });
+    console.debug(events);
 
     const eventSummaries = events.map((event) => {
       const summary = event.summary || "タイトルなし";
@@ -48,17 +48,8 @@ export class CalendarEventsNotifier {
   }
 
   private notifyEvents(events: Event[]) {
-    if (events.length === 0) {
-      console.log("予定はありません");
-      return;
-    }
-
-    events.forEach((event) => {
-      console.log({
-        title: event.summary,
-        start: event.startDateTime?.toISOString(),
-        end: event.endDateTime?.toISOString(),
-      });
-    });
+    const userId = Config.getInstance().LINE_USER_ID;
+    const message = new CalendarMessageBuilder(events).build();
+    return this.lineMessagingApiClient.pushTextMessages(userId, [message]);
   }
 }

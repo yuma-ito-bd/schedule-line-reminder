@@ -23,8 +23,8 @@ Resources:
         CloudWatchEvent:
           Type: Schedule
           Properties:
-            # 10分ごとに実行する
-            Schedule: cron(0/10 * * * ? *)
+            # 毎日21時に実行する
+            Schedule: cron(0 12 * * ? *)
       MemorySize: 128
       Timeout: 100
       Layers:
@@ -44,6 +44,8 @@ Resources:
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/da90619d-ebf1-43ae-903d-5035b8ff19e4",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
                 ]
+      LoggingConfig:
+        ApplicationLogLevel: DEBUG
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
