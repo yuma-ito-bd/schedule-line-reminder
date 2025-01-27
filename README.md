@@ -1,140 +1,149 @@
 # schedule-line-reminder
 
-This project contains source code and supporting files for a serverless application that you can deploy with the AWS Serverless Application Model (AWS SAM) command line interface (CLI). It includes the following files and folders:
+Googleカレンダーに登録している1週間分の予定をLINEに通知してくれるプロジェクトです。
 
-- `src` - Code for the application's Lambda function.
-- `events` - Invocation events that you can use to invoke the function.
-- `__tests__` - Unit tests for the application code. 
-- `template.yaml` - A template that defines the application's AWS resources.
+※現在はLINEアカウントやAWSリソースを自分で用意する必要があります。
 
-Resources for this project are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
+## 使い方
 
-If you prefer to use an integrated development environment (IDE) to build and test your application, you can use the AWS Toolkit.  
-The AWS Toolkit is an open-source plugin for popular IDEs that uses the AWS SAM CLI to build and deploy serverless applications on AWS. The AWS Toolkit also adds step-through debugging for Lambda function code. 
+1. LINEアカウント「マイスケジュールリマインダー」を友達登録する。
+2. GoogleアカウントでGoogleカレンダーへのアクセスを許可する。
+3. 毎日21時に1週間分の予定がLINEに通知されます。
 
-To get started, see the following:
+## できること
 
-* [CLion](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [GoLand](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [IntelliJ](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [WebStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [Rider](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PhpStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PyCharm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [RubyMine](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [DataGrip](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [VS Code](https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/welcome.html)
-* [Visual Studio](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/welcome.html)
+- 1対1のトークのみ対応
+- デフォルトのGoogleカレンダーの予定を1週間分通知する
 
-## Deploy the sample application
+## 対応予定の機能
 
-The AWS SAM CLI is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
+- グループトーク内での通知
+- デフォルトカレンダー以外のカレンダーの予定を通知する
+- 時間指定がない終日の予定の通知
 
-To use the AWS SAM CLI, you need the following tools:
+# 開発方法
 
-* AWS SAM CLI - [Install the AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html).
-* Node.js - [Install Node.js 22](https://nodejs.org/en/), including the npm package management tool.
-* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community).
+## 必要なツール
 
-To build and deploy your application for the first time, run the following in your shell:
+各種インストールしてください。
+
+- Bun v1.1.34 以上
+  - パッケージマネージャーやテストのランタイム環境として利用しています。
+  - [`asdf`](https://asdf-vm.com/)でバージョン管理しているので、asdfもインストールしてください。
+- AWS CLI v2.22.26 以上
+  - 後述のAWS SAMを利用するために必要です。
+  - 参考：[AWS CLI の最新バージョンのインストールまたは更新 - AWS Command Line Interface](https://docs.aws.amazon.com/ja_jp/cli/latest/userguide/getting-started-install.html)
+- AWS SAM (AWS Serveless Application Model)
+  - LambdaなどのAWSリソースを管理します。
+  - 参考：[AWS SAM CLI のインストール - AWS Serverless Application Model](https://docs.aws.amazon.com/ja_jp/serverless-application-model/latest/developerguide/install-sam-cli.html)
+
+### 利用しているAPI
+
+- [LINE Messaging API](https://developers.line.biz/ja/docs/messaging-api/overview/)：LINEユーザーにメッセージを送信するためのAPI
+- [Google Calendar API](https://developers.google.com/calendar/api/guides/overview?hl=ja)：Googleカレンダーの予定を取得するためのAPI
+
+## システムフロー図
+
+### カレンダーの予定を通知する
+カレンダーの予定の通知は以下のように行っています。
+
+```mermaid
+graph LR
+
+subgraph AWS
+  EventBridge -->|1.trigger| Lambda
+end
+
+subgraph Google
+  google[Google Calendar API]
+end
+Lambda -->|2.fetch| google
+Lambda -->|3.pushMessage| messaging-api
+
+subgraph LINE
+  messaging-api[LINE Messaging API] -->|4.notify| user((User))
+end
+```
+
+1. EventBridgeによって毎日21時にLambdaがトリガーされます。
+2. LambdaではGoogle Calendar APIからカレンダー情報を取得し、LINE Messaging APIに対してメッセージを送ります。
+3. LINEユーザーにメッセージが届きます。
+
+### LINEユーザーからのイベントを受け取る
+
+LINEユーザーが友達登録した際、メッセージを送信した際は以下のようにイベントを取得できます。
+
+```mermaid
+graph LR
+
+subgraph LINE
+  user((User)) -->|友達登録、メッセージ送信| line[LINE Platform]
+end
+
+subgraph AWS
+  apigw[API Gateway] -->|trigger|Lambda
+end
+line-->|Webhook|apigw
+```
+
+1. LINEユーザーが友達登録やメッセージ送信などを行う
+2. LINEプラットフォームから登録済みのWebhook用エンドポイントにリクエストが送られる
+3. API GatewayからLambdaを起動する
+
+## 環境構築
+
+### 各サービスでの設定
+
+- LINE
+  - LINE公式アカウントを作成する
+  - 参考：https://zenn.dev/link/comments/42fbfda5176305
+- Google
+  - Google Cloudプロジェクトを作成し、Google Calendar APIを利用できるようにする
+  - Google CloudプロジェクトのクライアントID、クライアントシークレットを発行してください。
+  - 参考：https://zenn.dev/link/comments/522cacc14e3d14
+
+### 各種トークンの発行
+以下のアクセストークンが必要になるため、発行します。
+
+- LINE Messaging APIのための[チャネルアクセストークン](https://developers.line.biz/ja/docs/messaging-api/generate-json-web-token/)
+  - 発行方法：https://zenn.dev/link/comments/ecfe0a7ca1d312
+- Googleアカウントのリフレッシュトークン
+  - 発行方法：https://zenn.dev/link/comments/8631c7f926eeaa
+
+### デプロイ
+
+下記のコマンドを実行するとAWS環境にリソースが作成されます。
 
 ```bash
-sam build
-sam deploy --guided
+bun run build
+bun run deploy
 ```
 
-The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:
+その後、AWS SSMのパラメータストアまたはLambdaの環境変数に以下の値を設定してください。
 
-* **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
-* **AWS Region**: The AWS region you want to deploy your app to.
-* **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
-* **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
-* **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
+パラメータ名 | 環境変数名 | 説明
+---|---|---
+line-schedule-reminder-google-client-id | GOOGLE_CLIENT_ID | Google Calendar APIのためのクライアントID
+line-schedule-reminder-google-client-secret | GOOGLE_CLIENT_SECRET | Google Calendar APIのためのクライアントシークレット 
+line-schedule-reminder-google-refresh-token | GOOGLE_REFRESH_TOKEN | Googleカレンダーにアクセスするためのリフレッシュトークン
+line-schedule-reminder-line-channel-access-token | LINE_CHANNEL_ACCESS_TOKEN | LINEチャネルアクセストークン
+line-schedule-reminder-line-user-id | LINE_USER_ID | 通知先のLINEユーザーID
 
-## Use the AWS SAM CLI to build and test locally
+### 動作検証
 
-Build your application by using the `sam build` command.
+AWSマネジメントコンソールからデプロイしたLambdaをテスト起動してください。
+（参考：[コンソールでの Lambda 関数のテスト - AWS Lambda](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/testing-functions.html)）
+
+正しく設定できていれば公式アカウントからGoogleカレンダーの予定が通知されます。
+
+## ユニットテスト
+
+ユニットテストは`__tests__`フォルダに格納しています。下記のコマンドで実行してください。
 
 ```bash
-my-application$ sam build
+bun run test
 ```
 
-The AWS SAM CLI installs dependencies that are defined in `package.json`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
+## LICENSE
 
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
-
-Run functions locally and invoke them with the `sam local invoke` command.
-
-```bash
-my-application$ sam local invoke ScheduledEventLogger --event events/event-cloudwatch-event.json
-```
-
-## Add a resource to your application
-
-The application template uses AWS SAM to define application resources. AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources, such as functions, triggers, and APIs. For resources that aren't included in the [AWS SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), you can use the standard [AWS CloudFormation resource types](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
-
-Update `template.yaml` to add a dead-letter queue to your application. In the **Resources** section, add a resource named **MyQueue** with the type **AWS::SQS::Queue**. Then add a property to the **AWS::Serverless::Function** resource named **DeadLetterQueue** that targets the queue's Amazon Resource Name (ARN), and a policy that grants the function permission to access the queue.
-
-```
-Resources:
-  MyQueue:
-    Type: AWS::SQS::Queue
-  ScheduledEventLogger:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: src/handlers/scheduled-event-logger.scheduledEventLogger
-      Runtime: nodejs22.x
-      DeadLetterQueue:
-        Type: SQS
-        TargetArn: !GetAtt MyQueue.Arn
-      Policies:
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt MyQueue.QueueName
-```
-
-The dead-letter queue is a location for Lambda to send events that could not be processed. It's only used if you invoke your function asynchronously, but it's useful here to show how you can modify your application's resources and function configuration.
-
-Deploy the updated application.
-
-```bash
-my-application$ sam deploy
-```
-
-Open the [**Applications**](https://console.aws.amazon.com/lambda/home#/applications) page of the Lambda console, and choose your application. When the deployment completes, view the application resources on the **Overview** tab to see the new resource. Then, choose the function to see the updated configuration that specifies the dead-letter queue.
-
-## Fetch, tail, and filter Lambda function logs
-
-To simplify troubleshooting, the AWS SAM CLI has a command called `sam logs`. `sam logs` lets you fetch logs that are generated by your Lambda function from the command line. In addition to printing the logs on the terminal, this command has several nifty features to help you quickly find the bug.
-
-**NOTE:** This command works for all Lambda functions, not just the ones you deploy using AWS SAM.
-
-```bash
-my-application$ sam logs -n ScheduledEventLogger --stack-name sam-app --tail
-```
-
-**NOTE:** This uses the logical name of the function within the stack. This is the correct name to use when searching logs inside an AWS Lambda function within a CloudFormation stack, even if the deployed function name varies due to CloudFormation's unique resource name generation.
-
-You can find more information and examples about filtering Lambda function logs in the [AWS SAM CLI documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
-
-## Unit tests
-
-Tests are defined in the `__tests__` folder in this project. Use `npm` to install the [Jest test framework](https://jestjs.io/) and run unit tests.
-
-```bash
-my-application$ npm install
-my-application$ npm run test
-```
-
-## Cleanup
-
-To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
-
-```bash
-sam delete --stack-name schedule-line-reminder
-```
-
-## Resources
-
-For an introduction to the AWS SAM specification, the AWS SAM CLI, and serverless application concepts, see the [AWS SAM Developer Guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html).
-
-Next, you can use the AWS Serverless Application Repository to deploy ready-to-use apps that go beyond Hello World samples and learn how authors developed their applications. For more information, see the [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/) and the [AWS Serverless Application Repository Developer Guide](https://docs.aws.amazon.com/serverlessrepo/latest/devguide/what-is-serverlessrepo.html).
+MITライセンスです。
