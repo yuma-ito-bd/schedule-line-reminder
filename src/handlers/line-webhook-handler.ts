@@ -2,24 +2,24 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import type { LineWebhookEvent } from "../types/line-webhook-event";
+import { GoogleAuthUrlGenerator } from "../lib/google-auth-url-generator";
 
 /**
+ * LINE Messaging APIのWebhookイベントを処理するLambda関数
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
  * @param {Object} event - API Gateway Lambda Proxy Input Format
  *
  * Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
  * @returns {Object} object - API Gateway Lambda Proxy Output Format
- *
  */
-
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
     console.debug({ event });
 
-    // Configの初期化
+    // Configの初期化（環境変数やパラメータストアから設定値を取得）
     const parameterFetcher = new AwsParameterFetcher();
     await Config.getInstance().init(parameterFetcher);
 
@@ -42,9 +42,10 @@ export const handler = async (
       webhookEvent.message.type === "text"
     ) {
       const text = webhookEvent.message.text;
+      // 「カレンダー追加」というメッセージを受け取った場合、Google認可URLを生成
       if (text === "カレンダー追加") {
-        // TODO: 実際のGoogleカレンダーの認可URLを生成する
-        const authUrl = "https://example.com/auth";
+        const authUrlGenerator = new GoogleAuthUrlGenerator();
+        const authUrl = authUrlGenerator.generateAuthUrl();
         return {
           statusCode: 200,
           body: JSON.stringify({
@@ -55,6 +56,7 @@ export const handler = async (
       }
     }
 
+    // その他のメッセージは無視
     return {
       statusCode: 200,
       body: JSON.stringify({
