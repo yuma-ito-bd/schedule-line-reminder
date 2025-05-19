@@ -1,24 +1,48 @@
 import { describe, it, expect } from "bun:test";
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { handler } from "../src/handlers/line-webhook-handler";
+import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
+import { Config } from "../src/lib/config";
 
 describe("Unit test for app handler", function () {
   it("verifies successful response", async () => {
+    // Configの初期化
+    const parameterFetcher = new ParameterFetcherMock();
+    await Config.getInstance().init(parameterFetcher);
+
+    // LINE Webhookイベントのモック
     const event: APIGatewayProxyEvent = {
-      httpMethod: "get",
-      body: "",
+      httpMethod: "post",
+      body: JSON.stringify({
+        events: [
+          {
+            type: "message",
+            message: {
+              type: "text",
+              text: "カレンダー追加",
+            },
+            replyToken: "reply-token",
+            source: {
+              type: "user",
+              userId: "user-id",
+            },
+            timestamp: 1234567890,
+            mode: "active",
+          },
+        ],
+      }),
       headers: {},
       isBase64Encoded: false,
       multiValueHeaders: {},
       multiValueQueryStringParameters: {},
-      path: "/hello",
+      path: "/webhook",
       pathParameters: {},
       queryStringParameters: {},
       requestContext: {
         accountId: "123456789012",
         apiId: "1234",
         authorizer: {},
-        httpMethod: "get",
+        httpMethod: "post",
         identity: {
           accessKey: "",
           accountId: "",
@@ -42,24 +66,25 @@ describe("Unit test for app handler", function () {
           userAgent: "",
           userArn: "",
         },
-        path: "/hello",
+        path: "/webhook",
         protocol: "HTTP/1.1",
         requestId: "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
         requestTimeEpoch: 1428582896000,
         resourceId: "123456",
-        resourcePath: "/hello",
+        resourcePath: "/webhook",
         stage: "dev",
       },
       resource: "",
       stageVariables: {},
     };
+
     const result: APIGatewayProxyResult = await handler(event);
 
     expect(result.statusCode).toEqual(200);
-    expect(result.body).toEqual(
-      JSON.stringify({
-        message: "hello world",
-      })
+    const body = JSON.parse(result.body);
+    expect(body.message).toEqual("認可URLを生成しました");
+    expect(body.authUrl).toContain(
+      "https://accounts.google.com/o/oauth2/v2/auth"
     );
   });
 });
