@@ -3,6 +3,7 @@ import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import type { LineWebhookEvent } from "../types/line-webhook-event";
 import { GoogleAuthUrlGenerator } from "../lib/google-auth-url-generator";
+import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
 
 /**
  * LINE Messaging APIのWebhookイベントを処理するLambda関数
@@ -14,14 +15,15 @@ import { GoogleAuthUrlGenerator } from "../lib/google-auth-url-generator";
  * @returns {Object} object - API Gateway Lambda Proxy Output Format
  */
 export const handler = async (
-  event: APIGatewayProxyEvent
+  event: APIGatewayProxyEvent,
+  parameterFetcher?: Schema$ParameterFetcher
 ): Promise<APIGatewayProxyResult> => {
   try {
     console.debug({ event });
 
     // Configの初期化（環境変数やパラメータストアから設定値を取得）
-    const parameterFetcher = new AwsParameterFetcher();
-    await Config.getInstance().init(parameterFetcher);
+    const fetcher = parameterFetcher || new AwsParameterFetcher();
+    await Config.getInstance().init(fetcher);
 
     // LINE Messaging APIのイベントをパース
     const body = JSON.parse(event.body || "{}");
