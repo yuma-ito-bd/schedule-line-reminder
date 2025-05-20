@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+## Test
+- Use `ParameterFetcherMock` for config
