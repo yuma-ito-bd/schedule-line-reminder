@@ -1,4 +1,8 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import type {
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  Context,
+} from "aws-lambda";
 import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import type { LineWebhookEvent } from "../types/line-webhook-event";
@@ -16,6 +20,7 @@ import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
  */
 export const handler = async (
   event: APIGatewayProxyEvent,
+  context: Context,
   parameterFetcher?: Schema$ParameterFetcher
 ): Promise<APIGatewayProxyResult> => {
   try {
@@ -23,6 +28,7 @@ export const handler = async (
 
     // Configの初期化（環境変数やパラメータストアから設定値を取得）
     const fetcher = parameterFetcher || new AwsParameterFetcher();
+    console.debug({ fetcher });
     await Config.getInstance().init(fetcher);
 
     // LINE Messaging APIのイベントをパース
@@ -66,7 +72,7 @@ export const handler = async (
       }),
     };
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return {
       statusCode: 500,
       body: JSON.stringify({

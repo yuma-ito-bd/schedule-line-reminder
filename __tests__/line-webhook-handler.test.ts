@@ -1,5 +1,9 @@
 import { describe, it, expect } from "bun:test";
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import type {
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  Context,
+} from "aws-lambda";
 import { handler } from "../src/handlers/line-webhook-handler";
 import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
 import { Config } from "../src/lib/config";
@@ -9,6 +13,23 @@ describe("Unit test for app handler", function () {
     // Configの初期化
     const parameterFetcher = new ParameterFetcherMock();
     await Config.getInstance().init(parameterFetcher);
+
+    // Lambdaコンテキストのモック
+    const context: Context = {
+      callbackWaitsForEmptyEventLoop: true,
+      functionName: "test-function",
+      functionVersion: "1",
+      invokedFunctionArn:
+        "arn:aws:lambda:region:account-id:function:test-function",
+      memoryLimitInMB: "128",
+      awsRequestId: "test-request-id",
+      logGroupName: "/aws/lambda/test-function",
+      logStreamName: "test-log-stream",
+      getRemainingTimeInMillis: () => 1000,
+      done: () => {},
+      fail: () => {},
+      succeed: () => {},
+    };
 
     // LINE Webhookイベントのモック
     const event: APIGatewayProxyEvent = {
@@ -80,6 +101,7 @@ describe("Unit test for app handler", function () {
 
     const result: APIGatewayProxyResult = await handler(
       event,
+      context,
       parameterFetcher
     );
 
