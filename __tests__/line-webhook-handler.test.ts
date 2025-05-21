@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, mock, afterEach } from "bun:test";
 import type {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
@@ -7,12 +7,23 @@ import type {
 import { handler } from "../src/handlers/line-webhook-handler";
 import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
 import { Config } from "../src/lib/config";
+import { LineMessagingApiClient } from "../src/line-messaging-api-client";
 
 describe("Unit test for app handler", function () {
+  afterEach(() => {
+    // モックをリセット
+    (LineMessagingApiClient.prototype.replyTextMessages as any).mockReset?.();
+  });
+
   it("verifies successful response", async () => {
     // Configの初期化
     const parameterFetcher = new ParameterFetcherMock();
     await Config.getInstance().init(parameterFetcher);
+
+    // replyTextMessagesメソッドを直接モック
+    const replyTextMessagesMock = mock().mockResolvedValue({});
+    (LineMessagingApiClient.prototype as any).replyTextMessages =
+      replyTextMessagesMock;
 
     // Lambdaコンテキストのモック
     const context: Context = {
@@ -103,8 +114,13 @@ describe("Unit test for app handler", function () {
 
     expect(result.statusCode).toEqual(200);
     const body = JSON.parse(result.body);
-    expect(body.message).toEqual("認可URLを生成しました");
-    expect(body.authUrl).toContain(
+    expect(body.message).toEqual("認可URLを送信しました");
+    expect(replyTextMessagesMock).toHaveBeenCalled();
+    expect(replyTextMessagesMock.mock.calls[0][0]).toEqual("reply-token");
+    expect(replyTextMessagesMock.mock.calls[0][1][0]).toEqual(
+      "Googleカレンダーとの連携を開始します。以下のURLをクリックして認可を行ってください："
+    );
+    expect(replyTextMessagesMock.mock.calls[0][1][1]).toContain(
       "https://accounts.google.com/o/oauth2/v2/auth"
     );
   });

@@ -7,7 +7,7 @@ import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import type { LineWebhookEvent } from "../types/line-webhook-event";
 import { GoogleAuthUrlGenerator } from "../lib/google-auth-url-generator";
-import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
+import { LineMessagingApiClient } from "../line-messaging-api-client";
 
 /**
  * LINE Messaging APIのWebhookイベントを処理するLambda関数
@@ -53,11 +53,15 @@ export const handler = async (
       if (text === "カレンダー追加") {
         const authUrlGenerator = new GoogleAuthUrlGenerator();
         const authUrl = authUrlGenerator.generateAuthUrl();
+        const lineClient = new LineMessagingApiClient();
+        await lineClient.replyTextMessages(webhookEvent.replyToken, [
+          "Googleカレンダーとの連携を開始します。以下のURLをクリックして認可を行ってください：",
+          authUrl,
+        ]);
         return {
           statusCode: 200,
           body: JSON.stringify({
-            message: "認可URLを生成しました",
-            authUrl,
+            message: "認可URLを送信しました",
           }),
         };
       }
