@@ -99,11 +99,7 @@ describe("Unit test for app handler", function () {
       stageVariables: {},
     };
 
-    const result: APIGatewayProxyResult = await handler(
-      event,
-      context,
-      parameterFetcher
-    );
+    const result: APIGatewayProxyResult = await handler(event, context);
 
     expect(result.statusCode).toEqual(200);
     const body = JSON.parse(result.body);

@@ -20,14 +20,13 @@ import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
  */
 export const handler = async (
   event: APIGatewayProxyEvent,
-  context: Context,
-  parameterFetcher?: Schema$ParameterFetcher
+  context: Context
 ): Promise<APIGatewayProxyResult> => {
   try {
     console.debug({ event });
 
     // Configの初期化（環境変数やパラメータストアから設定値を取得）
-    const fetcher = parameterFetcher || new AwsParameterFetcher();
+    const fetcher = new AwsParameterFetcher();
     console.debug({ fetcher });
     await Config.getInstance().init(fetcher);
 
