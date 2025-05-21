@@ -31,4 +31,27 @@ describe("LineMessagingApiClient", () => {
       });
     });
   });
+
+  describe("replyTextMessages", () => {
+    it("正しくメッセージを返信できること", async () => {
+      const lineMessagingApiClient = new LineMessagingApiClient();
+      const replyMessageMock = mock().mockResolvedValue({});
+      const lineClientMock = {
+        replyMessageWithHttpInfo: replyMessageMock,
+      };
+      (lineMessagingApiClient as any).client = lineClientMock;
+
+      const replyToken = "reply-token";
+      const texts = ["text1", "text2"];
+      lineMessagingApiClient.replyTextMessages(replyToken, texts);
+      expect(replyMessageMock).toHaveBeenCalled();
+      expect(replyMessageMock.mock.calls[0][0]).toEqual({
+        replyToken,
+        messages: [
+          { type: "text", text: "text1" },
+          { type: "text", text: "text2" },
+        ],
+      });
+    });
+  });
 });
