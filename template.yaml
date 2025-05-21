@@ -74,6 +74,7 @@ Resources:
           Properties:
             Path: /webhook
             Method: post
+      Timeout: 10
       LoggingConfig:
         ApplicationLogLevel: DEBUG
       Layers:
