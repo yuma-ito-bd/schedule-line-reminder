@@ -36,9 +36,9 @@ export const handler = async (
 
     if (!webhookEvent) {
       return {
-        statusCode: 400,
+        statusCode: 200, // ヘルスチェックのため200で返却する
         body: JSON.stringify({
-          message: "Invalid webhook event",
+          message: "no event",
         }),
       };
     }
