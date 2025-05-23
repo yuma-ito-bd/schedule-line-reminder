@@ -60,4 +60,20 @@ export class GoogleAuthAdapter implements Schema$GoogleAuth {
       refresh_token: token.refreshToken,
     });
   }
+
+  /**
+   * 認可コードからアクセストークンとリフレッシュトークンを取得する
+   * @param code 認可コード
+   * @returns アクセストークンとリフレッシュトークン
+   */
+  async getTokensFromCode(code: string): Promise<Schema$GoogleAuthToken> {
+    const { tokens } = await this.oauth2Client.getToken(code);
+    if (!tokens.access_token || !tokens.refresh_token) {
+      throw new Error("Failed to get tokens from authorization code");
+    }
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+    };
+  }
 }
