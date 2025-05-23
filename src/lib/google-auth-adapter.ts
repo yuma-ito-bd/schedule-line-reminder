@@ -1,7 +1,10 @@
 import { auth } from "@googleapis/calendar";
 import { OAuth2Client } from "google-auth-library";
 import { Config } from "./config";
-import type { Schema$GoogleAuth } from "../types/google-auth";
+import type {
+  Schema$GoogleAuth,
+  Schema$GoogleAuthToken,
+} from "../types/google-auth";
 
 /**
  * Google Calendar APIの認証を管理するクラス
@@ -45,5 +48,16 @@ export class GoogleAuthAdapter implements Schema$GoogleAuth {
    */
   getAuthClient(): OAuth2Client {
     return this.oauth2Client;
+  }
+
+  /**
+   * アクセストークンとリフレッシュトークンをセットする
+   * @param token アクセストークンとリフレッシュトークン
+   */
+  setTokens(token: Schema$GoogleAuthToken): void {
+    this.oauth2Client.setCredentials({
+      access_token: token.accessToken,
+      refresh_token: token.refreshToken,
+    });
   }
 }

@@ -11,6 +11,11 @@ export const calendarEventsHandler = async () => {
   await Config.getInstance().init(parameterFetcher);
 
   const auth = new GoogleAuthAdapter();
+  const token = {
+    accessToken: Config.getInstance().GOOGLE_ACCESS_TOKEN,
+    refreshToken: Config.getInstance().GOOGLE_REFRESH_TOKEN,
+  };
+  auth.setTokens(token);
   const googleCalendarApi = new GoogleCalendarApiAdapter(auth);
   const lineMessagingApiClient = new LineMessagingApiClient();
 
