@@ -74,4 +74,61 @@ describe("GoogleAuthAdapter", () => {
       });
     });
   });
+
+  describe("getTokensFromCode", () => {
+    it("認可コードからトークンを取得できること", async () => {
+      // モックの設定値をConfigに設定
+      const parameterFetcher = new ParameterFetcherMock();
+      await Config.getInstance().init(parameterFetcher);
+      const googleAuth = new GoogleAuthAdapter();
+      const authClient = googleAuth.getAuthClient();
+
+      // OAuth2ClientのgetTokenをモック
+      const mockTokens = {
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
+      };
+      const mockResponse = {
+        tokens: mockTokens,
+        res: {} as any,
+      };
+      const getTokenMock = mock(() => Promise.resolve(mockResponse));
+      authClient.getToken = getTokenMock;
+
+      // 認可コードからトークンを取得
+      const code = "test-auth-code";
+      const tokens = await googleAuth.getTokensFromCode(code);
+
+      // getTokenが正しい引数で呼ばれたことを確認
+      expect(getTokenMock).toHaveBeenCalledWith(code);
+
+      // 返却されたトークンが正しいことを確認
+      expect(tokens).toEqual({
+        accessToken: mockTokens.access_token,
+        refreshToken: mockTokens.refresh_token,
+      });
+    });
+
+    it("トークンが取得できない場合はエラーをスローすること", async () => {
+      // モックの設定値をConfigに設定
+      const parameterFetcher = new ParameterFetcherMock();
+      await Config.getInstance().init(parameterFetcher);
+      const googleAuth = new GoogleAuthAdapter();
+      const authClient = googleAuth.getAuthClient();
+
+      // OAuth2ClientのgetTokenをモック（トークンなし）
+      const mockResponse = {
+        tokens: {},
+        res: {} as any,
+      };
+      const getTokenMock = mock(() => Promise.resolve(mockResponse));
+      authClient.getToken = getTokenMock;
+
+      // 認可コードからトークンを取得（エラーが発生することを期待）
+      const code = "test-auth-code";
+      expect(googleAuth.getTokensFromCode(code)).rejects.toThrow(
+        "Failed to get tokens from authorization code"
+      );
+    });
+  });
 });
