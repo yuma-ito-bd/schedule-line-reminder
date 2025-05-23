@@ -23,4 +23,11 @@ export class MockGoogleAuth implements Schema$GoogleAuth {
   setTokens(_token: Schema$GoogleAuthToken): void {
     // モックなので何もしない
   }
+
+  async getTokensFromCode(_code: string): Promise<Schema$GoogleAuthToken> {
+    return {
+      accessToken: "mock-access-token",
+      refreshToken: "mock-refresh-token",
+    };
+  }
 }

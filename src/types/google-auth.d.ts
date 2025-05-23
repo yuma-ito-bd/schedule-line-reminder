@@ -21,6 +21,13 @@ export type Schema$GoogleAuth = {
    * @param token アクセストークンとリフレッシュトークン
    */
   setTokens(token: Schema$GoogleAuthToken): void;
+
+  /**
+   * 認可コードからアクセストークンとリフレッシュトークンを取得する
+   * @param code 認可コード
+   * @returns アクセストークンとリフレッシュトークン
+   */
+  getTokensFromCode(code: string): Promise<Schema$GoogleAuthToken>;
 };
 
 export type Schema$GoogleAuthToken = {
