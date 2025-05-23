@@ -3,5 +3,21 @@ description:
 globs: 
 alwaysApply: true
 ---
+## Directory
+
+- `__tests__`: Testing files
+- `src`: Application code files
+  - `handlers`: Handler files invoked from AWS Lambda
+  - `lib`: Library files
+  - `types`: Type difinition files. File extension is `.d.ts`. Use not `interface` but `type`.
+  - `usecases`: Application logic files
+
+## 実装方針
+
+- 外部サービスの（Google, LINE）APIへのリクエストは`HogeApiClient`クラスに実装して。
+- ユースケースクラスではコンストラクタで外部リソースにアクセスするためのtypeを受け取って、実クラスは外部から注入できるようにして（Dependency Injection）。
+- Handlerクラスでは最初に `Config.getInstance().init(parameterFetcher)` を実行して、Configの初期設定を行って。
+
 ## Test
 - Use `ParameterFetcherMock` for config
+- Use `bun run test` command to test all files
