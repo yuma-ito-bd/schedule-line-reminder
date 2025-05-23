@@ -10,7 +10,7 @@ export class GoogleCalendarApiAdapter
 {
   private readonly calendarClient;
 
-  constructor(private readonly auth: Schema$GoogleAuth) {
+  constructor(auth: Schema$GoogleAuth) {
     this.calendarClient = calendar({
       version: "v3",
       auth: auth.getAuthClient(),
