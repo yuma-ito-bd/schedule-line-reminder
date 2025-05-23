@@ -47,4 +47,31 @@ describe("GoogleAuthAdapter", () => {
       expect(authClient).toBeInstanceOf(OAuth2Client);
     });
   });
+
+  describe("setTokens", () => {
+    it("トークンが正しくセットされること", async () => {
+      // モックの設定値をConfigに設定
+      const parameterFetcher = new ParameterFetcherMock();
+      await Config.getInstance().init(parameterFetcher);
+      const googleAuth = new GoogleAuthAdapter();
+      const authClient = googleAuth.getAuthClient();
+
+      // OAuth2ClientのsetCredentialsをモック
+      const setCredentialsMock = mock(() => {});
+      authClient.setCredentials = setCredentialsMock;
+
+      // トークンをセット
+      const token = {
+        accessToken: "test-access-token",
+        refreshToken: "test-refresh-token",
+      };
+      googleAuth.setTokens(token);
+
+      // setCredentialsが正しい引数で呼ばれたことを確認
+      expect(setCredentialsMock).toHaveBeenCalledWith({
+        access_token: token.accessToken,
+        refresh_token: token.refreshToken,
+      });
+    });
+  });
 });
