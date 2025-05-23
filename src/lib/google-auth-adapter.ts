@@ -1,11 +1,12 @@
 import { auth } from "@googleapis/calendar";
 import { Config } from "./config";
+import type { Schema$GoogleAuth } from "../types/google-auth";
 
 /**
  * Google Calendar APIの認可URLを生成するクラス
  * 参考: https://developers.google.com/identity/protocols/oauth2/web-server?hl=ja
  */
-export class GoogleAuthUrlGenerator {
+export class GoogleAuthAdapter implements Schema$GoogleAuth {
   /** Google OAuth2クライアント */
   private readonly oauth2Client;
 

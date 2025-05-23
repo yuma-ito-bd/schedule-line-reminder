@@ -1,18 +1,18 @@
 import { describe, it, expect, mock } from "bun:test";
-import { GoogleAuthUrlGenerator } from "../src/lib/google-auth-url-generator";
+import { GoogleAuthAdapter } from "../src/lib/google-auth-adapter";
 import { Config } from "../src/lib/config";
 import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
 
 /**
- * GoogleAuthUrlGeneratorのテスト
+ * GoogleAuthAdapterのテスト
  */
-describe("GoogleAuthUrlGenerator", () => {
+describe("GoogleAuthAdapter", () => {
   describe("constructor", () => {
     it("正しく初期化されていること", async () => {
       // モックの設定値をConfigに設定
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
-      const generator = new GoogleAuthUrlGenerator();
+      const generator = new GoogleAuthAdapter();
       expect(generator).toBeDefined();
     });
   });
@@ -22,7 +22,7 @@ describe("GoogleAuthUrlGenerator", () => {
       // モックの設定値をConfigに設定
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
-      const generator = new GoogleAuthUrlGenerator();
+      const generator = new GoogleAuthAdapter();
       const authUrl = generator.generateAuthUrl();
 
       // 認可URLに必要な要素が含まれていることを確認
