@@ -7,13 +7,14 @@ import { LineMessagingApiClient } from "../line-messaging-api-client";
 
 export const calendarEventsHandler = async () => {
   console.info("Start calendar events handler");
+  const config = Config.getInstance();
   const parameterFetcher = new AwsParameterFetcher();
-  await Config.getInstance().init(parameterFetcher);
+  await config.init(parameterFetcher);
 
   const auth = new GoogleAuthAdapter();
   const token = {
-    accessToken: Config.getInstance().GOOGLE_ACCESS_TOKEN,
-    refreshToken: Config.getInstance().GOOGLE_REFRESH_TOKEN,
+    accessToken: config.GOOGLE_ACCESS_TOKEN,
+    refreshToken: config.GOOGLE_REFRESH_TOKEN,
   };
   auth.setTokens(token);
   const googleCalendarApi = new GoogleCalendarApiAdapter(auth);
