@@ -8,4 +8,10 @@ export class LineMessagingApiClientMock
       sentMessages: [],
     };
   }
+
+  async replyTextMessages(replyToken: string, texts: string[]) {
+    return {
+      sentMessages: [],
+    };
+  }
 }

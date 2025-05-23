@@ -5,4 +5,8 @@ export type Schema$LineMessagingApiClient = {
     userId: string,
     texts: string[]
   ) => Promise<messagingApi.PushMessageResponse>;
+  replyTextMessages: (
+    replyToken: string,
+    texts: string[]
+  ) => Promise<messagingApi.ReplyMessageResponse>;
 };

@@ -1,33 +1,77 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { LineWebhookUseCase } from "../usecases/line-webhook-usecase";
+import { LineMessagingApiClient } from "../line-messaging-api-client";
+import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
+import type { LineWebhookEvent } from "../types/line-webhook-event";
+import { Config } from "../lib/config";
+import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 
 /**
- *
- * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
- * @param {Object} event - API Gateway Lambda Proxy Input Format
- *
- * Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
- * @returns {Object} object - API Gateway Lambda Proxy Output Format
- *
+ * LINE Messaging APIのWebhookイベントを処理するLambda関数
+ * @param event - API Gateway Lambda Proxy Input Format
+ * @returns API Gateway Lambda Proxy Output Format
  */
-
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
     console.debug({ event });
 
+    // Configの初期化（環境変数やパラメータストアから設定値を取得）
+    const fetcher = new AwsParameterFetcher();
+    console.debug({ fetcher });
+    await Config.getInstance().init(fetcher);
+
+    // リクエストボディの検証
+    if (!event.body) {
+      console.warn("Request body is empty");
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: "Request body is required",
+        }),
+      };
+    }
+
+    // LINE Messaging APIのイベントをパース
+    let webhookEvent: LineWebhookEvent;
+    try {
+      const body = JSON.parse(event.body);
+      webhookEvent = body.events?.[0];
+    } catch (error) {
+      console.error("Failed to parse request body:", error);
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: "Invalid request body format",
+        }),
+      };
+    }
+
+    // 依存関係の初期化
+    const lineClient = new LineMessagingApiClient();
+    const googleAuth = new GoogleAuthAdapter();
+    const webhookUseCase = new LineWebhookUseCase(lineClient, googleAuth);
+
+    // Webhookイベントの処理
+    const result = await webhookUseCase.handleWebhookEvent(webhookEvent);
+
+    // レスポンスの生成
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "hello world",
+        message: result.message,
       }),
     };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    // エラーログの出力
+    console.error("Unexpected error occurred:", error);
+
+    // エラーレスポンスの生成
     return {
       statusCode: 500,
       body: JSON.stringify({
-        message: "some error happened",
+        message: "Internal server error",
       }),
     };
   }
