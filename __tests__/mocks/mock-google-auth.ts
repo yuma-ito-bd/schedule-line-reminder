@@ -1,4 +1,7 @@
-import type { Schema$GoogleAuth } from "../../src/types/google-auth";
+import type {
+  Schema$GoogleAuth,
+  Schema$GoogleAuthToken,
+} from "../../src/types/google-auth";
 import { OAuth2Client } from "google-auth-library";
 
 export class MockGoogleAuth implements Schema$GoogleAuth {
@@ -15,5 +18,9 @@ export class MockGoogleAuth implements Schema$GoogleAuth {
 
   getAuthClient(): OAuth2Client {
     return this.oauth2Client;
+  }
+
+  setTokens(_token: Schema$GoogleAuthToken): void {
+    // モックなので何もしない
   }
 }
