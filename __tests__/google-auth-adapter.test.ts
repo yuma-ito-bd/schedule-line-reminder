@@ -13,8 +13,8 @@ describe("GoogleAuthAdapter", () => {
       // モックの設定値をConfigに設定
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
-      const generator = new GoogleAuthAdapter();
-      expect(generator).toBeDefined();
+      const googleAuth = new GoogleAuthAdapter();
+      expect(googleAuth).toBeDefined();
     });
   });
 
@@ -23,8 +23,8 @@ describe("GoogleAuthAdapter", () => {
       // モックの設定値をConfigに設定
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
-      const generator = new GoogleAuthAdapter();
-      const authUrl = generator.generateAuthUrl();
+      const googleAuth = new GoogleAuthAdapter();
+      const authUrl = googleAuth.generateAuthUrl();
 
       // 認可URLに必要な要素が含まれていることを確認
       expect(authUrl).toContain("https://accounts.google.com/o/oauth2/v2/auth"); // 認可エンドポイント
@@ -41,8 +41,8 @@ describe("GoogleAuthAdapter", () => {
       // モックの設定値をConfigに設定
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
-      const generator = new GoogleAuthAdapter();
-      const authClient = generator.getAuthClient();
+      const googleAuth = new GoogleAuthAdapter();
+      const authClient = googleAuth.getAuthClient();
 
       expect(authClient).toBeInstanceOf(OAuth2Client);
     });
