@@ -2,6 +2,7 @@ import { describe, it, expect, mock } from "bun:test";
 import { GoogleAuthAdapter } from "../src/lib/google-auth-adapter";
 import { Config } from "../src/lib/config";
 import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
+import { OAuth2Client } from "google-auth-library";
 
 /**
  * GoogleAuthAdapterのテスト
@@ -32,6 +33,18 @@ describe("GoogleAuthAdapter", () => {
       expect(authUrl).toContain(
         "scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.calendarlist.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.events.readonly"
       ); // 要求する権限スコープ
+    });
+  });
+
+  describe("getAuthClient", () => {
+    it("OAuth2Clientを返すこと", async () => {
+      // モックの設定値をConfigに設定
+      const parameterFetcher = new ParameterFetcherMock();
+      await Config.getInstance().init(parameterFetcher);
+      const generator = new GoogleAuthAdapter();
+      const authClient = generator.getAuthClient();
+
+      expect(authClient).toBeInstanceOf(OAuth2Client);
     });
   });
 });

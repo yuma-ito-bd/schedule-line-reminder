@@ -3,21 +3,18 @@ import type {
   FetchEventsParams,
   Schema$GoogleCalendarApiAdapter,
 } from "./types/google-calendar-api-adapter";
-import { GoogleApiClient } from "./google-api-client";
-import { Config } from "./lib/config";
+import type { Schema$GoogleAuth } from "./types/google-auth";
 
 export class GoogleCalendarApiAdapter
   implements Schema$GoogleCalendarApiAdapter
 {
   private readonly calendarClient;
 
-  constructor() {
-    const config = Config.getInstance();
-    const accessToken = config.GOOGLE_ACCESS_TOKEN;
-    const refreshToken = config.GOOGLE_REFRESH_TOKEN;
-    const googleApiClient = new GoogleApiClient({ accessToken, refreshToken });
-    const authClient = googleApiClient.authClient;
-    this.calendarClient = calendar({ version: "v3", auth: authClient });
+  constructor(private readonly auth: Schema$GoogleAuth) {
+    this.calendarClient = calendar({
+      version: "v3",
+      auth: auth.getAuthClient(),
+    });
   }
 
   async fetchEvents({
