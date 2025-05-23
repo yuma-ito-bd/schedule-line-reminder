@@ -108,6 +108,52 @@ Resources:
         Banner:
           # モジュールの解決エラーを解決するために、esbuildのバナーにNode.jsのrequireを追加する
           - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
+  OAuthCallbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Google OAuth2.0のコールバックを処理するLambda関数
+      Runtime: nodejs22.x
+      Handler: oauth-callback-handler.oauthCallbackHandler
+      Architectures:
+        - x86_64
+      Events:
+        OAuthCallback:
+          Type: Api
+          Properties:
+            Path: /oauth/callback
+            Method: get
+      LoggingConfig:
+        ApplicationLogLevel: DEBUG
+      Layers:
+        # AWS Systems Managerのパラメータストアから設定値を取得するためのLambda Layer
+        - arn:aws:lambda:ap-northeast-1:133490724326:layer:AWS-Parameters-and-Secrets-Lambda-Extension:12
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        # AWS Systems Managerのパラメータストアから設定値を取得するためのポリシー
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "kms:Decrypt"
+                - "ssm:GetParameter"
+              Resource:
+                [
+                  Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/da90619d-ebf1-43ae-903d-5035b8ff19e4",
+                  Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
+                ]
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Minify: false
+        OutExtension:
+          - .js=.mjs
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/oauth-callback-handler.ts
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
     Properties:
@@ -128,6 +174,9 @@ Outputs:
   WebhookApi:
     Description: API Gateway endpoint URL for Prod stage for Webhook function
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/webhook/"
+  OAuthCallbackApi:
+    Description: API Gateway endpoint URL for Prod stage for OAuth callback function
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/oauth/callback/"
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
