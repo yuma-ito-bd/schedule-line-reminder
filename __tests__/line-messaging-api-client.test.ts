@@ -20,7 +20,7 @@ describe("LineMessagingApiClient", () => {
 
       const userId = "userId";
       const texts = ["text1", "text2"];
-      lineMessagingApiClient.pushTextMessages(userId, texts);
+      await lineMessagingApiClient.pushTextMessages(userId, texts);
       expect(pushMessageMock).toHaveBeenCalled();
       expect(pushMessageMock.mock.calls[0][0]).toEqual({
         to: userId,
@@ -43,7 +43,7 @@ describe("LineMessagingApiClient", () => {
 
       const replyToken = "reply-token";
       const texts = ["text1", "text2"];
-      lineMessagingApiClient.replyTextMessages(replyToken, texts);
+      await lineMessagingApiClient.replyTextMessages(replyToken, texts);
       expect(replyMessageMock).toHaveBeenCalled();
       expect(replyMessageMock.mock.calls[0][0]).toEqual({
         replyToken,
