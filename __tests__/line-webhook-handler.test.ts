@@ -1,9 +1,5 @@
 import { describe, it, expect, mock, afterEach } from "bun:test";
-import type {
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-  Context,
-} from "aws-lambda";
+import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { handler } from "../src/handlers/line-webhook-handler";
 import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
 import { Config } from "../src/lib/config";
@@ -24,23 +20,6 @@ describe("Unit test for app handler", function () {
     const replyTextMessagesMock = mock().mockResolvedValue({});
     (LineMessagingApiClient.prototype as any).replyTextMessages =
       replyTextMessagesMock;
-
-    // Lambdaコンテキストのモック
-    const context: Context = {
-      callbackWaitsForEmptyEventLoop: true,
-      functionName: "test-function",
-      functionVersion: "1",
-      invokedFunctionArn:
-        "arn:aws:lambda:region:account-id:function:test-function",
-      memoryLimitInMB: "128",
-      awsRequestId: "test-request-id",
-      logGroupName: "/aws/lambda/test-function",
-      logStreamName: "test-log-stream",
-      getRemainingTimeInMillis: () => 1000,
-      done: () => {},
-      fail: () => {},
-      succeed: () => {},
-    };
 
     // LINE Webhookイベントのモック
     const event: APIGatewayProxyEvent = {
@@ -110,7 +89,7 @@ describe("Unit test for app handler", function () {
       stageVariables: {},
     };
 
-    const result: APIGatewayProxyResult = await handler(event, context);
+    const result: APIGatewayProxyResult = await handler(event);
 
     expect(result.statusCode).toEqual(200);
     const body = JSON.parse(result.body);
