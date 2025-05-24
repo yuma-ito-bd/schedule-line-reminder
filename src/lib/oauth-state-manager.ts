@@ -15,9 +15,9 @@ export class OAuthStateManager implements Schema$OAuthStateManager {
   private readonly tableName: string;
   private readonly ttlSeconds: number;
 
-  constructor(tableName: string, ttlSeconds: number = 300) {
+  constructor(ttlSeconds: number = 300) {
     this.dynamoClient = new DynamoDBClient({});
-    this.tableName = tableName;
+    this.tableName = `${process.env.STACK_NAME}-oauth-state`;
     this.ttlSeconds = ttlSeconds;
   }
 

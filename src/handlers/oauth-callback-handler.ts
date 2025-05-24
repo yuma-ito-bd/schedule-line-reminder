@@ -22,9 +22,7 @@ export const oauthCallbackHandler = async (
     }
 
     // stateパラメータの検証
-    const stateManager = new OAuthStateManager(
-      `${process.env.STACK_NAME}-oauth-state`
-    );
+    const stateManager = new OAuthStateManager();
     const { isValid, userId } = await stateManager.validateState(state);
     if (!isValid || !userId) {
       throw new Error("Invalid state parameter");
