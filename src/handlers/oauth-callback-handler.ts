@@ -24,7 +24,7 @@ export const oauthCallbackHandler = async (
       new OAuthStateRepository(),
       new GoogleAuthAdapter()
     );
-    const result = await useCase.execute(code || "", state || "");
+    const result = await useCase.execute(code, state);
 
     return {
       statusCode: 200,

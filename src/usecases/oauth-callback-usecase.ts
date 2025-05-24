@@ -7,7 +7,7 @@ export class OAuthCallbackUseCase {
     private readonly auth: Schema$GoogleAuth
   ) {}
 
-  async execute(code: string, state: string): Promise<{ message: string }> {
+  async execute(code?: string, state?: string): Promise<{ message: string }> {
     if (!code) {
       throw new Error("Authorization code is missing");
     }
