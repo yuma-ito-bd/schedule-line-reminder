@@ -208,10 +208,6 @@ Resources:
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
-      # TTLを有効化し、一定時間後に自動的に削除
-      TimeToLiveSpecification:
-        AttributeName: ttl
-        Enabled: true
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

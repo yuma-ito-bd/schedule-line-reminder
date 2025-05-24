@@ -52,7 +52,6 @@ describe("TokenRepository", () => {
       expect(input.Item?.userId.S).toBe(token.userId);
       expect(input.Item?.accessToken.S).toBe(token.accessToken);
       expect(input.Item?.refreshToken.S).toBe(token.refreshToken);
-      expect(input.Item?.ttl.N).toBeDefined();
       expect(input.Item?.createdAt.N).toBeDefined();
       expect(input.Item?.updatedAt.N).toBeDefined();
     });
@@ -74,7 +73,6 @@ describe("TokenRepository", () => {
           userId: { S: token.userId },
           accessToken: { S: token.accessToken },
           refreshToken: { S: token.refreshToken },
-          ttl: { N: "1234567890" },
           createdAt: { N: "1234567890" },
           updatedAt: { N: "1234567890" },
         },
@@ -141,7 +139,6 @@ describe("TokenRepository", () => {
       expect(input.Item?.userId.S).toBe(token.userId);
       expect(input.Item?.accessToken.S).toBe(token.accessToken);
       expect(input.Item?.refreshToken.S).toBe(token.refreshToken);
-      expect(input.Item?.ttl.N).toBeDefined();
       expect(input.Item?.updatedAt.N).toBeDefined();
     });
   });

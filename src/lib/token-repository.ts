@@ -13,12 +13,10 @@ import type { Schema$TokenRepository, Token } from "../types/token-repository";
 export class TokenRepository implements Schema$TokenRepository {
   private readonly dynamoClient: DynamoDBClient;
   private readonly tableName: string;
-  private readonly ttlSeconds: number;
 
-  constructor(ttlSeconds: number = 3600) {
+  constructor() {
     this.dynamoClient = new DynamoDBClient({});
     this.tableName = `${process.env.STACK_NAME}-oauth-tokens`;
-    this.ttlSeconds = ttlSeconds;
   }
 
   /**
@@ -31,7 +29,6 @@ export class TokenRepository implements Schema$TokenRepository {
       TableName: this.tableName,
       Item: marshall({
         ...token,
-        ttl: now + this.ttlSeconds,
         createdAt: now,
         updatedAt: now,
       }),
@@ -78,7 +75,6 @@ export class TokenRepository implements Schema$TokenRepository {
       TableName: this.tableName,
       Item: marshall({
         ...token,
-        ttl: now + this.ttlSeconds,
         updatedAt: now,
       }),
     });
