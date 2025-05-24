@@ -5,6 +5,7 @@ import type {
   Schema$GoogleAuth,
   Schema$GoogleAuthToken,
 } from "../types/google-auth";
+import { randomBytes } from "crypto";
 
 /**
  * Google Calendar APIの認証を管理するクラス
@@ -28,18 +29,30 @@ export class GoogleAuthAdapter implements Schema$GoogleAuth {
   }
 
   /**
-   * Google Calendar APIの認可URLを生成する
-   * @returns 認可URL
+   * ランダムなstateパラメータを生成する
+   * @returns 生成されたstateパラメータ
    */
-  generateAuthUrl(): string {
-    return this.oauth2Client.generateAuthUrl({
+  private generateState(): string {
+    return randomBytes(32).toString("hex");
+  }
+
+  /**
+   * Google Calendar APIの認可URLを生成する
+   * @returns 認可URLとstateパラメータ
+   */
+  generateAuthUrl(): { url: string; state: string } {
+    const state = this.generateState();
+    const url = this.oauth2Client.generateAuthUrl({
       // オフラインアクセスを有効化（リフレッシュトークンを取得するため）
       access_type: "offline",
       // 要求する権限スコープ
       scope: this.scopes,
       // インクリメンタル認可を有効化（推奨）
       include_granted_scopes: true,
+      // CSRF対策のstateパラメータ
+      state,
     });
+    return { url, state };
   }
 
   /**
@@ -59,5 +72,21 @@ export class GoogleAuthAdapter implements Schema$GoogleAuth {
       access_token: token.accessToken,
       refresh_token: token.refreshToken,
     });
+  }
+
+  /**
+   * 認可コードからアクセストークンとリフレッシュトークンを取得する
+   * @param code 認可コード
+   * @returns アクセストークンとリフレッシュトークン
+   */
+  async getTokensFromCode(code: string): Promise<Schema$GoogleAuthToken> {
+    const { tokens } = await this.oauth2Client.getToken(code);
+    if (!tokens.access_token || !tokens.refresh_token) {
+      throw new Error("Failed to get tokens from authorization code");
+    }
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+    };
   }
 }

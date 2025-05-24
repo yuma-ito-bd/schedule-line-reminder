@@ -12,8 +12,11 @@ export class MockGoogleAuth implements Schema$GoogleAuth {
     this.oauth2Client = new OAuth2Client();
   }
 
-  generateAuthUrl(): string {
-    return this.authUrl;
+  generateAuthUrl(): { url: string; state: string } {
+    return {
+      url: this.authUrl,
+      state: "mock-state",
+    };
   }
 
   getAuthClient(): OAuth2Client {
@@ -22,5 +25,12 @@ export class MockGoogleAuth implements Schema$GoogleAuth {
 
   setTokens(_token: Schema$GoogleAuthToken): void {
     // モックなので何もしない
+  }
+
+  async getTokensFromCode(_code: string): Promise<Schema$GoogleAuthToken> {
+    return {
+      accessToken: "mock-access-token",
+      refreshToken: "mock-refresh-token",
+    };
   }
 }

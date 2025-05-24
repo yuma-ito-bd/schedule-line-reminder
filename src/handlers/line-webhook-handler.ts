@@ -5,6 +5,7 @@ import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
 import type { LineWebhookEvent } from "../types/line-webhook-event";
 import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
+import { OAuthStateRepository } from "../lib/oauth-state-repository";
 
 /**
  * LINE Messaging APIのWebhookイベントを処理するLambda関数
@@ -51,7 +52,12 @@ export const handler = async (
     // 依存関係の初期化
     const lineClient = new LineMessagingApiClient();
     const googleAuth = new GoogleAuthAdapter();
-    const webhookUseCase = new LineWebhookUseCase(lineClient, googleAuth);
+    const stateRepository = new OAuthStateRepository();
+    const webhookUseCase = new LineWebhookUseCase(
+      lineClient,
+      googleAuth,
+      stateRepository
+    );
 
     // Webhookイベントの処理
     const result = await webhookUseCase.handleWebhookEvent(webhookEvent);
