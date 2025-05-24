@@ -5,12 +5,12 @@ import {
   DeleteItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import type { Schema$OAuthStateManager } from "../types/oauth-state-manager";
+import type { Schema$OAuthStateRepository } from "../types/oauth-state-repository";
 
 /**
- * OAuth stateパラメータを管理するクラス
+ * OAuth stateパラメータを管理するリポジトリ
  */
-export class OAuthStateManager implements Schema$OAuthStateManager {
+export class OAuthStateRepository implements Schema$OAuthStateRepository {
   private readonly dynamoClient: DynamoDBClient;
   private readonly tableName: string;
   private readonly ttlSeconds: number;
