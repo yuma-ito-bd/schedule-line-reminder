@@ -1,10 +1,12 @@
 import type { Schema$GoogleAuth } from "../types/google-auth";
 import type { Schema$OAuthStateRepository } from "../types/oauth-state-repository";
+import type { Schema$TokenRepository } from "../types/token-repository";
 
 export class OAuthCallbackUseCase {
   constructor(
     private readonly stateRepository: Schema$OAuthStateRepository,
-    private readonly auth: Schema$GoogleAuth
+    private readonly auth: Schema$GoogleAuth,
+    private readonly tokenRepository: Schema$TokenRepository
   ) {}
 
   async execute(code?: string, state?: string): Promise<{ message: string }> {
@@ -25,10 +27,11 @@ export class OAuthCallbackUseCase {
     const tokens = await this.auth.getTokensFromCode(code);
 
     // トークンの保存
-    // const tokenManager = new OAuthTokenManager(
-    //   `${process.env.STACK_NAME}-oauth-tokens`
-    // );
-    // await tokenManager.saveToken(userId, tokens);
+    await this.tokenRepository.saveToken({
+      userId,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
 
     return {
       message: "認証が完了しました。このウィンドウを閉じてください。",
