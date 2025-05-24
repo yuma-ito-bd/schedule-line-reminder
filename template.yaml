@@ -41,7 +41,7 @@ Resources:
                 - "ssm:GetParameter"
               Resource:
                 [
-                  Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/da90619d-ebf1-43ae-903d-5035b8ff19e4",
+                  Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
                 ]
       LoggingConfig:
@@ -91,7 +91,7 @@ Resources:
                 - "ssm:GetParameter"
               Resource:
                 [
-                  Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/da90619d-ebf1-43ae-903d-5035b8ff19e4",
+                  Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
                 ]
     Metadata: # Manage esbuild properties
@@ -142,7 +142,7 @@ Resources:
                 - "dynamodb:DeleteItem"
               Resource:
                 [
-                  Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/da90619d-ebf1-43ae-903d-5035b8ff19e4",
+                  Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
                   !GetAtt OAuthStateTable.Arn,
                   !GetAtt OAuthTokensTable.Arn,
