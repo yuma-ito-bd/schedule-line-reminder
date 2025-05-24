@@ -1,4 +1,4 @@
-export interface Schema$OAuthStateRepository {
+export type Schema$OAuthStateRepository = {
   /**
    * stateパラメータを保存する
    * @param state 保存するstateパラメータ
@@ -12,4 +12,4 @@ export interface Schema$OAuthStateRepository {
    * @returns 検証結果とユーザーID
    */
   validateState(state: string): Promise<{ isValid: boolean; userId?: string }>;
-}
+};
