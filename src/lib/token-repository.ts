@@ -13,10 +13,12 @@ import type { Schema$TokenRepository, Token } from "../types/token-repository";
 export class TokenRepository implements Schema$TokenRepository {
   private readonly dynamoClient: DynamoDBClient;
   private readonly tableName: string;
+  private readonly ttlSeconds: number;
 
-  constructor() {
+  constructor(ttlSeconds: number = 3600) {
     this.dynamoClient = new DynamoDBClient({});
     this.tableName = `${process.env.STACK_NAME}-oauth-tokens`;
+    this.ttlSeconds = ttlSeconds;
   }
 
   /**
@@ -24,11 +26,14 @@ export class TokenRepository implements Schema$TokenRepository {
    * @param token 保存するトークン
    */
   async saveToken(token: Token): Promise<void> {
+    const now = Math.floor(Date.now() / 1000);
     const command = new PutItemCommand({
       TableName: this.tableName,
       Item: marshall({
         ...token,
-        ttl: token.expiresAt,
+        ttl: now + this.ttlSeconds,
+        createdAt: now,
+        updatedAt: now,
       }),
     });
     await this.dynamoClient.send(command);
@@ -56,9 +61,6 @@ export class TokenRepository implements Schema$TokenRepository {
         userId: item.userId,
         accessToken: item.accessToken,
         refreshToken: item.refreshToken,
-        expiresAt: item.expiresAt,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
       };
     } catch (error) {
       console.error("Failed to get token:", error);
@@ -71,7 +73,16 @@ export class TokenRepository implements Schema$TokenRepository {
    * @param token 更新するトークン
    */
   async updateToken(token: Token): Promise<void> {
-    await this.saveToken(token);
+    const now = Math.floor(Date.now() / 1000);
+    const command = new PutItemCommand({
+      TableName: this.tableName,
+      Item: marshall({
+        ...token,
+        ttl: now + this.ttlSeconds,
+        updatedAt: now,
+      }),
+    });
+    await this.dynamoClient.send(command);
   }
 
   /**

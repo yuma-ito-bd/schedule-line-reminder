@@ -4,6 +4,11 @@ import {
   GetItemCommand,
   DeleteItemCommand,
 } from "@aws-sdk/client-dynamodb";
+import type {
+  PutItemCommandInput,
+  GetItemCommandInput,
+  DeleteItemCommandInput,
+} from "@aws-sdk/client-dynamodb";
 import { TokenRepository } from "../../src/lib/token-repository";
 import { mockClient } from "aws-sdk-client-mock";
 
@@ -27,9 +32,6 @@ describe("TokenRepository", () => {
         userId: "test-user",
         accessToken: "test-access-token",
         refreshToken: "test-refresh-token",
-        expiresAt: Math.floor(Date.now() / 1000) + 3600,
-        createdAt: Math.floor(Date.now() / 1000),
-        updatedAt: Math.floor(Date.now() / 1000),
       };
 
       // モックの設定
@@ -45,18 +47,14 @@ describe("TokenRepository", () => {
       // モックの呼び出し確認
       expect(dynamoDBMock.calls()).toHaveLength(1);
       const call = dynamoDBMock.calls()[0];
-      expect(call.args[0].input).toEqual({
-        TableName: "test-stack-oauth-tokens",
-        Item: {
-          userId: { S: token.userId },
-          accessToken: { S: token.accessToken },
-          refreshToken: { S: token.refreshToken },
-          expiresAt: { N: token.expiresAt.toString() },
-          createdAt: { N: token.createdAt.toString() },
-          updatedAt: { N: token.updatedAt.toString() },
-          ttl: { N: token.expiresAt.toString() },
-        },
-      });
+      const input = call.args[0].input as PutItemCommandInput;
+      expect(input.TableName).toBe("test-stack-oauth-tokens");
+      expect(input.Item?.userId.S).toBe(token.userId);
+      expect(input.Item?.accessToken.S).toBe(token.accessToken);
+      expect(input.Item?.refreshToken.S).toBe(token.refreshToken);
+      expect(input.Item?.ttl.N).toBeDefined();
+      expect(input.Item?.createdAt.N).toBeDefined();
+      expect(input.Item?.updatedAt.N).toBeDefined();
     });
   });
 
@@ -68,9 +66,6 @@ describe("TokenRepository", () => {
         userId: "test-user",
         accessToken: "test-access-token",
         refreshToken: "test-refresh-token",
-        expiresAt: Math.floor(Date.now() / 1000) + 3600,
-        createdAt: Math.floor(Date.now() / 1000),
-        updatedAt: Math.floor(Date.now() / 1000),
       };
 
       // モックの設定
@@ -79,9 +74,9 @@ describe("TokenRepository", () => {
           userId: { S: token.userId },
           accessToken: { S: token.accessToken },
           refreshToken: { S: token.refreshToken },
-          expiresAt: { N: token.expiresAt.toString() },
-          createdAt: { N: token.createdAt.toString() },
-          updatedAt: { N: token.updatedAt.toString() },
+          ttl: { N: "1234567890" },
+          createdAt: { N: "1234567890" },
+          updatedAt: { N: "1234567890" },
         },
         $metadata: {
           httpStatusCode: 200,
@@ -97,12 +92,9 @@ describe("TokenRepository", () => {
       // モックの呼び出し確認
       expect(dynamoDBMock.calls()).toHaveLength(1);
       const call = dynamoDBMock.calls()[0];
-      expect(call.args[0].input).toEqual({
-        TableName: "test-stack-oauth-tokens",
-        Key: {
-          userId: { S: userId },
-        },
-      });
+      const input = call.args[0].input as GetItemCommandInput;
+      expect(input.TableName).toBe("test-stack-oauth-tokens");
+      expect(input.Key?.userId.S).toBe(userId);
     });
 
     it("トークンが存在しない場合はnullを返すこと", async () => {
@@ -129,9 +121,6 @@ describe("TokenRepository", () => {
         userId: "test-user",
         accessToken: "updated-access-token",
         refreshToken: "updated-refresh-token",
-        expiresAt: Math.floor(Date.now() / 1000) + 3600,
-        createdAt: Math.floor(Date.now() / 1000),
-        updatedAt: Math.floor(Date.now() / 1000),
       };
 
       // モックの設定
@@ -147,18 +136,13 @@ describe("TokenRepository", () => {
       // モックの呼び出し確認
       expect(dynamoDBMock.calls()).toHaveLength(1);
       const call = dynamoDBMock.calls()[0];
-      expect(call.args[0].input).toEqual({
-        TableName: "test-stack-oauth-tokens",
-        Item: {
-          userId: { S: token.userId },
-          accessToken: { S: token.accessToken },
-          refreshToken: { S: token.refreshToken },
-          expiresAt: { N: token.expiresAt.toString() },
-          createdAt: { N: token.createdAt.toString() },
-          updatedAt: { N: token.updatedAt.toString() },
-          ttl: { N: token.expiresAt.toString() },
-        },
-      });
+      const input = call.args[0].input as PutItemCommandInput;
+      expect(input.TableName).toBe("test-stack-oauth-tokens");
+      expect(input.Item?.userId.S).toBe(token.userId);
+      expect(input.Item?.accessToken.S).toBe(token.accessToken);
+      expect(input.Item?.refreshToken.S).toBe(token.refreshToken);
+      expect(input.Item?.ttl.N).toBeDefined();
+      expect(input.Item?.updatedAt.N).toBeDefined();
     });
   });
 
@@ -180,12 +164,9 @@ describe("TokenRepository", () => {
       // モックの呼び出し確認
       expect(dynamoDBMock.calls()).toHaveLength(1);
       const call = dynamoDBMock.calls()[0];
-      expect(call.args[0].input).toEqual({
-        TableName: "test-stack-oauth-tokens",
-        Key: {
-          userId: { S: userId },
-        },
-      });
+      const input = call.args[0].input as DeleteItemCommandInput;
+      expect(input.TableName).toBe("test-stack-oauth-tokens");
+      expect(input.Key?.userId.S).toBe(userId);
     });
   });
 });

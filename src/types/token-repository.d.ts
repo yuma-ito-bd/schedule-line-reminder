@@ -2,9 +2,6 @@ export type Token = {
   userId: string;
   accessToken: string;
   refreshToken: string;
-  expiresAt: number;
-  createdAt: number;
-  updatedAt: number;
 };
 
 export type Schema$TokenRepository = {
