@@ -4,6 +4,7 @@ import { OAuthStateRepository } from "../lib/oauth-state-repository";
 import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
+import { TokenRepository } from "../lib/token-repository";
 
 export const oauthCallbackHandler = async (
   event: APIGatewayProxyEvent
@@ -22,7 +23,8 @@ export const oauthCallbackHandler = async (
 
     const useCase = new OAuthCallbackUseCase(
       new OAuthStateRepository(),
-      new GoogleAuthAdapter()
+      new GoogleAuthAdapter(),
+      new TokenRepository()
     );
     const result = await useCase.execute(code, state);
 
