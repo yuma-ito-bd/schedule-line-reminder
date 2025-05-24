@@ -2,7 +2,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
 import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
-import { OAuthStateManager } from "../lib/oauth-state-manager";
+import { OAuthStateRepository } from "../lib/oauth-state-repository";
 
 export const oauthCallbackHandler = async (
   event: APIGatewayProxyEvent
@@ -22,8 +22,8 @@ export const oauthCallbackHandler = async (
     }
 
     // stateパラメータの検証
-    const stateManager = new OAuthStateManager();
-    const { isValid, userId } = await stateManager.validateState(state);
+    const stateRepository = new OAuthStateRepository();
+    const { isValid, userId } = await stateRepository.validateState(state);
     if (!isValid || !userId) {
       throw new Error("Invalid state parameter");
     }
