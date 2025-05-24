@@ -1,5 +1,7 @@
 # schedule-line-reminder
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/yuma-ito-bd/schedule-line-reminder)
+
 Googleカレンダーに登録している1週間分の予定をLINEに通知してくれるプロジェクトです。
 
 ※現在はLINEアカウントやAWSリソースを自分で用意する必要があります。
