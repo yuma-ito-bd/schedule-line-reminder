@@ -6,9 +6,9 @@ import { OAuth2Client } from "google-auth-library";
 export type Schema$GoogleAuth = {
   /**
    * Google Calendar APIの認可URLを生成する
-   * @returns 認可URL
+   * @returns 認可URLとstateパラメータ
    */
-  generateAuthUrl(): string;
+  generateAuthUrl(): { url: string; state: string };
 
   /**
    * 認証済みのOAuth2クライアントを取得する

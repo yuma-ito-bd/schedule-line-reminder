@@ -1,6 +1,7 @@
 import { LineWebhookUseCase } from "../src/usecases/line-webhook-usecase";
 import { LineMessagingApiClientMock } from "./mocks/line-messaging-api-client-mock";
 import { MockGoogleAuth } from "./mocks/mock-google-auth";
+import { MockOAuthStateRepository } from "./mocks/mock-oauth-state-repository";
 import type { LineWebhookEvent } from "../src/types/line-webhook-event";
 import { expect, test, describe, beforeEach, spyOn } from "bun:test";
 
@@ -12,18 +13,28 @@ function createTextMessageEvent(text: string): LineWebhookEvent {
       text,
     },
     replyToken: "test-reply-token",
+    source: {
+      type: "user",
+      userId: "test-user-id",
+    },
   } as LineWebhookEvent;
 }
 
 describe("LineWebhookUseCase", () => {
   let mockLineClient: LineMessagingApiClientMock;
   let mockAuthUrlGenerator: MockGoogleAuth;
+  let mockStateRepository: MockOAuthStateRepository;
   let useCase: LineWebhookUseCase;
 
   beforeEach(() => {
     mockLineClient = new LineMessagingApiClientMock();
     mockAuthUrlGenerator = new MockGoogleAuth();
-    useCase = new LineWebhookUseCase(mockLineClient, mockAuthUrlGenerator);
+    mockStateRepository = new MockOAuthStateRepository();
+    useCase = new LineWebhookUseCase(
+      mockLineClient,
+      mockAuthUrlGenerator,
+      mockStateRepository
+    );
   });
 
   describe("handleWebhookEvent", () => {
@@ -44,12 +55,17 @@ describe("LineWebhookUseCase", () => {
 
       const generateAuthUrlSpy = spyOn(mockAuthUrlGenerator, "generateAuthUrl");
       const replyTextMessagesSpy = spyOn(mockLineClient, "replyTextMessages");
+      const saveStateSpy = spyOn(mockStateRepository, "saveState");
 
       // When
       const result = await useCase.handleWebhookEvent(event);
 
       // Then
       expect(generateAuthUrlSpy).toHaveBeenCalledTimes(1);
+      expect(saveStateSpy).toHaveBeenCalledWith(
+        expect.any(String),
+        "test-user-id"
+      );
       expect(replyTextMessagesSpy).toHaveBeenCalledWith(
         "test-reply-token",
         expectedMessages

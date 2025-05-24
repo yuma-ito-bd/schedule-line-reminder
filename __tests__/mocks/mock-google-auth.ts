@@ -12,8 +12,11 @@ export class MockGoogleAuth implements Schema$GoogleAuth {
     this.oauth2Client = new OAuth2Client();
   }
 
-  generateAuthUrl(): string {
-    return this.authUrl;
+  generateAuthUrl(): { url: string; state: string } {
+    return {
+      url: this.authUrl,
+      state: "mock-state",
+    };
   }
 
   getAuthClient(): OAuth2Client {

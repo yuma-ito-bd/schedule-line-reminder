@@ -24,15 +24,16 @@ describe("GoogleAuthAdapter", () => {
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
       const googleAuth = new GoogleAuthAdapter();
-      const authUrl = googleAuth.generateAuthUrl();
+      const { url, state } = googleAuth.generateAuthUrl();
 
       // 認可URLに必要な要素が含まれていることを確認
-      expect(authUrl).toContain("https://accounts.google.com/o/oauth2/v2/auth"); // 認可エンドポイント
-      expect(authUrl).toContain("access_type=offline"); // オフラインアクセス
-      expect(authUrl).toContain("include_granted_scopes=true"); // インクリメンタル認可
-      expect(authUrl).toContain(
+      expect(url).toContain("https://accounts.google.com/o/oauth2/v2/auth"); // 認可エンドポイント
+      expect(url).toContain("access_type=offline"); // オフラインアクセス
+      expect(url).toContain("include_granted_scopes=true"); // インクリメンタル認可
+      expect(url).toContain(
         "scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.calendarlist.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.events.readonly"
       ); // 要求する権限スコープ
+      expect(state).toBeDefined(); // stateパラメータが生成されていること
     });
   });
 
