@@ -122,6 +122,7 @@ Resources:
           Properties:
             Path: /oauth/callback
             Method: get
+      Timeout: 15
       LoggingConfig:
         ApplicationLogLevel: DEBUG
       Layers:
