@@ -16,7 +16,11 @@ export type Schema$ApiResponseBuilder = {
     message: string,
     options?: ApiResponseOptions
   ) => APIGatewayProxyResult;
-  error: (
+  clientError: (
+    message: string,
+    options?: ApiResponseOptions
+  ) => APIGatewayProxyResult;
+  serverError: (
     message: string,
     options?: ApiResponseOptions
   ) => APIGatewayProxyResult;

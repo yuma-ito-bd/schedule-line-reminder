@@ -57,27 +57,27 @@ describe("ApiResponseBuilder", () => {
     });
   });
 
-  describe("error", () => {
-    it("デフォルトのステータスコード500でレスポンスを生成する", () => {
-      const response = builder.error("エラーメッセージ");
+  describe("clientError", () => {
+    it("デフォルトのステータスコード400でレスポンスを生成する", () => {
+      const response = builder.clientError("クライアントエラー");
 
-      expect(response.statusCode).toBe(500);
+      expect(response.statusCode).toBe(400);
       expect(response.headers).toEqual({
         "Content-Type": "application/json; charset=utf-8",
       });
       expect(JSON.parse(response.body)).toEqual({
-        message: "エラーメッセージ",
+        message: "クライアントエラー",
       });
     });
 
     it("カスタムステータスコードでレスポンスを生成する", () => {
-      const response = builder.error("エラーメッセージ", {
-        statusCode: 400,
+      const response = builder.clientError("クライアントエラー", {
+        statusCode: 404,
       });
 
-      expect(response.statusCode).toBe(400);
+      expect(response.statusCode).toBe(404);
       expect(JSON.parse(response.body)).toEqual({
-        message: "エラーメッセージ",
+        message: "クライアントエラー",
       });
     });
 
@@ -86,18 +86,18 @@ describe("ApiResponseBuilder", () => {
         code: "VALIDATION_ERROR",
         details: "詳細なエラー情報",
       };
-      const response = builder.error("エラーメッセージ", {
+      const response = builder.clientError("クライアントエラー", {
         data: errorData,
       });
 
       expect(JSON.parse(response.body)).toEqual({
-        message: "エラーメッセージ",
+        message: "クライアントエラー",
         data: errorData,
       });
     });
 
     it("カスタムヘッダーを含むエラーレスポンスを生成する", () => {
-      const response = builder.error("エラーメッセージ", {
+      const response = builder.clientError("クライアントエラー", {
         headers: {
           "X-Error-Code": "E001",
         },
@@ -106,6 +106,59 @@ describe("ApiResponseBuilder", () => {
       expect(response.headers).toEqual({
         "Content-Type": "application/json; charset=utf-8",
         "X-Error-Code": "E001",
+      });
+    });
+  });
+
+  describe("serverError", () => {
+    it("デフォルトのステータスコード500でレスポンスを生成する", () => {
+      const response = builder.serverError("サーバーエラー");
+
+      expect(response.statusCode).toBe(500);
+      expect(response.headers).toEqual({
+        "Content-Type": "application/json; charset=utf-8",
+      });
+      expect(JSON.parse(response.body)).toEqual({
+        message: "サーバーエラー",
+      });
+    });
+
+    it("カスタムステータスコードでレスポンスを生成する", () => {
+      const response = builder.serverError("サーバーエラー", {
+        statusCode: 503,
+      });
+
+      expect(response.statusCode).toBe(503);
+      expect(JSON.parse(response.body)).toEqual({
+        message: "サーバーエラー",
+      });
+    });
+
+    it("データを含むエラーレスポンスを生成する", () => {
+      const errorData = {
+        code: "INTERNAL_ERROR",
+        details: "詳細なエラー情報",
+      };
+      const response = builder.serverError("サーバーエラー", {
+        data: errorData,
+      });
+
+      expect(JSON.parse(response.body)).toEqual({
+        message: "サーバーエラー",
+        data: errorData,
+      });
+    });
+
+    it("カスタムヘッダーを含むエラーレスポンスを生成する", () => {
+      const response = builder.serverError("サーバーエラー", {
+        headers: {
+          "X-Error-Code": "E002",
+        },
+      });
+
+      expect(response.headers).toEqual({
+        "Content-Type": "application/json; charset=utf-8",
+        "X-Error-Code": "E002",
       });
     });
   });

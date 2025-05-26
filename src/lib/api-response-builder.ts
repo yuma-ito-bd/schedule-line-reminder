@@ -22,7 +22,22 @@ export class ApiResponseBuilder implements Schema$ApiResponseBuilder {
     });
   }
 
-  error(message: string, options?: ApiResponseOptions): APIGatewayProxyResult {
+  clientError(
+    message: string,
+    options?: ApiResponseOptions
+  ): APIGatewayProxyResult {
+    return this.buildResponse({
+      statusCode: options?.statusCode ?? 400,
+      message,
+      data: options?.data,
+      headers: options?.headers,
+    });
+  }
+
+  serverError(
+    message: string,
+    options?: ApiResponseOptions
+  ): APIGatewayProxyResult {
     return this.buildResponse({
       statusCode: options?.statusCode ?? 500,
       message,

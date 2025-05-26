@@ -28,9 +28,7 @@ export const handler = async (
     // リクエストボディの検証
     if (!event.body) {
       console.warn("Request body is empty");
-      return responseBuilder.error("Request body is required", {
-        statusCode: 400,
-      });
+      return responseBuilder.clientError("Request body is required");
     }
 
     // LINE Messaging APIのイベントをパース
@@ -40,9 +38,7 @@ export const handler = async (
       webhookEvent = body.events?.[0];
     } catch (error) {
       console.error("Failed to parse request body:", error);
-      return responseBuilder.error("Invalid request body format", {
-        statusCode: 400,
-      });
+      return responseBuilder.clientError("Invalid request body format");
     }
 
     // 依存関係の初期化
@@ -65,6 +61,6 @@ export const handler = async (
     console.error("Unexpected error occurred:", error);
 
     // エラーレスポンスの生成
-    return responseBuilder.error("Internal server error");
+    return responseBuilder.serverError("Internal server error");
   }
 };

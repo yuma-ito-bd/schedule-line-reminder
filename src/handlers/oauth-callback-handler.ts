@@ -32,6 +32,8 @@ export const oauthCallbackHandler = async (
     return new ApiResponseBuilder().success(result.message);
   } catch (error) {
     console.error("Error in OAuth callback handler:", error);
-    return new ApiResponseBuilder().error("認証処理中にエラーが発生しました。");
+    return new ApiResponseBuilder().serverError(
+      "認証処理中にエラーが発生しました。"
+    );
   }
 };
