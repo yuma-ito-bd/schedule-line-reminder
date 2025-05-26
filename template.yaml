@@ -140,6 +140,7 @@ Resources:
                 - "dynamodb:PutItem"
                 - "dynamodb:GetItem"
                 - "dynamodb:DeleteItem"
+                - "dynamodb:UpdateItem"
               Resource:
                 [
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
@@ -195,6 +196,7 @@ Resources:
 
   # OAuthトークンを管理するDynamoDBテーブル
   # ユーザーごとのアクセストークンとリフレッシュトークンを保存
+  # Googleのリフレッシュトークンは有効期限がないため、TTLを使用しない
   OAuthTokensTable:
     Type: AWS::DynamoDB::Table
     Properties:
