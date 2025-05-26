@@ -140,7 +140,7 @@ describe("TokenRepository", () => {
       expect(input.TableName).toBe("test-stack-oauth-tokens");
       expect(input.Key?.userId.S).toBe(token.userId);
       expect(input.UpdateExpression).toBe(
-        "SET accessToken = :accessToken, refreshToken = :refreshToken, updatedAt = :updatedAt"
+        "SET accessToken = :accessToken, updatedAt = :updatedAt, refreshToken = :refreshToken"
       );
       expect(input.ExpressionAttributeValues?.[":accessToken"].S).toBe(
         token.accessToken
@@ -148,6 +148,41 @@ describe("TokenRepository", () => {
       expect(input.ExpressionAttributeValues?.[":refreshToken"].S).toBe(
         token.refreshToken
       );
+      expect(input.ExpressionAttributeValues?.[":updatedAt"].N).toBeDefined();
+    });
+
+    it("refreshTokenがない場合でもトークンを更新できること", async () => {
+      // テストデータ
+      const token = {
+        userId: "test-user",
+        accessToken: "updated-access-token",
+      };
+
+      // モックの設定
+      dynamoDBMock.on(UpdateItemCommand).resolves({
+        $metadata: {
+          httpStatusCode: 200,
+        },
+      });
+
+      // テスト実行
+      await repository.updateToken(token);
+
+      // モックの呼び出し確認
+      expect(dynamoDBMock.calls()).toHaveLength(1);
+      const call = dynamoDBMock.calls()[0];
+      const input = call.args[0].input as UpdateItemCommandInput;
+      expect(input.TableName).toBe("test-stack-oauth-tokens");
+      expect(input.Key?.userId.S).toBe(token.userId);
+      expect(input.UpdateExpression).toBe(
+        "SET accessToken = :accessToken, updatedAt = :updatedAt"
+      );
+      expect(input.ExpressionAttributeValues?.[":accessToken"].S).toBe(
+        token.accessToken
+      );
+      expect(
+        input.ExpressionAttributeValues?.[":refreshToken"]
+      ).toBeUndefined();
       expect(input.ExpressionAttributeValues?.[":updatedAt"].N).toBeDefined();
     });
   });

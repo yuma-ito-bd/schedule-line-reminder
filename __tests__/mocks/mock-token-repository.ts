@@ -1,22 +1,14 @@
-import type { Schema$TokenRepository } from "../../src/types/token-repository";
+import type {
+  Schema$TokenRepository,
+  Token,
+  UpdateToken,
+} from "../../src/types/token-repository";
 
 export class MockTokenRepository implements Schema$TokenRepository {
-  async saveToken(token: {
-    userId: string;
-    accessToken: string;
-    refreshToken: string;
-  }): Promise<void> {}
-  async getToken(userId: string): Promise<{
-    userId: string;
-    accessToken: string;
-    refreshToken: string;
-  } | null> {
+  async saveToken(token: Token): Promise<void> {}
+  async getToken(userId: string): Promise<Token | null> {
     return null;
   }
-  async updateToken(token: {
-    userId: string;
-    accessToken: string;
-    refreshToken: string;
-  }): Promise<void> {}
+  async updateToken(token: UpdateToken): Promise<void> {}
   async deleteToken(userId: string): Promise<void> {}
 }

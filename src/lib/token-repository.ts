@@ -6,7 +6,11 @@ import {
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import type { Schema$TokenRepository, Token } from "../types/token-repository";
+import type {
+  Schema$TokenRepository,
+  Token,
+  UpdateToken,
+} from "../types/token-repository";
 
 /**
  * OAuthトークンを管理するリポジトリ
@@ -70,18 +74,23 @@ export class TokenRepository implements Schema$TokenRepository {
    * トークンを更新する
    * @param token 更新するトークン
    */
-  async updateToken(token: Token): Promise<void> {
+  async updateToken(token: UpdateToken): Promise<void> {
     const now = Math.floor(Date.now() / 1000);
+    let UpdateExpression =
+      "SET accessToken = :accessToken, updatedAt = :updatedAt";
+    const ExpressionAttributeValues: Record<string, any> = {
+      ":accessToken": token.accessToken,
+      ":updatedAt": now,
+    };
+    if (token.refreshToken != null) {
+      UpdateExpression += ", refreshToken = :refreshToken";
+      ExpressionAttributeValues[":refreshToken"] = token.refreshToken;
+    }
     const command = new UpdateItemCommand({
       TableName: this.tableName,
       Key: marshall({ userId: token.userId }),
-      UpdateExpression:
-        "SET accessToken = :accessToken, refreshToken = :refreshToken, updatedAt = :updatedAt",
-      ExpressionAttributeValues: marshall({
-        ":accessToken": token.accessToken,
-        ":refreshToken": token.refreshToken,
-        ":updatedAt": now,
-      }),
+      UpdateExpression,
+      ExpressionAttributeValues: marshall(ExpressionAttributeValues),
     });
     await this.dynamoClient.send(command);
   }
