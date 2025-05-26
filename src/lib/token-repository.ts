@@ -3,6 +3,7 @@ import {
   PutItemCommand,
   GetItemCommand,
   DeleteItemCommand,
+  UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import type { Schema$TokenRepository, Token } from "../types/token-repository";
@@ -71,11 +72,15 @@ export class TokenRepository implements Schema$TokenRepository {
    */
   async updateToken(token: Token): Promise<void> {
     const now = Math.floor(Date.now() / 1000);
-    const command = new PutItemCommand({
+    const command = new UpdateItemCommand({
       TableName: this.tableName,
-      Item: marshall({
-        ...token,
-        updatedAt: now,
+      Key: marshall({ userId: token.userId }),
+      UpdateExpression:
+        "SET accessToken = :accessToken, refreshToken = :refreshToken, updatedAt = :updatedAt",
+      ExpressionAttributeValues: marshall({
+        ":accessToken": token.accessToken,
+        ":refreshToken": token.refreshToken,
+        ":updatedAt": now,
       }),
     });
     await this.dynamoClient.send(command);

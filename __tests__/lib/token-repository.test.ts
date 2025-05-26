@@ -3,11 +3,13 @@ import {
   PutItemCommand,
   GetItemCommand,
   DeleteItemCommand,
+  UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import type {
   PutItemCommandInput,
   GetItemCommandInput,
   DeleteItemCommandInput,
+  UpdateItemCommandInput,
 } from "@aws-sdk/client-dynamodb";
 import { TokenRepository } from "../../src/lib/token-repository";
 import { mockClient } from "aws-sdk-client-mock";
@@ -122,7 +124,7 @@ describe("TokenRepository", () => {
       };
 
       // モックの設定
-      dynamoDBMock.on(PutItemCommand).resolves({
+      dynamoDBMock.on(UpdateItemCommand).resolves({
         $metadata: {
           httpStatusCode: 200,
         },
@@ -134,12 +136,19 @@ describe("TokenRepository", () => {
       // モックの呼び出し確認
       expect(dynamoDBMock.calls()).toHaveLength(1);
       const call = dynamoDBMock.calls()[0];
-      const input = call.args[0].input as PutItemCommandInput;
+      const input = call.args[0].input as UpdateItemCommandInput;
       expect(input.TableName).toBe("test-stack-oauth-tokens");
-      expect(input.Item?.userId.S).toBe(token.userId);
-      expect(input.Item?.accessToken.S).toBe(token.accessToken);
-      expect(input.Item?.refreshToken.S).toBe(token.refreshToken);
-      expect(input.Item?.updatedAt.N).toBeDefined();
+      expect(input.Key?.userId.S).toBe(token.userId);
+      expect(input.UpdateExpression).toBe(
+        "SET accessToken = :accessToken, refreshToken = :refreshToken, updatedAt = :updatedAt"
+      );
+      expect(input.ExpressionAttributeValues?.[":accessToken"].S).toBe(
+        token.accessToken
+      );
+      expect(input.ExpressionAttributeValues?.[":refreshToken"].S).toBe(
+        token.refreshToken
+      );
+      expect(input.ExpressionAttributeValues?.[":updatedAt"].N).toBeDefined();
     });
   });
 
