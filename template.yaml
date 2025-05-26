@@ -226,3 +226,6 @@ Globals:
   Function:
     LoggingConfig:
       LogFormat: JSON
+    Environment:
+      Variables:
+        STACK_NAME: !Ref AWS::StackName
