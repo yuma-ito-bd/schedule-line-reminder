@@ -2,17 +2,24 @@ import { OAuthCallbackUseCase } from "../../src/usecases/oauth-callback-usecase"
 import type { Schema$GoogleAuthToken } from "../../src/types/google-auth";
 import { MockOAuthStateRepository } from "../mocks/mock-oauth-state-repository";
 import { MockGoogleAuth } from "../mocks/mock-google-auth";
+import { MockTokenRepository } from "../mocks/mock-token-repository";
 import { describe, expect, it, beforeEach, spyOn } from "bun:test";
 
 describe("OAuthCallbackUseCase", () => {
   let useCase: OAuthCallbackUseCase;
   let mockStateRepository: MockOAuthStateRepository;
   let mockAuth: MockGoogleAuth;
+  let mockTokenRepository: MockTokenRepository;
 
   beforeEach(() => {
     mockStateRepository = new MockOAuthStateRepository();
     mockAuth = new MockGoogleAuth();
-    useCase = new OAuthCallbackUseCase(mockStateRepository, mockAuth);
+    mockTokenRepository = new MockTokenRepository();
+    useCase = new OAuthCallbackUseCase(
+      mockStateRepository,
+      mockAuth,
+      mockTokenRepository
+    );
   });
 
   describe("execute", () => {
@@ -31,6 +38,7 @@ describe("OAuthCallbackUseCase", () => {
         refreshToken: "mock-refresh-token",
       };
       spyOn(mockAuth, "getTokensFromCode").mockResolvedValue(mockTokens);
+      spyOn(mockTokenRepository, "saveToken").mockResolvedValue();
 
       // Act
       const result = await useCase.execute(validCode, validState);
@@ -40,6 +48,11 @@ describe("OAuthCallbackUseCase", () => {
         validState
       );
       expect(mockAuth.getTokensFromCode).toHaveBeenCalledWith(validCode);
+      expect(mockTokenRepository.saveToken).toHaveBeenCalledWith({
+        userId,
+        accessToken: mockTokens.accessToken,
+        refreshToken: mockTokens.refreshToken,
+      });
       expect(result).toEqual({
         message: "認証が完了しました。このウィンドウを閉じてください。",
       });

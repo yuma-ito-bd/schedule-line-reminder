@@ -89,10 +89,12 @@ Resources:
               Action:
                 - "kms:Decrypt"
                 - "ssm:GetParameter"
+                - "dynamodb:PutItem"
               Resource:
                 [
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
+                  !GetAtt OAuthStateTable.Arn,
                 ]
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -140,6 +142,7 @@ Resources:
                 - "dynamodb:PutItem"
                 - "dynamodb:GetItem"
                 - "dynamodb:DeleteItem"
+                - "dynamodb:UpdateItem"
               Resource:
                 [
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
@@ -195,6 +198,7 @@ Resources:
 
   # OAuthトークンを管理するDynamoDBテーブル
   # ユーザーごとのアクセストークンとリフレッシュトークンを保存
+  # Googleのリフレッシュトークンは有効期限がないため、TTLを使用しない
   OAuthTokensTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -208,10 +212,6 @@ Resources:
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
-      # TTLを有効化し、一定時間後に自動的に削除
-      TimeToLiveSpecification:
-        AttributeName: ttl
-        Enabled: true
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -228,3 +228,6 @@ Globals:
   Function:
     LoggingConfig:
       LogFormat: JSON
+    Environment:
+      Variables:
+        STACK_NAME: !Ref AWS::StackName

@@ -36,7 +36,10 @@ export class OAuthStateRepository implements Schema$OAuthStateRepository {
         ttl: now + this.ttlSeconds,
       }),
       // 条件付き書き込み：同じstateが存在しない場合のみ保存
-      ConditionExpression: "attribute_not_exists(state)",
+      ConditionExpression: "attribute_not_exists(#state)",
+      ExpressionAttributeNames: {
+        "#state": "state",
+      },
     });
     await this.dynamoClient.send(command);
   }
