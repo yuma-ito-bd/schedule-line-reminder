@@ -6,6 +6,7 @@ import type { LineWebhookEvent } from "../types/line-webhook-event";
 import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import { OAuthStateRepository } from "../lib/oauth-state-repository";
+import { ApiResponseBuilder } from "../lib/api-response-builder";
 
 /**
  * LINE Messaging APIのWebhookイベントを処理するLambda関数
@@ -15,6 +16,7 @@ import { OAuthStateRepository } from "../lib/oauth-state-repository";
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  const responseBuilder = new ApiResponseBuilder();
   try {
     console.debug({ event });
 
@@ -26,12 +28,7 @@ export const handler = async (
     // リクエストボディの検証
     if (!event.body) {
       console.warn("Request body is empty");
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message: "Request body is required",
-        }),
-      };
+      return responseBuilder.clientError("Request body is required");
     }
 
     // LINE Messaging APIのイベントをパース
@@ -41,12 +38,7 @@ export const handler = async (
       webhookEvent = body.events?.[0];
     } catch (error) {
       console.error("Failed to parse request body:", error);
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message: "Invalid request body format",
-        }),
-      };
+      return responseBuilder.clientError("Invalid request body format");
     }
 
     // 依存関係の初期化
@@ -63,22 +55,12 @@ export const handler = async (
     const result = await webhookUseCase.handleWebhookEvent(webhookEvent);
 
     // レスポンスの生成
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: result.message,
-      }),
-    };
+    return responseBuilder.success(result.message);
   } catch (error) {
     // エラーログの出力
     console.error("Unexpected error occurred:", error);
 
     // エラーレスポンスの生成
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        message: "Internal server error",
-      }),
-    };
+    return responseBuilder.serverError("Internal server error");
   }
 };

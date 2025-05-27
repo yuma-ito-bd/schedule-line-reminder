@@ -5,6 +5,7 @@ import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
 import { TokenRepository } from "../lib/token-repository";
+import { ApiResponseBuilder } from "../lib/api-response-builder";
 
 export const oauthCallbackHandler = async (
   event: APIGatewayProxyEvent
@@ -28,17 +29,11 @@ export const oauthCallbackHandler = async (
     );
     const result = await useCase.execute(code, state);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(result),
-    };
+    return new ApiResponseBuilder().success(result.message);
   } catch (error) {
     console.error("Error in OAuth callback handler:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        message: "認証処理中にエラーが発生しました。",
-      }),
-    };
+    return new ApiResponseBuilder().serverError(
+      "認証処理中にエラーが発生しました。"
+    );
   }
 };
