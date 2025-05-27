@@ -7,7 +7,7 @@
         "@aws-sdk/client-dynamodb": "^3.817.0",
         "@aws-sdk/util-dynamodb": "^3.817.0",
         "@googleapis/calendar": "^9.8.0",
-        "@line/bot-sdk": "^9.5.1",
+        "@line/bot-sdk": "^9.9.0",
         "jose": "^5.9.6",
       },
       "devDependencies": {
@@ -132,7 +132,7 @@
 
     "@googleapis/calendar": ["@googleapis/calendar@9.8.0", "", { "dependencies": { "googleapis-common": "^7.0.0" } }, "sha512-5IG4x/bOvdDFLEzNX/HyvN4LUtuMFTv4eYqZcgwSWBHiBwCfN1zIVLPP6ENbIOR5sIceLpOS35NqknoaAiTJ1g=="],
 
-    "@line/bot-sdk": ["@line/bot-sdk@9.5.1", "", { "dependencies": { "@types/node": "^22.0.0" }, "optionalDependencies": { "axios": "^1.7.4" } }, "sha512-MnZh3rxxAX4q8rTy7jQbfXwr0T9U9+u9zWMWlOyXvGnrb8IR+74z+MDrcUcIDQeUP/zKnfU/irWjiktFBYQESA=="],
+    "@line/bot-sdk": ["@line/bot-sdk@9.9.0", "", { "dependencies": { "@types/node": "^22.0.0" }, "optionalDependencies": { "axios": "^1.7.4" } }, "sha512-/jVjH7k2uMWY1O0F/zkwYD3dqDH/pWbawvDtR6DV/scruH86w9zZrMwknZLt1unUWdK+V9eX4UVP/gLAzqUocg=="],
 
     "@sinonjs/commons": ["@sinonjs/commons@3.0.1", "", { "dependencies": { "type-detect": "4.0.8" } }, "sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ=="],
 
