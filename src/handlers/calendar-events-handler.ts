@@ -36,7 +36,7 @@ export const calendarEventsHandler =
       );
     } catch (error) {
       console.error("Error in calendar events handler:", error);
-      return responseBuilder.error(
+      return responseBuilder.serverError(
         "カレンダーイベントの通知処理中にエラーが発生しました"
       );
     }
