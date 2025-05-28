@@ -7,16 +7,13 @@
     "deploy": "sam deploy --profile private-admin",
     "build_and_deploy": "bun run build && bun run deploy",
     "test": "bun test __tests__ --coverage",
-    "generate-line-token": "bun run scripts/make_token.js",
-    "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\""
+    "generate-line-token": "bun run scripts/make_token.js"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.149",
     "@types/bun": "latest",
     "aws-sdk-client-mock": "^4.1.0",
-    "esbuild": "^0.25.5",
-    "prettier": "^3.2.5"
+    "esbuild": "^0.25.5"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
