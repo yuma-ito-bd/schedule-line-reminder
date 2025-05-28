@@ -1,15 +1,16 @@
 import { describe, it, expect, spyOn, beforeEach, afterEach } from "bun:test";
 import { calendarEventsHandler } from "../../src/handlers/calendar-events-handler";
-import { Config } from "../../src/lib/config";
+import { AwsParameterFetcher } from "../../src/lib/aws-parameter-fetcher";
 import { CalendarEventsUseCase } from "../../src/usecases/calendar-events-usecase";
-import { ParameterFetcherMock } from "../mocks/parameter-fetcher-mock";
 
 describe("calendarEventsHandler", () => {
   let executeSpy: ReturnType<typeof spyOn>;
 
   beforeEach(() => {
-    // Configのモックをリセット
-    Config.getInstance().init(new ParameterFetcherMock());
+    // AwsParameterFetcherのモック
+    spyOn(AwsParameterFetcher.prototype, "call").mockResolvedValue(
+      "mock-value"
+    );
   });
 
   afterEach(() => {
