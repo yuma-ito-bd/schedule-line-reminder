@@ -4,6 +4,8 @@ import {
   GetItemCommand,
   DeleteItemCommand,
   UpdateItemCommand,
+  QueryCommand,
+  ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import type {
@@ -109,5 +111,24 @@ export class TokenRepository implements Schema$TokenRepository {
     } catch (error) {
       console.error("Failed to delete token:", error);
     }
+  }
+
+  /**
+   * すべてのトークンを取得する
+   * @returns トークンの配列
+   */
+  async getAllTokens(): Promise<Token[]> {
+    const command = new ScanCommand({
+      TableName: this.tableName,
+    });
+    const result = await this.dynamoClient.send(command);
+    return (result.Items || []).map((item) => {
+      const unmarshalled = unmarshall(item);
+      return {
+        userId: unmarshalled.userId,
+        accessToken: unmarshalled.accessToken,
+        refreshToken: unmarshalled.refreshToken,
+      };
+    });
   }
 }

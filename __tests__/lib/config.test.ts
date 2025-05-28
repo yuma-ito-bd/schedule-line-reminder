@@ -14,8 +14,6 @@ describe("Config", () => {
       process.env.GOOGLE_CLIENT_ID = "client-id";
       process.env.GOOGLE_CLIENT_SECRET = "client-secret";
       process.env.GOOGLE_REDIRECT_URI = "redirect-uri";
-      process.env.GOOGLE_ACCESS_TOKEN = "access-token";
-      process.env.GOOGLE_REFRESH_TOKEN = "refresh-token";
       process.env.LINE_CHANNEL_ACCESS_TOKEN = "channel-access-token";
       process.env.LINE_USER_ID = "line-user-id";
 
@@ -24,8 +22,6 @@ describe("Config", () => {
       expect(config.GOOGLE_CLIENT_ID).toBe("client-id");
       expect(config.GOOGLE_CLIENT_SECRET).toBe("client-secret");
       expect(config.GOOGLE_REDIRECT_URI).toBe("redirect-uri");
-      expect(config.GOOGLE_ACCESS_TOKEN).toBe("access-token");
-      expect(config.GOOGLE_REFRESH_TOKEN).toBe("refresh-token");
       expect(config.LINE_CHANNEL_ACCESS_TOKEN).toBe("channel-access-token");
       expect(config.LINE_USER_ID).toBe("line-user-id");
     });
@@ -36,8 +32,6 @@ describe("Config", () => {
       process.env.GOOGLE_CLIENT_ID = "";
       process.env.GOOGLE_CLIENT_SECRET = "";
       process.env.GOOGLE_REDIRECT_URI = "";
-      process.env.GOOGLE_ACCESS_TOKEN = "";
-      process.env.GOOGLE_REFRESH_TOKEN = "";
       process.env.LINE_CHANNEL_ACCESS_TOKEN = "";
       process.env.LINE_USER_ID = "";
 
@@ -46,8 +40,6 @@ describe("Config", () => {
       expect(config.GOOGLE_CLIENT_ID).toBe("mock-google-client-id");
       expect(config.GOOGLE_CLIENT_SECRET).toBe("mock-google-client-secret");
       expect(config.GOOGLE_REDIRECT_URI).toBe("mock-google-redirect-uri");
-      expect(config.GOOGLE_ACCESS_TOKEN).toBe("mock-google-access-token");
-      expect(config.GOOGLE_REFRESH_TOKEN).toBe("mock-google-refresh-token");
       expect(config.LINE_CHANNEL_ACCESS_TOKEN).toBe(
         "mock-line-channel-access-token"
       );

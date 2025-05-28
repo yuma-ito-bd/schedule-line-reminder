@@ -109,8 +109,6 @@ line-->|Webhook|apigw
 
 - LINE Messaging APIのための[チャネルアクセストークン](https://developers.line.biz/ja/docs/messaging-api/generate-json-web-token/)
   - 発行方法：https://zenn.dev/link/comments/ecfe0a7ca1d312
-- Googleアカウントのリフレッシュトークン
-  - 発行方法：https://zenn.dev/link/comments/8631c7f926eeaa
 
 ### デプロイ
 
@@ -127,7 +125,7 @@ bun run deploy
 ---|---|---
 line-schedule-reminder-google-client-id | GOOGLE_CLIENT_ID | Google Calendar APIのためのクライアントID
 line-schedule-reminder-google-client-secret | GOOGLE_CLIENT_SECRET | Google Calendar APIのためのクライアントシークレット 
-line-schedule-reminder-google-refresh-token | GOOGLE_REFRESH_TOKEN | Googleカレンダーにアクセスするためのリフレッシュトークン
+line-schedule-reminder-google-redirect-uri | GOOGLE_REDIRECT_URI | Googleで認可を得たときにリダイレクトされるURL
 line-schedule-reminder-line-channel-access-token | LINE_CHANNEL_ACCESS_TOKEN | LINEチャネルアクセストークン
 line-schedule-reminder-line-user-id | LINE_USER_ID | 通知先のLINEユーザーID
 
