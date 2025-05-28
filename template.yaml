@@ -39,10 +39,12 @@ Resources:
               Action:
                 - "kms:Decrypt"
                 - "ssm:GetParameter"
+                - "dynamodb:Scan"
               Resource:
                 [
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
+                  !GetAtt OAuthTokensTable.Arn,
                 ]
       LoggingConfig:
         ApplicationLogLevel: DEBUG
