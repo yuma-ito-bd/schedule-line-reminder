@@ -15,4 +15,5 @@ export type Schema$TokenRepository = {
   getToken(userId: string): Promise<Token | null>;
   updateToken(token: UpdateToken): Promise<void>;
   deleteToken(userId: string): Promise<void>;
+  getAllTokens(): Promise<Token[]>;
 };

@@ -11,4 +11,18 @@ export class MockTokenRepository implements Schema$TokenRepository {
   }
   async updateToken(token: UpdateToken): Promise<void> {}
   async deleteToken(userId: string): Promise<void> {}
+  async getAllTokens(): Promise<Token[]> {
+    return [
+      {
+        userId: "1",
+        accessToken: "accessToken",
+        refreshToken: "refreshToken",
+      },
+      {
+        userId: "2",
+        accessToken: "accessToken2",
+        refreshToken: "refreshToken2",
+      },
+    ];
+  }
 }

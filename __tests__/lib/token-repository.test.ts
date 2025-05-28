@@ -4,12 +4,14 @@ import {
   GetItemCommand,
   DeleteItemCommand,
   UpdateItemCommand,
+  ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 import type {
   PutItemCommandInput,
   GetItemCommandInput,
   DeleteItemCommandInput,
   UpdateItemCommandInput,
+  ScanCommandInput,
 } from "@aws-sdk/client-dynamodb";
 import { TokenRepository } from "../../src/lib/token-repository";
 import { mockClient } from "aws-sdk-client-mock";
@@ -208,6 +210,82 @@ describe("TokenRepository", () => {
       const input = call.args[0].input as DeleteItemCommandInput;
       expect(input.TableName).toBe("test-stack-oauth-tokens");
       expect(input.Key?.userId.S).toBe(userId);
+    });
+  });
+
+  describe("getAllTokens", () => {
+    it("すべてのトークンを取得できること", async () => {
+      // テストデータ
+      const mockItems = [
+        {
+          userId: { S: "user1" },
+          accessToken: { S: "access-token-1" },
+          refreshToken: { S: "refresh-token-1" },
+        },
+        {
+          userId: { S: "user2" },
+          accessToken: { S: "access-token-2" },
+          refreshToken: { S: "refresh-token-2" },
+        },
+      ];
+
+      // モックの設定
+      dynamoDBMock.on(ScanCommand).resolves({
+        Items: mockItems,
+        $metadata: {
+          httpStatusCode: 200,
+        },
+      });
+
+      // テスト実行
+      const result = await repository.getAllTokens();
+
+      // 結果の確認
+      expect(result).toHaveLength(2);
+      expect(result).toEqual([
+        {
+          userId: "user1",
+          accessToken: "access-token-1",
+          refreshToken: "refresh-token-1",
+        },
+        {
+          userId: "user2",
+          accessToken: "access-token-2",
+          refreshToken: "refresh-token-2",
+        },
+      ]);
+
+      // モックの呼び出し確認
+      expect(dynamoDBMock.calls()).toHaveLength(1);
+      const call = dynamoDBMock.calls()[0];
+      const input = call.args[0].input as ScanCommandInput;
+      expect(input.TableName).toBe("test-stack-oauth-tokens");
+    });
+
+    it("トークンが存在しない場合は空配列を返すこと", async () => {
+      // モックの設定
+      dynamoDBMock.on(ScanCommand).resolves({
+        Items: [],
+        $metadata: {
+          httpStatusCode: 200,
+        },
+      });
+
+      // テスト実行
+      const result = await repository.getAllTokens();
+
+      // 結果の確認
+      expect(result).toHaveLength(0);
+      expect(result).toEqual([]);
+    });
+
+    it("DynamoDBでエラーが発生した場合、エラーをスローすること", async () => {
+      // モックの設定
+      const mockError = new Error("DynamoDB error");
+      dynamoDBMock.on(ScanCommand).rejects(mockError);
+
+      // テスト実行と検証
+      await expect(repository.getAllTokens()).rejects.toThrow(mockError);
     });
   });
 });
