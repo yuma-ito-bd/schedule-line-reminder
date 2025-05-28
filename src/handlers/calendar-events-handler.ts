@@ -3,6 +3,8 @@ import type { APIGatewayProxyResult } from "aws-lambda";
 import { CalendarEventsUseCase } from "../usecases/calendar-events-usecase";
 import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
+import { TokenRepository } from "../lib/token-repository";
+import { LineMessagingApiClient } from "../line-messaging-api-client";
 
 export const calendarEventsHandler =
   async (): Promise<APIGatewayProxyResult> => {
@@ -13,7 +15,12 @@ export const calendarEventsHandler =
       const parameterFetcher = new AwsParameterFetcher();
       await config.init(parameterFetcher);
 
-      await new CalendarEventsUseCase().execute();
+      const tokenRepository = new TokenRepository();
+      const lineMessagingApiClient = new LineMessagingApiClient();
+      await new CalendarEventsUseCase(
+        tokenRepository,
+        lineMessagingApiClient
+      ).execute();
       console.info("End calendar events handler");
 
       return responseBuilder.success(

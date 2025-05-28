@@ -1,24 +1,39 @@
 import { CalendarEventsNotifier } from "../calendar-events-notifier";
 import { GoogleCalendarApiAdapter } from "../google-calendar-api-adapter";
 import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
-import { LineMessagingApiClient } from "../line-messaging-api-client";
-import { Config } from "../lib/config";
+import type { Schema$LineMessagingApiClient } from "../types/line-messaging-api-adapter";
+import type { Schema$TokenRepository } from "../types/token-repository";
 
 export class CalendarEventsUseCase {
-  async execute(): Promise<void> {
-    const config = Config.getInstance();
-    const auth = new GoogleAuthAdapter();
-    const token = {
-      accessToken: config.GOOGLE_ACCESS_TOKEN,
-      refreshToken: config.GOOGLE_REFRESH_TOKEN,
-    };
-    auth.setTokens(token);
-    const googleCalendarApi = new GoogleCalendarApiAdapter(auth);
-    const lineMessagingApiClient = new LineMessagingApiClient();
+  constructor(
+    private readonly tokenRepository: Schema$TokenRepository,
+    private readonly lineMessagingApiClient: Schema$LineMessagingApiClient
+  ) {}
 
-    await new CalendarEventsNotifier(
-      googleCalendarApi,
-      lineMessagingApiClient
-    ).call();
+  async execute(): Promise<void> {
+    const tokens = await this.tokenRepository.getAllTokens();
+
+    for (const token of tokens) {
+      try {
+        const auth = new GoogleAuthAdapter();
+        auth.setTokens({
+          accessToken: token.accessToken,
+          refreshToken: token.refreshToken,
+        });
+        const googleCalendarApi = new GoogleCalendarApiAdapter(auth);
+
+        await new CalendarEventsNotifier(
+          googleCalendarApi,
+          this.lineMessagingApiClient
+        ).call();
+      } catch (error) {
+        console.error(
+          `Error processing calendar for user ${token.userId}:`,
+          error
+        );
+        // エラーが発生しても他のユーザーの処理は続行
+        continue;
+      }
+    }
   }
 }
