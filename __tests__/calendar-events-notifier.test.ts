@@ -31,7 +31,10 @@ describe("CalendarEventsNotifier", () => {
         "test-user-id"
       );
       await calendarEventsNotifier.call();
-      expect(pushTextMessagesSpy).toHaveBeenCalled();
+      // 第1引数がtest-user-idであること
+      expect(pushTextMessagesSpy).toHaveBeenCalledWith("test-user-id", [
+        expect.any(String),
+      ]);
     });
   });
 });
