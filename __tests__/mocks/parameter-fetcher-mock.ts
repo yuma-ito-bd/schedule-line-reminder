@@ -9,10 +9,6 @@ export class ParameterFetcherMock implements Schema$ParameterFetcher {
         return "mock-google-client-secret";
       case "google-redirect-uri":
         return "mock-google-redirect-uri";
-      case "google-access-token":
-        return "mock-google-access-token";
-      case "google-refresh-token":
-        return "mock-google-refresh-token";
       case "line-channel-access-token":
         return "mock-line-channel-access-token";
       default:
