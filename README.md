@@ -127,7 +127,6 @@ line-schedule-reminder-google-client-id | GOOGLE_CLIENT_ID | Google Calendar API
 line-schedule-reminder-google-client-secret | GOOGLE_CLIENT_SECRET | Google Calendar APIのためのクライアントシークレット 
 line-schedule-reminder-google-redirect-uri | GOOGLE_REDIRECT_URI | Googleで認可を得たときにリダイレクトされるURL
 line-schedule-reminder-line-channel-access-token | LINE_CHANNEL_ACCESS_TOKEN | LINEチャネルアクセストークン
-line-schedule-reminder-line-user-id | LINE_USER_ID | 通知先のLINEユーザーID
 
 ### 動作検証
 

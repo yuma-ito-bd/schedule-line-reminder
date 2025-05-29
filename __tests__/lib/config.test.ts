@@ -15,7 +15,6 @@ describe("Config", () => {
       process.env.GOOGLE_CLIENT_SECRET = "client-secret";
       process.env.GOOGLE_REDIRECT_URI = "redirect-uri";
       process.env.LINE_CHANNEL_ACCESS_TOKEN = "channel-access-token";
-      process.env.LINE_USER_ID = "line-user-id";
 
       const config = Config.getInstance();
       await config.init(new ParameterFetcherMock());
@@ -23,7 +22,6 @@ describe("Config", () => {
       expect(config.GOOGLE_CLIENT_SECRET).toBe("client-secret");
       expect(config.GOOGLE_REDIRECT_URI).toBe("redirect-uri");
       expect(config.LINE_CHANNEL_ACCESS_TOKEN).toBe("channel-access-token");
-      expect(config.LINE_USER_ID).toBe("line-user-id");
     });
   });
 
@@ -33,7 +31,6 @@ describe("Config", () => {
       process.env.GOOGLE_CLIENT_SECRET = "";
       process.env.GOOGLE_REDIRECT_URI = "";
       process.env.LINE_CHANNEL_ACCESS_TOKEN = "";
-      process.env.LINE_USER_ID = "";
 
       const config = Config.getInstance();
       await config.init(new ParameterFetcherMock());
@@ -43,7 +40,6 @@ describe("Config", () => {
       expect(config.LINE_CHANNEL_ACCESS_TOKEN).toBe(
         "mock-line-channel-access-token"
       );
-      expect(config.LINE_USER_ID).toBe("mock-line-user-id");
     });
   });
 });
