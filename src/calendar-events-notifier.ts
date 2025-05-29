@@ -2,12 +2,12 @@ import type { Schema$GoogleCalendarApiAdapter } from "./types/google-calendar-ap
 import type { Schema$LineMessagingApiClient } from "./types/line-messaging-api-adapter";
 import type { Event } from "./types/event";
 import { CalendarMessageBuilder } from "./calendar-message-builder";
-import { Config } from "./lib/config";
 
 export class CalendarEventsNotifier {
   constructor(
     private readonly googleCalendarApi: Schema$GoogleCalendarApiAdapter,
-    private readonly lineMessagingApiClient: Schema$LineMessagingApiClient
+    private readonly lineMessagingApiClient: Schema$LineMessagingApiClient,
+    private readonly lineUserId: string
   ) {}
 
   async call() {
@@ -48,8 +48,9 @@ export class CalendarEventsNotifier {
   }
 
   private notifyEvents(events: Event[]) {
-    const userId = Config.getInstance().LINE_USER_ID;
     const message = new CalendarMessageBuilder(events).build();
-    return this.lineMessagingApiClient.pushTextMessages(userId, [message]);
+    return this.lineMessagingApiClient.pushTextMessages(this.lineUserId, [
+      message,
+    ]);
   }
 }

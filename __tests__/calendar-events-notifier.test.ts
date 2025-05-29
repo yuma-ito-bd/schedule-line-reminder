@@ -11,7 +11,8 @@ describe("CalendarEventsNotifier", () => {
       const fetchEventsSpy = spyOn(googleCalendarApiMock, "fetchEvents");
       const calendarEventsNotifier = new CalendarEventsNotifier(
         googleCalendarApiMock,
-        lineMessagingApiClientMock
+        lineMessagingApiClientMock,
+        "test-user-id"
       );
       await calendarEventsNotifier.call();
       expect(fetchEventsSpy).toHaveBeenCalled();
@@ -26,7 +27,8 @@ describe("CalendarEventsNotifier", () => {
       );
       const calendarEventsNotifier = new CalendarEventsNotifier(
         googleCalendarApiMock,
-        lineMessagingApiClientMock
+        lineMessagingApiClientMock,
+        "test-user-id"
       );
       await calendarEventsNotifier.call();
       expect(pushTextMessagesSpy).toHaveBeenCalled();

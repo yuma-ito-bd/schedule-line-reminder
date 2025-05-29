@@ -26,7 +26,8 @@ export class CalendarEventsUseCase {
       const googleCalendarApi = new GoogleCalendarApiAdapter(auth);
       await new CalendarEventsNotifier(
         googleCalendarApi,
-        this.lineMessagingApiClient
+        this.lineMessagingApiClient,
+        token.userId
       ).call();
     } catch (error) {
       console.error(
