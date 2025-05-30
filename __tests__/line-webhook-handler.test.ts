@@ -1,21 +1,207 @@
-import { describe, it, expect, mock, afterEach } from "bun:test";
+import { describe, it, expect, mock, afterEach, beforeEach } from "bun:test";
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { handler } from "../src/handlers/line-webhook-handler";
+import { validateSignature } from "@line/bot-sdk";
 import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
 import { Config } from "../src/lib/config";
 import { LineMessagingApiClient } from "../src/line-messaging-api-client";
 
+// Mock @line/bot-sdk
+mock.module("@line/bot-sdk", () => ({
+  validateSignature: mock(),
+}));
+
 describe("Unit test for app handler", function () {
+  let originalConfigInstance: Config;
+  let mockConfigInstance: Partial<Config>;
+  let mockInit: ReturnType<typeof mock>;
+  let mockLineChannelSecret: string;
+
+  beforeEach(() => {
+    // Save original Config instance and methods
+    originalConfigInstance = Config.getInstance();
+    mockInit = mock().mockResolvedValue(undefined);
+    mockLineChannelSecret = "test-channel-secret";
+
+    // Create a mock config instance
+    mockConfigInstance = {
+      init: mockInit,
+      LINE_CHANNEL_SECRET: mockLineChannelSecret,
+      // Add other properties if needed by the handler during these tests
+      GOOGLE_CLIENT_ID: "test-google-client-id",
+      GOOGLE_CLIENT_SECRET: "test-google-client-secret",
+      GOOGLE_REDIRECT_URI: "test-google-redirect-uri",
+      LINE_CHANNEL_ACCESS_TOKEN: "test-line-access-token",
+    };
+
+    // Mock Config.getInstance() to return our mock instance
+    Config.getInstance = mock().mockReturnValue(mockConfigInstance as Config);
+
+    // Reset validateSignature mock for each test if it's from @line/bot-sdk
+    if ((validateSignature as any).mockReset) {
+      (validateSignature as any).mockReset();
+    }
+  });
+
   afterEach(() => {
+    // Restore original Config instance
+    Config.getInstance = mock().mockReturnValue(originalConfigInstance);
     // モックをリセット
     (LineMessagingApiClient.prototype.replyTextMessages as any).mockReset?.();
+    if ((validateSignature as any).mockReset) {
+        (validateSignature as any).mockReset();
+    }
+  });
+
+  describe("Signature Validation", () => {
+    const validBody = JSON.stringify({ events: [{ type: "message" }] });
+    const dummyEventBase: Partial<APIGatewayProxyEvent> = {
+      httpMethod: "post",
+      headers: {},
+      isBase64Encoded: false,
+      multiValueHeaders: {},
+      multiValueQueryStringParameters: {},
+      path: "/webhook",
+      pathParameters: {},
+      queryStringParameters: {},
+      requestContext: {
+        accountId: "123456789012",
+        apiId: "1234",
+        authorizer: {},
+        httpMethod: "post",
+        identity: {
+          accessKey: "",
+          accountId: "",
+          apiKey: "",
+          apiKeyId: "",
+          caller: "",
+          clientCert: {
+            clientCertPem: "",
+            issuerDN: "",
+            serialNumber: "",
+            subjectDN: "",
+            validity: { notAfter: "", notBefore: "" },
+          },
+          cognitoAuthenticationProvider: "",
+          cognitoAuthenticationType: "",
+          cognitoIdentityId: "",
+          cognitoIdentityPoolId: "",
+          principalOrgId: "",
+          sourceIp: "",
+          user: "",
+          userAgent: "",
+          userArn: "",
+        },
+        path: "/webhook",
+        protocol: "HTTP/1.1",
+        requestId: "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
+        requestTimeEpoch: 1428582896000,
+        resourceId: "123456",
+        resourcePath: "/webhook",
+        stage: "dev",
+      },
+      resource: "",
+      stageVariables: {},
+    };
+
+    it("should return 400 if x-line-signature header is missing", async () => {
+      const event: APIGatewayProxyEvent = {
+        ...dummyEventBase,
+        body: validBody,
+        headers: {}, // No signature header
+      } as APIGatewayProxyEvent;
+
+      const result = await handler(event);
+      expect(result.statusCode).toEqual(400);
+      const body = JSON.parse(result.body);
+      expect(body.message).toEqual("x-line-signature header is required");
+      expect(mockInit).toHaveBeenCalled(); // Config.init should still be called
+    });
+
+    it("should return 400 if request body is missing for signature validation", async () => {
+      const event: APIGatewayProxyEvent = {
+        ...dummyEventBase,
+        headers: { "x-line-signature": "test-signature" },
+        body: null, // Missing body
+      } as APIGatewayProxyEvent;
+
+      const result = await handler(event);
+      expect(result.statusCode).toEqual(400);
+      const body = JSON.parse(result.body);
+      expect(body.message).toEqual(
+        "Request body is required for signature validation"
+      );
+      expect(mockInit).toHaveBeenCalled();
+    });
+
+    it("should return 400 if signature validation fails", async () => {
+      (validateSignature as any).mockReturnValue(false);
+      const event: APIGatewayProxyEvent = {
+        ...dummyEventBase,
+        headers: { "x-line-signature": "invalid-signature" },
+        body: validBody,
+      } as APIGatewayProxyEvent;
+
+      const result = await handler(event);
+
+      expect(result.statusCode).toEqual(400);
+      const responseBody = JSON.parse(result.body);
+      expect(responseBody.message).toEqual("Signature validation failed");
+      expect(mockInit).toHaveBeenCalled();
+      expect(validateSignature).toHaveBeenCalledWith(
+        validBody,
+        mockLineChannelSecret,
+        "invalid-signature"
+      );
+    });
+
+    it("should proceed to normal processing if signature is valid (mocked)", async () => {
+      (validateSignature as any).mockReturnValue(true);
+      // Mock LineMessagingApiClient for this specific test to avoid errors down the line
+      const replyTextMessagesMock = mock().mockResolvedValue({});
+      (LineMessagingApiClient.prototype as any).replyTextMessages =
+        replyTextMessagesMock;
+
+      const event: APIGatewayProxyEvent = {
+        ...dummyEventBase,
+        headers: { "x-line-signature": "valid-signature" },
+        body: JSON.stringify({
+          events: [
+            {
+              type: "message",
+              message: { type: "text", text: "Hello" },
+              replyToken: "test-reply-token",
+              source: { type: "user", userId: "test-user-id" },
+              timestamp: Date.now(),
+              mode: "active",
+            },
+          ],
+        }),
+      } as APIGatewayProxyEvent;
+
+      const result = await handler(event);
+
+      // Depending on the actual use case logic after signature validation,
+      // this might be a 200 or another status.
+      // For now, let's assume it's 200 if no other error occurs.
+      expect(result.statusCode).toEqual(200);
+      expect(mockInit).toHaveBeenCalled();
+      expect(validateSignature).toHaveBeenCalledWith(
+        event.body,
+        mockLineChannelSecret,
+        "valid-signature"
+      );
+      // Further assertions would depend on the behavior of LineWebhookUseCase
+      // For example, checking if replyTextMessagesMock was called
+      expect(replyTextMessagesMock).toHaveBeenCalled();
+    });
   });
 
   // FIXME: CIではAwsParameterFetcherがエラーになるため、テストをスキップ
   it.skip("verifies successful response", async () => {
     // Configの初期化
-    const parameterFetcher = new ParameterFetcherMock();
-    await Config.getInstance().init(parameterFetcher);
+    // const parameterFetcher = new ParameterFetcherMock(); // Already part of mockConfigInstance
+    // await Config.getInstance().init(parameterFetcher); // init is mocked
 
     // replyTextMessagesメソッドを直接モック
     const replyTextMessagesMock = mock().mockResolvedValue({});
@@ -23,7 +209,7 @@ describe("Unit test for app handler", function () {
       replyTextMessagesMock;
 
     // LINE Webhookイベントのモック
-    const event: APIGatewayProxyEvent = {
+    const event: APIGatewayProxyEvent = { // This event is for the original test, ensure it uses the mocked config
       httpMethod: "post",
       body: JSON.stringify({
         events: [
