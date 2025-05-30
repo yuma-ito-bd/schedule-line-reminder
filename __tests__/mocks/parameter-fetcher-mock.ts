@@ -11,6 +11,8 @@ export class ParameterFetcherMock implements Schema$ParameterFetcher {
         return "mock-google-redirect-uri";
       case "line-channel-access-token":
         return "mock-line-channel-access-token";
+      case "line-channel-secret":
+        return "mock-line-channel-secret";
       default:
         throw new Error(`Unknown parameter name: ${name}`);
     }
