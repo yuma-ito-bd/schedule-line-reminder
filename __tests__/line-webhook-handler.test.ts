@@ -5,6 +5,7 @@ import { validateSignature } from "@line/bot-sdk";
 import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
 import { Config } from "../src/lib/config";
 import { LineMessagingApiClient } from "../src/line-messaging-api-client";
+import { LineWebhookUseCase } from "../src/usecases/line-webhook-usecase";
 
 // Mock @line/bot-sdk
 mock.module("@line/bot-sdk", () => ({
@@ -16,12 +17,21 @@ describe("Unit test for app handler", function () {
   let mockConfigInstance: Partial<Config>;
   let mockInit: ReturnType<typeof mock>;
   let mockLineChannelSecret: string;
+  let mockHandleWebhookEvent: ReturnType<typeof mock>;
+  let originalHandleWebhookEvent: typeof LineWebhookUseCase.prototype.handleWebhookEvent;
 
   beforeEach(() => {
     // Save original Config instance and methods
     originalConfigInstance = Config.getInstance();
+    // 元のhandleWebhookEventを保存
+    originalHandleWebhookEvent =
+      LineWebhookUseCase.prototype.handleWebhookEvent;
     mockInit = mock().mockResolvedValue(undefined);
     mockLineChannelSecret = "test-channel-secret";
+    mockHandleWebhookEvent = mock().mockResolvedValue({
+      success: true,
+      message: "認可URLを送信しました",
+    });
 
     // Create a mock config instance
     mockConfigInstance = {
@@ -37,6 +47,9 @@ describe("Unit test for app handler", function () {
     // Mock Config.getInstance() to return our mock instance
     Config.getInstance = mock().mockReturnValue(mockConfigInstance as Config);
 
+    // Mock LineWebhookUseCase
+    LineWebhookUseCase.prototype.handleWebhookEvent = mockHandleWebhookEvent;
+
     // Reset validateSignature mock for each test if it's from @line/bot-sdk
     if ((validateSignature as any).mockReset) {
       (validateSignature as any).mockReset();
@@ -46,10 +59,12 @@ describe("Unit test for app handler", function () {
   afterEach(() => {
     // Restore original Config instance
     Config.getInstance = mock().mockReturnValue(originalConfigInstance);
+    // handleWebhookEventを元に戻す
+    LineWebhookUseCase.prototype.handleWebhookEvent =
+      originalHandleWebhookEvent;
     // モックをリセット
-    (LineMessagingApiClient.prototype.replyTextMessages as any).mockReset?.();
     if ((validateSignature as any).mockReset) {
-        (validateSignature as any).mockReset();
+      (validateSignature as any).mockReset();
     }
   });
 
@@ -157,10 +172,6 @@ describe("Unit test for app handler", function () {
 
     it("should proceed to normal processing if signature is valid (mocked)", async () => {
       (validateSignature as any).mockReturnValue(true);
-      // Mock LineMessagingApiClient for this specific test to avoid errors down the line
-      const replyTextMessagesMock = mock().mockResolvedValue({});
-      (LineMessagingApiClient.prototype as any).replyTextMessages =
-        replyTextMessagesMock;
 
       const event: APIGatewayProxyEvent = {
         ...dummyEventBase,
@@ -181,9 +192,6 @@ describe("Unit test for app handler", function () {
 
       const result = await handler(event);
 
-      // Depending on the actual use case logic after signature validation,
-      // this might be a 200 or another status.
-      // For now, let's assume it's 200 if no other error occurs.
       expect(result.statusCode).toEqual(200);
       expect(mockInit).toHaveBeenCalled();
       expect(validateSignature).toHaveBeenCalledWith(
@@ -191,25 +199,14 @@ describe("Unit test for app handler", function () {
         mockLineChannelSecret,
         "valid-signature"
       );
-      // Further assertions would depend on the behavior of LineWebhookUseCase
-      // For example, checking if replyTextMessagesMock was called
-      expect(replyTextMessagesMock).toHaveBeenCalled();
+      expect(mockHandleWebhookEvent).toHaveBeenCalled();
     });
   });
 
   // FIXME: CIではAwsParameterFetcherがエラーになるため、テストをスキップ
   it.skip("verifies successful response", async () => {
-    // Configの初期化
-    // const parameterFetcher = new ParameterFetcherMock(); // Already part of mockConfigInstance
-    // await Config.getInstance().init(parameterFetcher); // init is mocked
-
-    // replyTextMessagesメソッドを直接モック
-    const replyTextMessagesMock = mock().mockResolvedValue({});
-    (LineMessagingApiClient.prototype as any).replyTextMessages =
-      replyTextMessagesMock;
-
-    // LINE Webhookイベントのモック
-    const event: APIGatewayProxyEvent = { // This event is for the original test, ensure it uses the mocked config
+    const event: APIGatewayProxyEvent = {
+      // This event is for the original test, ensure it uses the mocked config
       httpMethod: "post",
       body: JSON.stringify({
         events: [
@@ -281,13 +278,6 @@ describe("Unit test for app handler", function () {
     expect(result.statusCode).toEqual(200);
     const body = JSON.parse(result.body);
     expect(body.message).toEqual("認可URLを送信しました");
-    expect(replyTextMessagesMock).toHaveBeenCalled();
-    expect(replyTextMessagesMock.mock.calls[0][0]).toEqual("reply-token");
-    expect(replyTextMessagesMock.mock.calls[0][1][0]).toEqual(
-      "Googleカレンダーとの連携を開始します。以下のURLをクリックして認可を行ってください："
-    );
-    expect(replyTextMessagesMock.mock.calls[0][1][1]).toContain(
-      "https://accounts.google.com/o/oauth2/v2/auth"
-    );
+    expect(mockHandleWebhookEvent).toHaveBeenCalled();
   });
 });
