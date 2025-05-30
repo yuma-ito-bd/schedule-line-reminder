@@ -1,4 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { validateSignature } from "@line/bot-sdk";
 import { LineWebhookUseCase } from "../usecases/line-webhook-usecase";
 import { LineMessagingApiClient } from "../line-messaging-api-client";
 import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
@@ -25,10 +26,25 @@ export const handler = async (
     console.debug({ fetcher });
     await Config.getInstance().init(fetcher);
 
-    // リクエストボディの検証
+    // Signature validation
+    const signature =
+      event.headers["x-line-signature"] || event.headers["X-Line-Signature"]; // Header names can be case-insensitive
+    if (!signature) {
+      console.warn("x-line-signature header is missing");
+      return responseBuilder.clientError("x-line-signature header is required");
+    }
+
+    const channelSecret = Config.getInstance().LINE_CHANNEL_SECRET;
     if (!event.body) {
-      console.warn("Request body is empty");
-      return responseBuilder.clientError("Request body is required");
+      // event.body is used by validateSignature
+      console.warn("Request body is empty, cannot validate signature");
+      return responseBuilder.clientError(
+        "Request body is required for signature validation"
+      );
+    }
+    if (!validateSignature(event.body, channelSecret, signature)) {
+      console.warn("Signature validation failed");
+      return responseBuilder.clientError("Signature validation failed");
     }
 
     // LINE Messaging APIのイベントをパース
