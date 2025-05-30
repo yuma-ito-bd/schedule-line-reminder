@@ -203,8 +203,8 @@ describe("Unit test for app handler", function () {
     });
   });
 
-  // FIXME: CIではAwsParameterFetcherがエラーになるため、テストをスキップ
-  it.skip("verifies successful response", async () => {
+  it("verifies successful response", async () => {
+    (validateSignature as any).mockReturnValue(true);
     const event: APIGatewayProxyEvent = {
       // This event is for the original test, ensure it uses the mocked config
       httpMethod: "post",
@@ -226,7 +226,7 @@ describe("Unit test for app handler", function () {
           },
         ],
       }),
-      headers: {},
+      headers: { "x-line-signature": "valid-signature" },
       isBase64Encoded: false,
       multiValueHeaders: {},
       multiValueQueryStringParameters: {},
