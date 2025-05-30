@@ -1,4 +1,7 @@
-import type { Schema$GoogleCalendarApiAdapter } from "./types/google-calendar-api-adapter";
+import type {
+  Schema$GoogleCalendarApiAdapter,
+  Schema$CalendarEvent,
+} from "./types/google-calendar-api-adapter";
 import type { Schema$LineMessagingApiClient } from "./types/line-messaging-api-adapter";
 import type { Event } from "./types/event";
 import { CalendarMessageBuilder } from "./calendar-message-builder";
@@ -36,13 +39,14 @@ export class CalendarEventsNotifier {
 
     const eventSummaries = events.map((event) => {
       const summary = event.summary || "タイトルなし";
-      const startDateTime = event.start?.dateTime
-        ? new Date(event.start.dateTime)
-        : null;
-      const endDateTime = event.end?.dateTime
-        ? new Date(event.end.dateTime)
-        : null;
-      return { summary, startDateTime, endDateTime };
+      const isAllDay = this.isAllDay(event);
+      const startDateTime = isAllDay
+        ? this.convertToDate(event.start?.date)
+        : this.convertToDate(event.start?.dateTime);
+      const endDateTime = isAllDay
+        ? this.convertToDate(event.end?.date)
+        : this.convertToDate(event.end?.dateTime);
+      return { summary, startDateTime, endDateTime, isAllDay };
     });
     return eventSummaries;
   }
@@ -52,5 +56,17 @@ export class CalendarEventsNotifier {
     return this.lineMessagingApiClient.pushTextMessages(this.lineUserId, [
       message,
     ]);
+  }
+
+  private isAllDay(event: Schema$CalendarEvent): boolean {
+    // 終日の予定は start.date のみ存在する
+    return !event.start?.dateTime && !!event.start?.date;
+  }
+
+  private convertToDate(date: string | null | undefined): Date | null {
+    if (!date) {
+      return null;
+    }
+    return new Date(date);
   }
 }
