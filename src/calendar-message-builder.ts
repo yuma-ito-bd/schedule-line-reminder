@@ -68,6 +68,9 @@ export class CalendarMessageBuilder {
   }
 
   private formatEvent(event: Event): string {
+    if (event.isAllDay) {
+      return `終日: ${event.summary}`;
+    }
     const eventStartTime = event.startDateTime
       ? DateFormatter.jstHm(event.startDateTime)
       : "";
