@@ -1,6 +1,7 @@
 import { auth } from "@googleapis/calendar";
 import { OAuth2Client } from "google-auth-library";
 import { Config } from "./config";
+import { TokenRepository } from "../lib/token-repository";
 import type {
   Schema$GoogleAuth,
   Schema$GoogleAuthToken,
@@ -19,13 +20,39 @@ export class GoogleAuthAdapter implements Schema$GoogleAuth {
     "https://www.googleapis.com/auth/calendar.events.readonly", // カレンダーイベントの読み取り
   ];
 
-  constructor() {
+  constructor(
+    private readonly userId: string,
+    private readonly tokenRepository: TokenRepository
+  ) {
     const config = Config.getInstance();
     this.oauth2Client = new auth.OAuth2(
       config.GOOGLE_CLIENT_ID,
       config.GOOGLE_CLIENT_SECRET,
       config.GOOGLE_REDIRECT_URI
     );
+
+    this.oauth2Client.on('tokens', (tokens) => {
+      if (!this.tokenRepository || !this.userId) {
+        // This check might be redundant if userId and tokenRepository are guaranteed by constructor
+        // but can be kept for safety or if they could be unset by other means.
+        console.error("TokenRepository or UserId not set, cannot update tokens.");
+        return;
+      }
+      const tokenToUpdate: { userId: string; accessToken: string; refreshToken?: string } = {
+        userId: this.userId,
+        accessToken: tokens.access_token,
+      };
+      if (tokens.refresh_token) {
+        tokenToUpdate.refreshToken = tokens.refresh_token;
+      }
+      this.tokenRepository.updateToken(tokenToUpdate)
+        .then(() => {
+          console.log('Tokens updated successfully for user:', this.userId);
+        })
+        .catch((error) => {
+          console.error('Failed to update tokens for user:', this.userId, error);
+        });
+    });
   }
 
   /**

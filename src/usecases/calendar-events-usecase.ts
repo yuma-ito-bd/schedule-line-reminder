@@ -18,7 +18,7 @@ export class CalendarEventsUseCase {
 
   private async processUserToken(token: Token): Promise<void> {
     try {
-      const auth = new GoogleAuthAdapter();
+      const auth = new GoogleAuthAdapter(token.userId, this.tokenRepository);
       auth.setTokens({
         accessToken: token.accessToken,
         refreshToken: token.refreshToken,
