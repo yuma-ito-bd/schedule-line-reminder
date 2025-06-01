@@ -98,10 +98,10 @@ export class GoogleAuthAdapter implements Schema$GoogleAuth {
     onTokensUpdated: (tokens: Schema$GoogleAuthToken) => void
   ): void {
     this.oauth2Client.on("tokens", (tokens) => {
-      if (tokens.access_token) {
+      if (tokens.access_token && tokens.refresh_token) {
         onTokensUpdated({
           accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token || "",
+          refreshToken: tokens.refresh_token,
         });
       }
     });
