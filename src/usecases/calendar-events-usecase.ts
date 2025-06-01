@@ -23,6 +23,16 @@ export class CalendarEventsUseCase {
         accessToken: token.accessToken,
         refreshToken: token.refreshToken,
       });
+
+      // トークン更新イベントリスナーを設定
+      auth.setTokensUpdatedListener(async (newTokens) => {
+        await this.tokenRepository.updateToken({
+          userId: token.userId,
+          accessToken: newTokens.accessToken,
+          refreshToken: newTokens.refreshToken,
+        });
+      });
+
       const googleCalendarApi = new GoogleCalendarApiAdapter(auth);
       await new CalendarEventsNotifier(
         googleCalendarApi,

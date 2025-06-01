@@ -89,4 +89,21 @@ export class GoogleAuthAdapter implements Schema$GoogleAuth {
       refreshToken: tokens.refresh_token,
     };
   }
+
+  /**
+   * トークン更新イベントリスナーを設定する
+   * @param onTokensUpdated トークン更新時のコールバック関数
+   */
+  setTokensUpdatedListener(
+    onTokensUpdated: (tokens: Schema$GoogleAuthToken) => void
+  ): void {
+    this.oauth2Client.on("tokens", (tokens) => {
+      if (tokens.access_token) {
+        onTokensUpdated({
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token || "",
+        });
+      }
+    });
+  }
 }
