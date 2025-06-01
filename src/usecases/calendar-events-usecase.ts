@@ -26,11 +26,18 @@ export class CalendarEventsUseCase {
 
       // トークン更新イベントリスナーを設定
       auth.setTokensUpdatedListener(async (newTokens) => {
-        await this.tokenRepository.updateToken({
-          userId: token.userId,
-          accessToken: newTokens.accessToken,
-          refreshToken: newTokens.refreshToken,
-        });
+        try {
+          await this.tokenRepository.updateToken({
+            userId: token.userId,
+            accessToken: newTokens.accessToken,
+            refreshToken: newTokens.refreshToken,
+          });
+        } catch (error) {
+          console.error(
+            `Failed to update token for user ${token.userId}:`,
+            error
+          );
+        }
       });
 
       const googleCalendarApi = new GoogleCalendarApiAdapter(auth);
