@@ -1,4 +1,4 @@
-import { describe, it, expect, mock } from "bun:test";
+import { describe, it, expect, mock, spyOn } from "bun:test";
 import { GoogleAuthAdapter } from "../src/lib/google-auth-adapter";
 import { Config } from "../src/lib/config";
 import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
@@ -43,9 +43,8 @@ describe("GoogleAuthAdapter", () => {
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
       const googleAuth = new GoogleAuthAdapter();
-      const authClient = googleAuth.getAuthClient();
-
-      expect(authClient).toBeInstanceOf(OAuth2Client);
+      const client = googleAuth.getAuthClient();
+      expect(client).toBeInstanceOf(OAuth2Client);
     });
   });
 
@@ -55,23 +54,17 @@ describe("GoogleAuthAdapter", () => {
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
       const googleAuth = new GoogleAuthAdapter();
-      const authClient = googleAuth.getAuthClient();
+      const client = googleAuth.getAuthClient();
+      const setCredentialsSpy = spyOn(client, "setCredentials");
 
-      // OAuth2ClientのsetCredentialsをモック
-      const setCredentialsMock = mock(() => {});
-      authClient.setCredentials = setCredentialsMock;
-
-      // トークンをセット
-      const token = {
+      googleAuth.setTokens({
         accessToken: "test-access-token",
         refreshToken: "test-refresh-token",
-      };
-      googleAuth.setTokens(token);
+      });
 
-      // setCredentialsが正しい引数で呼ばれたことを確認
-      expect(setCredentialsMock).toHaveBeenCalledWith({
-        access_token: token.accessToken,
-        refresh_token: token.refreshToken,
+      expect(setCredentialsSpy).toHaveBeenCalledWith({
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
       });
     });
   });
@@ -82,31 +75,36 @@ describe("GoogleAuthAdapter", () => {
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
       const googleAuth = new GoogleAuthAdapter();
-      const authClient = googleAuth.getAuthClient();
+      const client = googleAuth.getAuthClient();
+      const getTokenSpy = spyOn(client, "getToken");
+      getTokenSpy.mockImplementation(() =>
+        Promise.resolve({
+          tokens: {
+            access_token: "test-access-token",
+            refresh_token: "test-refresh-token",
+          },
+          res: {
+            data: {
+              access_token: "test-access-token",
+              refresh_token: "test-refresh-token",
+            },
+            config: {},
+            status: 200,
+            statusText: "OK",
+            headers: {},
+            request: {
+              responseURL: "https://oauth2.googleapis.com/token",
+            },
+          },
+        })
+      );
 
-      // OAuth2ClientのgetTokenをモック
-      const mockTokens = {
-        access_token: "test-access-token",
-        refresh_token: "test-refresh-token",
-      };
-      const mockResponse = {
-        tokens: mockTokens,
-        res: {} as any,
-      };
-      const getTokenMock = mock(() => Promise.resolve(mockResponse));
-      authClient.getToken = getTokenMock;
+      const tokens = await googleAuth.getTokensFromCode("test-code");
 
-      // 認可コードからトークンを取得
-      const code = "test-auth-code";
-      const tokens = await googleAuth.getTokensFromCode(code);
-
-      // getTokenが正しい引数で呼ばれたことを確認
-      expect(getTokenMock).toHaveBeenCalledWith(code);
-
-      // 返却されたトークンが正しいことを確認
+      expect(getTokenSpy).toHaveBeenCalledWith("test-code");
       expect(tokens).toEqual({
-        accessToken: mockTokens.access_token,
-        refreshToken: mockTokens.refresh_token,
+        accessToken: "test-access-token",
+        refreshToken: "test-refresh-token",
       });
     });
 
@@ -115,21 +113,79 @@ describe("GoogleAuthAdapter", () => {
       const parameterFetcher = new ParameterFetcherMock();
       await Config.getInstance().init(parameterFetcher);
       const googleAuth = new GoogleAuthAdapter();
-      const authClient = googleAuth.getAuthClient();
+      const client = googleAuth.getAuthClient();
+      const getTokenSpy = spyOn(client, "getToken");
+      getTokenSpy.mockImplementation(() =>
+        Promise.resolve({
+          tokens: {
+            access_token: null,
+            refresh_token: null,
+          },
+          res: {
+            data: {
+              access_token: null,
+              refresh_token: null,
+            },
+            config: {},
+            status: 200,
+            statusText: "OK",
+            headers: {},
+            request: {
+              responseURL: "https://oauth2.googleapis.com/token",
+            },
+          },
+        })
+      );
 
-      // OAuth2ClientのgetTokenをモック（トークンなし）
-      const mockResponse = {
-        tokens: {},
-        res: {} as any,
-      };
-      const getTokenMock = mock(() => Promise.resolve(mockResponse));
-      authClient.getToken = getTokenMock;
-
-      // 認可コードからトークンを取得（エラーが発生することを期待）
-      const code = "test-auth-code";
-      expect(googleAuth.getTokensFromCode(code)).rejects.toThrow(
+      await expect(googleAuth.getTokensFromCode("test-code")).rejects.toThrow(
         "Failed to get tokens from authorization code"
       );
+    });
+  });
+
+  describe("setTokensUpdatedListener", () => {
+    it("アクセストークンとリフレッシュトークンが両方存在する場合のみコールバックが呼ばれること", async () => {
+      // モックの設定値をConfigに設定
+      const parameterFetcher = new ParameterFetcherMock();
+      await Config.getInstance().init(parameterFetcher);
+      const googleAuth = new GoogleAuthAdapter();
+      const client = googleAuth.getAuthClient();
+      const onTokensSpy = spyOn(client, "on");
+      const onTokensUpdated = mock(() => {});
+
+      googleAuth.setTokensUpdatedListener(onTokensUpdated);
+
+      // イベントリスナーが設定されたことを確認
+      expect(onTokensSpy).toHaveBeenCalledWith("tokens", expect.any(Function));
+
+      // イベントリスナーのコールバック関数を取得
+      const tokensCallback = onTokensSpy.mock.calls[0][1];
+
+      // アクセストークンとリフレッシュトークンが両方存在する場合
+      tokensCallback({
+        access_token: "new-access-token",
+        refresh_token: "new-refresh-token",
+      });
+      expect(onTokensUpdated).toHaveBeenCalledWith({
+        accessToken: "new-access-token",
+        refreshToken: "new-refresh-token",
+      });
+
+      // アクセストークンのみ存在する場合
+      onTokensUpdated.mockClear();
+      tokensCallback({
+        access_token: "new-access-token",
+        refresh_token: null,
+      });
+      expect(onTokensUpdated).not.toHaveBeenCalled();
+
+      // リフレッシュトークンのみ存在する場合
+      onTokensUpdated.mockClear();
+      tokensCallback({
+        access_token: null,
+        refresh_token: "new-refresh-token",
+      });
+      expect(onTokensUpdated).not.toHaveBeenCalled();
     });
   });
 });

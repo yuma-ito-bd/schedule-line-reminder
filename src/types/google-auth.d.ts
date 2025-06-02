@@ -28,6 +28,14 @@ export type Schema$GoogleAuth = {
    * @returns アクセストークンとリフレッシュトークン
    */
   getTokensFromCode(code: string): Promise<Schema$GoogleAuthToken>;
+
+  /**
+   * トークン更新イベントリスナーを設定する
+   * @param onTokensUpdated トークン更新時のコールバック関数
+   */
+  setTokensUpdatedListener(
+    onTokensUpdated: (tokens: Schema$GoogleAuthToken) => void
+  ): void;
 };
 
 export type Schema$GoogleAuthToken = {

@@ -33,4 +33,10 @@ export class MockGoogleAuth implements Schema$GoogleAuth {
       refreshToken: "mock-refresh-token",
     };
   }
+
+  setTokensUpdatedListener(
+    onTokensUpdated: (tokens: Schema$GoogleAuthToken) => void
+  ): void {
+    // モックなので何もしない
+  }
 }
