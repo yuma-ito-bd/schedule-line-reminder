@@ -49,7 +49,7 @@ export class CalendarMessageBuilder {
     const dateKeys = this.buildDateKeys();
     const dateEventTexts = dateKeys.map((dateKey) => {
       const events = dateEventDescription[dateKey] ?? ["予定なし"];
-      return [dateKey, ...events].join("\n");
+      return [`📅 ${dateKey}`, ...events].join("\n");
     });
     const bodyText = dateEventTexts.join("\n\n"); // 日付の間は空行を入れる
     return bodyText;
