@@ -7,6 +7,7 @@ import type { LineWebhookEvent } from "../types/line-webhook-event";
 import { Config } from "../lib/config";
 import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import { OAuthStateRepository } from "../lib/oauth-state-repository";
+import { TokenRepository } from "../lib/token-repository";
 import { ApiResponseBuilder } from "../lib/api-response-builder";
 
 /**
@@ -61,10 +62,12 @@ export const handler = async (
     const lineClient = new LineMessagingApiClient();
     const googleAuth = new GoogleAuthAdapter();
     const stateRepository = new OAuthStateRepository();
+    const tokenRepository = new TokenRepository();
     const webhookUseCase = new LineWebhookUseCase(
       lineClient,
       googleAuth,
-      stateRepository
+      stateRepository,
+      tokenRepository
     );
 
     // Webhookイベントの処理

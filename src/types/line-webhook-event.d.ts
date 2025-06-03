@@ -2,8 +2,10 @@
  * LINE Messaging APIから受け取るWebhookイベントの型定義
  * 参考: https://developers.line.biz/ja/reference/messaging-api/#webhook-event-objects
  */
-export type LineWebhookEvent = {
-  /** イベントの種類。テキストメッセージの場合は "message" */
+
+/** メッセージイベントの型定義 */
+type MessageEvent = {
+  /** イベントの種類 */
   type: "message";
   /** メッセージの内容 */
   message: {
@@ -26,3 +28,23 @@ export type LineWebhookEvent = {
   /** チャネルの状態。通常は "active" */
   mode: "active";
 };
+
+/** 友だち解除イベントの型定義 */
+type UnfollowEvent = {
+  /** イベントの種類 */
+  type: "unfollow";
+  /** イベントの送信元情報 */
+  source: {
+    /** 送信元の種類。ユーザーからのメッセージの場合は "user" */
+    type: "user";
+    /** 送信元のユーザーID */
+    userId: string;
+  };
+  /** イベントの発生時刻（UNIX時間） */
+  timestamp: number;
+  /** チャネルの状態。通常は "active" */
+  mode: "active";
+};
+
+/** LINE Messaging APIから受け取るWebhookイベントの型定義 */
+export type LineWebhookEvent = MessageEvent | UnfollowEvent;
