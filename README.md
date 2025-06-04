@@ -1,4 +1,4 @@
-# schedule-line-reminder
+# スケジュール予報 (schedule-line-reminder)
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/yuma-ito-bd/schedule-line-reminder)
 
@@ -21,7 +21,6 @@ Googleカレンダーに登録している1週間分の予定をLINEに通知し
 
 - グループトーク内での通知
 - デフォルトカレンダー以外のカレンダーの予定を通知する
-- 時間指定がない終日の予定の通知
 
 # 開発方法
 
