@@ -189,14 +189,8 @@ Resources:
               AlarmMetrics:
                 - MetricName: SystemErrors
                   AlarmThreshold: 1
-                - MetricName: ThrottledRequests
-                  AlarmThreshold: 1
                 - MetricName: UserErrors
                   AlarmThreshold: 1
-              Logs:
-                - LogGroupName: !Sub /aws/dynamodb/${AWS::StackName}-oauth-state
-                  LogPath: /aws/dynamodb
-                  LogType: DYNAMODB
         - ComponentName: !Sub ${AWS::StackName}-oauth-tokens
           ComponentARN: !GetAtt OAuthTokensTable.Arn
           Tier: CUSTOM
@@ -205,14 +199,8 @@ Resources:
               AlarmMetrics:
                 - MetricName: SystemErrors
                   AlarmThreshold: 1
-                - MetricName: ThrottledRequests
-                  AlarmThreshold: 1
                 - MetricName: UserErrors
                   AlarmThreshold: 1
-              Logs:
-                - LogGroupName: !Sub /aws/dynamodb/${AWS::StackName}-oauth-tokens
-                  LogPath: /aws/dynamodb
-                  LogType: DYNAMODB
   # OAuth stateパラメータを管理するDynamoDBテーブル
   # stateパラメータを一時的に保存し、TTLで自動的に削除される
   OAuthStateTable:
