@@ -203,6 +203,16 @@ Resources:
                   EvaluationPeriods: 2
                   Period: 300
                   Statistic: Sum
+        - ComponentName: !Sub ${AWS::StackName}-application
+          Tier: CUSTOM
+          CustomComponentConfiguration:
+            ConfigurationDetails:
+              AlarmMetrics:
+                - MetricName: UserErrors
+                  AlarmThreshold: 1
+                  EvaluationPeriods: 2
+                  Period: 300
+                  Statistic: Sum
   # OAuth stateパラメータを管理するDynamoDBテーブル
   # stateパラメータを一時的に保存し、TTLで自動的に削除される
   OAuthStateTable:
