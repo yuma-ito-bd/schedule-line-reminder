@@ -189,6 +189,9 @@ Resources:
               AlarmMetrics:
                 - MetricName: SystemErrors
                   AlarmThreshold: 1
+                  EvaluationPeriods: 2
+                  Period: 300
+                  Statistic: Sum
                 - MetricName: UserErrors
                   AlarmThreshold: 1
         - ComponentName: !Sub ${AWS::StackName}-oauth-tokens
@@ -199,6 +202,9 @@ Resources:
               AlarmMetrics:
                 - MetricName: SystemErrors
                   AlarmThreshold: 1
+                  EvaluationPeriods: 2
+                  Period: 300
+                  Statistic: Sum
                 - MetricName: UserErrors
                   AlarmThreshold: 1
   # OAuth stateパラメータを管理するDynamoDBテーブル
