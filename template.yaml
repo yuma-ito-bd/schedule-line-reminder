@@ -192,8 +192,6 @@ Resources:
                   EvaluationPeriods: 2
                   Period: 300
                   Statistic: Sum
-                - MetricName: UserErrors
-                  AlarmThreshold: 1
         - ComponentName: !Sub ${AWS::StackName}-oauth-tokens
           ComponentARN: !GetAtt OAuthTokensTable.Arn
           Tier: CUSTOM
@@ -205,8 +203,6 @@ Resources:
                   EvaluationPeriods: 2
                   Period: 300
                   Statistic: Sum
-                - MetricName: UserErrors
-                  AlarmThreshold: 1
   # OAuth stateパラメータを管理するDynamoDBテーブル
   # stateパラメータを一時的に保存し、TTLで自動的に削除される
   OAuthStateTable:
