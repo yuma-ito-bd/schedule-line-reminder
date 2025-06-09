@@ -181,38 +181,20 @@ Resources:
         Ref: ApplicationResourceGroup
       AutoConfigurationEnabled: "true"
       ComponentMonitoringSettings:
-        - ComponentName: !Sub ${AWS::StackName}-oauth-state
-          ComponentARN: !GetAtt OAuthStateTable.Arn
+        - ComponentARN: !GetAtt OAuthStateTable.Arn
           Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
           CustomComponentConfiguration:
             ConfigurationDetails:
               AlarmMetrics:
-                - MetricName: SystemErrors
-                  AlarmThreshold: 1
-                  EvaluationPeriods: 2
-                  Period: 300
-                  Statistic: Sum
-        - ComponentName: !Sub ${AWS::StackName}-oauth-tokens
-          ComponentARN: !GetAtt OAuthTokensTable.Arn
+                - AlarmMetricName: SystemErrors
+        - ComponentARN: !GetAtt OAuthTokensTable.Arn
           Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
           CustomComponentConfiguration:
             ConfigurationDetails:
               AlarmMetrics:
-                - MetricName: SystemErrors
-                  AlarmThreshold: 1
-                  EvaluationPeriods: 2
-                  Period: 300
-                  Statistic: Sum
-        - ComponentName: !Sub ${AWS::StackName}-application
-          Tier: CUSTOM
-          CustomComponentConfiguration:
-            ConfigurationDetails:
-              AlarmMetrics:
-                - MetricName: UserErrors
-                  AlarmThreshold: 1
-                  EvaluationPeriods: 2
-                  Period: 300
-                  Statistic: Sum
+                - AlarmMetricName: SystemErrors
   # OAuth stateパラメータを管理するDynamoDBテーブル
   # stateパラメータを一時的に保存し、TTLで自動的に削除される
   OAuthStateTable:
