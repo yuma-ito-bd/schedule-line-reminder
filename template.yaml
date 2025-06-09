@@ -181,6 +181,30 @@ Resources:
         Ref: ApplicationResourceGroup
       AutoConfigurationEnabled: "true"
       ComponentMonitoringSettings:
+        - ComponentARN: !GetAtt CalendarEventsNotifier.Arn
+          Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
+          CustomComponentConfiguration:
+            ConfigurationDetails:
+              AlarmMetrics:
+                - AlarmMetricName: Errors
+                - AlarmMetricName: Duration
+        - ComponentARN: !GetAtt WebhookFunction.Arn
+          Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
+          CustomComponentConfiguration:
+            ConfigurationDetails:
+              AlarmMetrics:
+                - AlarmMetricName: Errors
+                - AlarmMetricName: Duration
+        - ComponentARN: !GetAtt OAuthCallbackFunction.Arn
+          Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
+          CustomComponentConfiguration:
+            ConfigurationDetails:
+              AlarmMetrics:
+                - AlarmMetricName: Errors
+                - AlarmMetricName: Duration
         - ComponentARN: !GetAtt OAuthStateTable.Arn
           Tier: CUSTOM
           ComponentConfigurationMode: CUSTOM
