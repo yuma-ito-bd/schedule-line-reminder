@@ -180,6 +180,45 @@ Resources:
       ResourceGroupName:
         Ref: ApplicationResourceGroup
       AutoConfigurationEnabled: "true"
+      ComponentMonitoringSettings:
+        - ComponentARN: !GetAtt CalendarEventsNotifier.Arn
+          Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
+          CustomComponentConfiguration:
+            ConfigurationDetails:
+              AlarmMetrics:
+                - AlarmMetricName: Errors
+                - AlarmMetricName: Duration
+        - ComponentARN: !GetAtt WebhookFunction.Arn
+          Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
+          CustomComponentConfiguration:
+            ConfigurationDetails:
+              AlarmMetrics:
+                - AlarmMetricName: Errors
+                - AlarmMetricName: Duration
+        - ComponentARN: !GetAtt OAuthCallbackFunction.Arn
+          Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
+          CustomComponentConfiguration:
+            ConfigurationDetails:
+              AlarmMetrics:
+                - AlarmMetricName: Errors
+                - AlarmMetricName: Duration
+        - ComponentARN: !GetAtt OAuthStateTable.Arn
+          Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
+          CustomComponentConfiguration:
+            ConfigurationDetails:
+              AlarmMetrics:
+                - AlarmMetricName: SystemErrors
+        - ComponentARN: !GetAtt OAuthTokensTable.Arn
+          Tier: CUSTOM
+          ComponentConfigurationMode: CUSTOM
+          CustomComponentConfiguration:
+            ConfigurationDetails:
+              AlarmMetrics:
+                - AlarmMetricName: SystemErrors
   # OAuth stateパラメータを管理するDynamoDBテーブル
   # stateパラメータを一時的に保存し、TTLで自動的に削除される
   OAuthStateTable:
