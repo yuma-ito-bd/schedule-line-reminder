@@ -1,4 +1,6 @@
+import { ParameterFetcherMock } from "../../__tests__/mocks/parameter-fetcher-mock";
 import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
+import { AwsParameterFetcher } from "./aws-parameter-fetcher";
 
 export class Config {
   private paramsFetcher!: Schema$ParameterFetcher;
@@ -23,8 +25,15 @@ export class Config {
    * 初期化処理
    * 値を取得する前に必ず呼び出すこと
    */
-  async init(paramsFetcher: Schema$ParameterFetcher) {
-    this.paramsFetcher = paramsFetcher;
+  async init(paramsFetcher?: Schema$ParameterFetcher) {
+    if (paramsFetcher) {
+      this.paramsFetcher = paramsFetcher;
+    } else {
+      this.paramsFetcher =
+        process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
+          ? new ParameterFetcherMock()
+          : new AwsParameterFetcher();
+    }
 
     const [
       google_client_id,

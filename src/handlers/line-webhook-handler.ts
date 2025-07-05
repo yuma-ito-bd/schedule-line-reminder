@@ -5,7 +5,6 @@ import { LineMessagingApiClient } from "../line-messaging-api-client";
 import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
 import type { LineWebhookEvent } from "../types/line-webhook-event";
 import { Config } from "../lib/config";
-import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import { OAuthStateRepository } from "../lib/oauth-state-repository";
 import { TokenRepository } from "../lib/token-repository";
 import { ApiResponseBuilder } from "../lib/api-response-builder";
@@ -23,9 +22,7 @@ export const handler = async (
     console.debug({ event });
 
     // Configの初期化（環境変数やパラメータストアから設定値を取得）
-    const fetcher = new AwsParameterFetcher();
-    console.debug({ fetcher });
-    await Config.getInstance().init(fetcher);
+    await Config.getInstance().init();
 
     // Signature validation
     const signature =
