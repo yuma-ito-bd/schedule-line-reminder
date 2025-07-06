@@ -1,7 +1,7 @@
 import { describe, it, expect, mock, spyOn } from "bun:test";
 import { GoogleAuthAdapter } from "../src/lib/google-auth-adapter";
 import { Config } from "../src/lib/config";
-import { ParameterFetcherMock } from "./mocks/parameter-fetcher-mock";
+import { ParameterFetcherMock } from "../src/lib/parameter-fetcher-mock";
 import { OAuth2Client } from "google-auth-library";
 
 /**

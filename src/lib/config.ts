@@ -1,4 +1,6 @@
+import { ParameterFetcherMock } from "./parameter-fetcher-mock";
 import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
+import { AwsParameterFetcher } from "./aws-parameter-fetcher";
 
 export class Config {
   private paramsFetcher!: Schema$ParameterFetcher;
@@ -23,8 +25,15 @@ export class Config {
    * 初期化処理
    * 値を取得する前に必ず呼び出すこと
    */
-  async init(paramsFetcher: Schema$ParameterFetcher) {
-    this.paramsFetcher = paramsFetcher;
+  async init(paramsFetcher?: Schema$ParameterFetcher) {
+    if (paramsFetcher) {
+      this.paramsFetcher = paramsFetcher;
+    } else {
+      this.paramsFetcher =
+        process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
+          ? new ParameterFetcherMock()
+          : new AwsParameterFetcher();
+    }
 
     const [
       google_client_id,
@@ -45,6 +54,7 @@ export class Config {
     this.GOOGLE_REDIRECT_URI = google_redirect_uri;
     this.LINE_CHANNEL_ACCESS_TOKEN = line_channel_access_token;
     this.LINE_CHANNEL_SECRET = line_channel_secret;
+    this.logInitialization();
   }
 
   private async envOrParameter(name: string): Promise<string> {
@@ -55,5 +65,13 @@ export class Config {
     }
 
     return this.paramsFetcher.call(name);
+  }
+
+  /**
+   * 設定初期化時のログ出力（ParameterFetcherのクラス名付き）
+   */
+  private logInitialization() {
+    const fetcherClass = this.paramsFetcher.constructor?.name || typeof this.paramsFetcher;
+    console.info(`Configuration initialized. ParameterFetcher: ${fetcherClass}`);
   }
 }
