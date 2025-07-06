@@ -1,4 +1,4 @@
-import type { Schema$ParameterFetcher } from "../../src/types/lib/parameter-fetcher";
+import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
 
 export class ParameterFetcherMock implements Schema$ParameterFetcher {
   call = async (name: string): Promise<string> => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, mock } from "bun:test";
 import { Config } from "../../src/lib/config";
-import { ParameterFetcherMock } from "../mocks/parameter-fetcher-mock";
+import { ParameterFetcherMock } from "../../src/lib/parameter-fetcher-mock";
 
 describe("Config", () => {
   it("シングルトンであること", () => {

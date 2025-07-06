@@ -1,4 +1,4 @@
-import { ParameterFetcherMock } from "../../__tests__/mocks/parameter-fetcher-mock";
+import { ParameterFetcherMock } from "./parameter-fetcher-mock";
 import type { Schema$ParameterFetcher } from "../types/lib/parameter-fetcher";
 import { AwsParameterFetcher } from "./aws-parameter-fetcher";
 
