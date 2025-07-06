@@ -33,8 +33,7 @@ describe("LineMessagingApiClient", () => {
   });
 
   describe("replyTextMessages", () => {
-    // FIXME: Bunのモックの仕様上、他のテストの影響を受けるため、テストをスキップ
-    it.skip("正しくメッセージを返信できること", async () => {
+    it("正しくメッセージを返信できること", async () => {
       const lineMessagingApiClient = new LineMessagingApiClient();
       const replyMessageMock = mock().mockResolvedValue({});
       const lineClientMock = {

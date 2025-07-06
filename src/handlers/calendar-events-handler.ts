@@ -2,19 +2,17 @@ import { ApiResponseBuilder } from "../lib/api-response-builder";
 import type { APIGatewayProxyResult } from "aws-lambda";
 import { CalendarEventsUseCase } from "../usecases/calendar-events-usecase";
 import { Config } from "../lib/config";
-import { AwsParameterFetcher } from "../lib/aws-parameter-fetcher";
 import { TokenRepository } from "../lib/token-repository";
 import { LineMessagingApiClient } from "../line-messaging-api-client";
 
+const configInitialization = (Config.getInstance()).init();
+
 export const calendarEventsHandler =
   async (): Promise<APIGatewayProxyResult> => {
+    await configInitialization;
     const responseBuilder = new ApiResponseBuilder();
     console.info("Start calendar events handler");
     try {
-      const config = Config.getInstance();
-      const parameterFetcher = new AwsParameterFetcher();
-      await config.init(parameterFetcher);
-
       const tokenRepository = new TokenRepository();
       const lineMessagingApiClient = new LineMessagingApiClient();
       await new CalendarEventsUseCase(
