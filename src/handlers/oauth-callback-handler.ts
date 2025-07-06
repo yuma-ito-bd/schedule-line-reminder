@@ -7,12 +7,12 @@ import { TokenRepository } from "../lib/token-repository";
 import { ApiResponseBuilder } from "../lib/api-response-builder";
 
 // 設定の初期化
-const config = Config.getInstance();
+const configInitialization = (Config.getInstance()).init();
 
 export const oauthCallbackHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  await config.init();
+  await configInitialization;
   try {
     console.info("Start OAuth callback handler");
 

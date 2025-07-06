@@ -54,6 +54,7 @@ export class Config {
     this.GOOGLE_REDIRECT_URI = google_redirect_uri;
     this.LINE_CHANNEL_ACCESS_TOKEN = line_channel_access_token;
     this.LINE_CHANNEL_SECRET = line_channel_secret;
+    this.logInitialization();
   }
 
   private async envOrParameter(name: string): Promise<string> {
@@ -64,5 +65,13 @@ export class Config {
     }
 
     return this.paramsFetcher.call(name);
+  }
+
+  /**
+   * 設定初期化時のログ出力（ParameterFetcherのクラス名付き）
+   */
+  private logInitialization() {
+    const fetcherClass = this.paramsFetcher.constructor?.name || typeof this.paramsFetcher;
+    console.info(`Configuration initialized. ParameterFetcher: ${fetcherClass}`);
   }
 }

@@ -5,11 +5,11 @@ import { Config } from "../lib/config";
 import { TokenRepository } from "../lib/token-repository";
 import { LineMessagingApiClient } from "../line-messaging-api-client";
 
-const config = Config.getInstance();
+const configInitialization = (Config.getInstance()).init();
 
 export const calendarEventsHandler =
   async (): Promise<APIGatewayProxyResult> => {
-    await config.init();
+    await configInitialization;
     const responseBuilder = new ApiResponseBuilder();
     console.info("Start calendar events handler");
     try {
