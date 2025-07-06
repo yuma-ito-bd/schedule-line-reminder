@@ -1,7 +1,7 @@
 import { describe, it, expect, mock, beforeEach } from "bun:test";
 import { OAuthStateRepository } from "../../src/lib/oauth-state-repository";
 import { Config } from "../../src/lib/config";
-import { ParameterFetcherMock } from "../mocks/parameter-fetcher-mock";
+import { ParameterFetcherMock } from "../../src/lib/parameter-fetcher-mock";
 
 // DynamoDBClientのモック
 type MockDynamoDBCommand = {
