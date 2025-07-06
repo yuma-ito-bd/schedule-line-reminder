@@ -17,7 +17,7 @@ describe("oauthCallbackHandler", () => {
     executeSpy.mockRestore();
   });
 
-  it("正常���: ユースケースが呼ばれ、200とメッセージが返る", async () => {
+  it("正常系: ユースケースが呼ばれ、200とメッセージが返る", async () => {
     executeSpy = spyOn(
       OAuthCallbackUseCase.prototype,
       "execute"
