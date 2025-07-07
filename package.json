@@ -10,7 +10,7 @@
     "generate-line-token": "bun run scripts/make_token.js"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.149",
+    "@types/aws-lambda": "^8.10.150",
     "@types/bun": "latest",
     "aws-sdk-client-mock": "^4.1.0",
     "esbuild": "^0.25.5"
