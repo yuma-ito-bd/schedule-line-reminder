@@ -17,16 +17,16 @@ import { TokenRepository } from "../../src/lib/token-repository";
 import { mockClient } from "aws-sdk-client-mock";
 
 describe("TokenRepository", () => {
-  const dynamoDBMock = mockClient(DynamoDBClient);
+  let dynamoDBMock: ReturnType<typeof mockClient>;
   let repository: TokenRepository;
 
   beforeEach(() => {
     // 環境変数の設定
     process.env.STACK_NAME = "test-stack";
-    // モックのリセット
-    dynamoDBMock.reset();
+    // モックの初期化
+    dynamoDBMock = mockClient(DynamoDBClient);
     // リポジトリの初期化
-    repository = new TokenRepository();
+    repository = new TokenRepository(dynamoDBMock as any);
   });
 
   describe("saveToken", () => {

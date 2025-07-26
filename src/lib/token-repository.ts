@@ -21,8 +21,8 @@ export class TokenRepository implements Schema$TokenRepository {
   private readonly dynamoClient: DynamoDBClient;
   private readonly tableName: string;
 
-  constructor() {
-    this.dynamoClient = new DynamoDBClient({});
+  constructor(dynamoClient?: DynamoDBClient) {
+    this.dynamoClient = dynamoClient || new DynamoDBClient({});
     this.tableName = `${process.env.STACK_NAME}-oauth-tokens`;
   }
 
