@@ -25,7 +25,7 @@ describe("OAuthStateRepository", () => {
     // モックの初期化
     dynamoDBMock = mockClient(DynamoDBClient);
     // リポジトリの初期化
-    repository = new OAuthStateRepository(300, dynamoDBMock as any);
+    repository = new OAuthStateRepository(300, dynamoDBMock as unknown as DynamoDBClient);
   });
 
   describe("saveState", () => {

@@ -26,7 +26,7 @@ describe("TokenRepository", () => {
     // モックの初期化
     dynamoDBMock = mockClient(DynamoDBClient);
     // リポジトリの初期化
-    repository = new TokenRepository(dynamoDBMock as any);
+    repository = new TokenRepository(dynamoDBMock as unknown as DynamoDBClient);
   });
 
   describe("saveToken", () => {
