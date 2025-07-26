@@ -23,5 +23,10 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
-  }
+  },
+  "exclude": [
+    "__tests__/**/*",
+    "node_modules",
+    "dist"
+  ]
 }

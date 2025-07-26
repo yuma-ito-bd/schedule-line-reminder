@@ -16,9 +16,7 @@
     "esbuild": "^0.25.5",
     "typescript": "^5.0.0"
   },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
+
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.840.0",
