@@ -7,7 +7,7 @@ describe("AwsParameterFetcher", () => {
       ok: true,
       json: async () => ({ Parameter: { Value: "value" } }),
     });
-    global.fetch = fetchMock;
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const parameterName = "test";
     await new AwsParameterFetcher().call(parameterName);
@@ -33,7 +33,7 @@ describe("AwsParameterFetcher", () => {
       status: 200,
       json: async () => ({ Parameter: { Value: "value" } }),
     });
-    global.fetch = fetchMock;
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const result = await new AwsParameterFetcher().call("test");
 
@@ -45,7 +45,7 @@ describe("AwsParameterFetcher", () => {
       ok: false,
       status: 400,
     });
-    global.fetch = fetchMock;
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const result = await new AwsParameterFetcher().call("test");
 
@@ -57,7 +57,7 @@ describe("AwsParameterFetcher", () => {
       ok: false,
       status: 500,
     });
-    global.fetch = fetchMock;
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const fetcher = new AwsParameterFetcher();
     expect(fetcher.call("test")).rejects.toThrow("Failed to fetch parameter");
