@@ -7,17 +7,17 @@
     "deploy": "sam deploy --profile private-admin",
     "build_and_deploy": "bun run build && bun run deploy",
     "test": "bun test __tests__ --coverage",
-    "generate-line-token": "bun run scripts/make_token.js"
+    "generate-line-token": "bun run scripts/make_token.js",
+    "type_check": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.150",
     "@types/bun": "latest",
     "aws-sdk-client-mock": "^4.1.0",
-    "esbuild": "^0.25.5"
-  },
-  "peerDependencies": {
+    "esbuild": "^0.25.5",
     "typescript": "^5.0.0"
   },
+
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.840.0",
