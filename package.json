@@ -22,7 +22,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.840.0",
     "@aws-sdk/util-dynamodb": "^3.840.0",
-    "@googleapis/calendar": "^9.8.0",
+    "@googleapis/calendar": "^11.0.1",
     "@line/bot-sdk": "^9.5.1",
     "jose": "^5.9.6"
   }
