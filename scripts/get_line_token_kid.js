@@ -10,12 +10,7 @@ const getTokenKid = async (jwt) => {
   });
 
   // GETリクエストでクエリパラメータを送信
-  const response = await fetch(`${tokenKidUrl}?${params.toString()}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-  });
+  const response = await fetch(`${tokenKidUrl}?${params.toString()}`);
 
   return response;
 };
