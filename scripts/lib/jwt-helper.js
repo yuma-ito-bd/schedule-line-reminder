@@ -7,6 +7,10 @@ import { dirname } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// 有効期間の定数（秒単位）
+const JWT_EXPIRATION_SECONDS = 25 * 60; // 25分
+const TOKEN_EXPIRATION_SECONDS = 30 * 24 * 60 * 60; // 30日
+
 /**
  * LINE OAuth用のJWTを生成する
  * @returns {Promise<string>} 生成されたJWT
@@ -29,8 +33,8 @@ export const makeJWT = async () => {
     iss: process.env.CHANNEL_ID, // チャネルID
     sub: process.env.CHANNEL_ID, // チャネルID
     aud: "https://api.line.me/",
-    exp: Math.floor(new Date().getTime() / 1000) + 60 * 25, // JWTの有効期間（UNIX時間）
-    token_exp: 60 * 60 * 24 * 30, // チャネルアクセストークンの有効期間
+    exp: Math.floor(Date.now() / 1000) + JWT_EXPIRATION_SECONDS, // JWTの有効期間（UNIX時間）
+    token_exp: TOKEN_EXPIRATION_SECONDS, // チャネルアクセストークンの有効期間
   };
 
   // JWTの生成
