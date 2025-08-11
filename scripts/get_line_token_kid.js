@@ -23,7 +23,8 @@ const getTokenKid = async (jwt) => {
 (async () => {
   try {
     const jwt = await makeJWT();
-    console.log("Generated JWT:", jwt);
+    console.log("JWT generated successfully");
+    console.log("JWT length:", jwt.length);
     
     const tokenKidResponse = await getTokenKid(jwt);
     console.log("Response status:", tokenKidResponse.status);
