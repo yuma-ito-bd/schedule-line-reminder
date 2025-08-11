@@ -1,229 +1,277 @@
-# GitHub Issues for AWS Chatbot CloudWatch to Slack Notification System
+# GitHub Issues for AWS Chatbot CloudWatch to Slack Notification System (IaC Approach)
 
-## Issue #1: Slack ワークスペースでAWSアプリの追加とOAuth設定
+## Issue #1: Slack Workspace IDとChannel IDの取得・準備
 
 **Priority:** High  
-**Labels:** `setup`, `slack`, `authentication`  
+**Labels:** `setup`, `slack`, `prerequisites`  
+**Assignee:** TBD  
+**Estimated Time:** 30 minutes - 1 hour
+
+### Description
+CloudFormationテンプレートで使用するSlack Workspace IDとChannel IDを取得し、デプロイ準備を行う。
+
+### Tasks
+- [ ] Slack Workspace IDの取得方法を確認
+- [ ] 対象チャンネルでSlack Channel IDを取得
+- [ ] デプロイ用パラメータファイル（parameters.json）を作成
+- [ ] AWS CLI/SAM CLIの設定確認
+
+### Acceptance Criteria
+- [ ] Slack Workspace IDが正しい形式（T0XXXXXXXXX）で取得されている
+- [ ] Slack Channel IDが正しい形式（C0XXXXXXXXX）で取得されている
+- [ ] parameters.jsonファイルが作成されている
+- [ ] AWS CLI認証が正常に動作する
+
+### Documentation Reference
+- `/workspace/deployment-guide.md` の「事前準備」セクションを参照
+
+---
+
+## Issue #2: CloudFormationテンプレートの検証と調整
+
+**Priority:** High  
+**Labels:** `infrastructure`, `cloudformation`, `validation`  
 **Assignee:** TBD  
 **Estimated Time:** 1-2 hours
 
 ### Description
-SlackワークスペースにAWSアプリを追加し、AWS ChatbotがSlackにアクセスできるようにOAuth認証を設定する。
+作成されたCloudFormationテンプレート（chatbot-template.yml）を環境に合わせて調整し、構文検証を行う。
 
 ### Tasks
-- [ ] Slackワークスペースの管理者権限を確認
-- [ ] AWS Chatbotアプリをワークスペースに追加
-- [ ] OAuth認証を完了
-- [ ] 通知を送信したいチャンネルを決定
+- [ ] CloudFormationテンプレートの構文検証
+- [ ] パラメータの調整（プロジェクト名、環境名等）
+- [ ] 監視対象メトリクスの設定確認・調整
+- [ ] IAM権限の確認と最小権限の原則適用
+- [ ] リソース名の命名規則確認
 
 ### Acceptance Criteria
-- [ ] SlackワークスペースにAWSアプリが正常に追加されている
-- [ ] OAuth認証が完了している
-- [ ] 対象チャンネルが決定されている
+- [ ] `aws cloudformation validate-template` でエラーがない
+- [ ] パラメータが環境に適合している
+- [ ] 監視対象が正しく設定されている
+- [ ] IAM権限が適切に設定されている
+- [ ] リソース命名が規則に従っている
 
-### Notes
-- Slackワークスペースの管理者権限が必要
-- 複数チャンネルへの通知が必要な場合は事前に整理しておく
+### Files
+- `/workspace/chatbot-template.yml`
+- `/workspace/parameters.json`
 
 ---
 
-## Issue #2: AWS Chatbotでチャットクライアント設定
+## Issue #3: CloudFormation Stackのデプロイ実行
 
 **Priority:** High  
-**Labels:** `aws`, `chatbot`, `configuration`  
-**Assignee:** TBD  
-**Estimated Time:** 2-3 hours
-
-### Description
-AWS Chatbotサービスでチャットクライアント（Slackワークスペース）を登録し、通知チャンネルを設定する。
-
-### Tasks
-- [ ] AWS Chatbotコンソールにアクセス
-- [ ] 新しいチャットクライアントを作成
-- [ ] Slackワークスペースを登録
-- [ ] 通知チャンネルを設定
-- [ ] チャンネル設定を確認
-
-### Acceptance Criteria
-- [ ] AWS ChatbotでSlackワークスペースが登録されている
-- [ ] 対象チャンネルが正しく設定されている
-- [ ] 基本的な通知テストが成功する
-
-### Dependencies
-- Issue #1 (Slack OAuth設定) が完了している必要がある
-
----
-
-## Issue #3: AWS Chatbot用IAMロールとポリシーの設定
-
-**Priority:** High  
-**Labels:** `aws`, `iam`, `security`  
-**Assignee:** TBD  
-**Estimated Time:** 2-3 hours
-
-### Description
-AWS Chatbotが適切にCloudWatchアラームとSNSにアクセスできるよう、必要なIAMロールとポリシーを設定する。
-
-### Tasks
-- [ ] AWS Chatbot用サービスロールを作成
-- [ ] CloudWatch読み取り権限を付与
-- [ ] SNSアクセス権限を付与
-- [ ] 必要最小限の権限原則に従って設定
-- [ ] ロール信頼関係を適切に設定
-
-### Acceptance Criteria
-- [ ] AWS Chatbot専用のIAMロールが作成されている
-- [ ] CloudWatchメトリクスとアラームの読み取り権限が付与されている
-- [ ] SNSトピックへのアクセス権限が付与されている
-- [ ] 不要な権限が付与されていない（最小権限の原則）
-
-### Security Considerations
-- 最小権限の原則に従う
-- 定期的な権限レビューを計画する
-
----
-
-## Issue #4: CloudWatch Alarm通知用SNSトピックの作成
-
-**Priority:** Medium  
-**Labels:** `aws`, `sns`, `notification`  
+**Labels:** `deployment`, `infrastructure`  
 **Assignee:** TBD  
 **Estimated Time:** 1-2 hours
 
 ### Description
-CloudWatch AlarmからAWS Chatbotに通知を送るためのSNSトピックを作成し、Chatbotチャンネルと連携する。
+CloudFormationテンプレートを使用してAWS ChatbotとCloudWatch通知システム全体をデプロイする。
 
 ### Tasks
-- [ ] SNSトピックを作成
-- [ ] 適切なトピック名を設定
-- [ ] AWS Chatbotチャンネルをサブスクライバーとして登録
-- [ ] 必要に応じてメッセージフィルタリングを設定
-- [ ] トピックのアクセス権限を設定
+- [ ] parameters.jsonの最終確認
+- [ ] CloudFormation Stackのデプロイ実行
+- [ ] デプロイ状況の監視
+- [ ] 作成されたリソースの確認
+- [ ] スタック出力値の記録
 
 ### Acceptance Criteria
-- [ ] SNSトピックが作成されている
-- [ ] AWS Chatbotチャンネルが正しくサブスクライブされている
-- [ ] テストメッセージが正常に送信される
-- [ ] アクセス権限が適切に設定されている
+- [ ] CloudFormation Stackが正常にCREATE_COMPLETEになる
+- [ ] すべてのリソース（SNS、IAM、Chatbot、CloudWatch Alarm）が作成されている
+- [ ] スタック出力値が正しく表示される
+- [ ] エラーが発生していない
+
+### Commands Reference
+```bash
+aws cloudformation create-stack \
+  --stack-name chatbot-notifications-stack \
+  --template-body file://chatbot-template.yml \
+  --parameters file://parameters.json \
+  --capabilities CAPABILITY_NAMED_IAM
+```
 
 ### Dependencies
-- Issue #2 (AWS Chatbot設定) が完了している必要がある
-- Issue #3 (IAM設定) が完了している必要がある
+- Issue #1 (Slack ID取得) が完了している必要がある
+- Issue #2 (テンプレート検証) が完了している必要がある
 
 ---
 
-## Issue #5: CloudWatch Alarmの作成とSNS連携設定
+## Issue #4: AWS Chatbot設定の動作確認
 
 **Priority:** Medium  
-**Labels:** `aws`, `cloudwatch`, `monitoring`  
+**Labels:** `testing`, `validation`, `chatbot`  
 **Assignee:** TBD  
-**Estimated Time:** 2-4 hours
+**Estimated Time:** 1 hour
 
 ### Description
-監視対象のメトリクスに対してCloudWatch Alarmを作成し、しきい値を超えた場合にSNSトピックに通知するよう設定する。
+デプロイされたAWS Chatbot設定が正常に動作し、Slackチャンネルとの接続が確立されていることを確認する。
 
 ### Tasks
-- [ ] 監視対象メトリクスを決定
-- [ ] アラーム条件（しきい値、期間、統計など）を定義
-- [ ] CloudWatch Alarmを作成
-- [ ] SNSトピックとの連携を設定
-- [ ] アラーム名と説明を設定
-- [ ] 復旧時の通知設定も確認
+- [ ] AWS Chatbot コンソールでの設定確認
+- [ ] Slackワークスペースでの連携確認
+- [ ] SNSトピックとの連携確認
+- [ ] ログ出力の確認
 
 ### Acceptance Criteria
-- [ ] 監視対象メトリクスが明確に定義されている
-- [ ] アラーム条件が適切に設定されている
-- [ ] SNSトピックへの通知が正しく設定されている
-- [ ] アラーム状態変更時に通知が送信される
-- [ ] 復旧時の通知も適切に動作する
+- [ ] AWS Chatbot設定がActiveになっている
+- [ ] Slackチャンネルに接続確認メッセージが表示される
+- [ ] SNSトピックが正しくサブスクライブされている
+- [ ] CloudWatch Logsでログが出力されている
+
+### Validation Commands
+```bash
+aws chatbot describe-slack-channel-configurations
+aws sns list-topics | grep cloudwatch-alarms
+```
 
 ### Dependencies
-- Issue #4 (SNSトピック作成) が完了している必要がある
-
-### Notes
-- 複数のメトリクスを監視する場合は、それぞれ個別のアラームを作成
-- しきい値は運用チームと相談して決定
+- Issue #3 (Stack デプロイ) が完了している必要がある
 
 ---
 
-## Issue #6: 通知メッセージフォーマット設定と日本語対応
+## Issue #5: CloudWatch Alarmテスト実行
+
+**Priority:** Medium  
+**Labels:** `testing`, `cloudwatch`, `notifications`  
+**Assignee:** TBD  
+**Estimated Time:** 1-2 hours
+
+### Description
+CloudWatch Alarmを手動でトリガーし、Slackへの通知が正常に動作することをテストする。
+
+### Tasks
+- [ ] 手動でのアラーム状態変更テスト
+- [ ] Slack通知受信確認
+- [ ] 通知内容とフォーマットの確認
+- [ ] 復旧通知（OK状態）のテスト
+- [ ] 通知遅延の測定
+- [ ] エラーケースのテスト
+
+### Acceptance Criteria
+- [ ] アラーム発生時にSlackに通知が届く
+- [ ] 通知内容が理解しやすい形式である
+- [ ] 復旧時の通知も正常に動作する
+- [ ] 通知遅延が5分以内である
+- [ ] エラーが発生しない
+
+### Test Commands
+```bash
+# アラーム発生テスト
+aws cloudwatch set-alarm-state \
+  --alarm-name "my-project-prod-sample-alarm" \
+  --state-value ALARM \
+  --state-reason "Testing Slack notification"
+
+# 復旧テスト
+aws cloudwatch set-alarm-state \
+  --alarm-name "my-project-prod-sample-alarm" \
+  --state-value OK \
+  --state-reason "Test completed"
+```
+
+### Dependencies
+- Issue #4 (Chatbot動作確認) が完了している必要がある
+
+---
+
+## Issue #6: 追加アラームとカスタマイズ
 
 **Priority:** Low  
-**Labels:** `enhancement`, `localization`, `user-experience`  
-**Assignee:** TBD  
-**Estimated Time:** 1-2 hours
-
-### Description
-Slackに送信される通知メッセージが分かりやすく、日本語環境に適したフォーマットになるよう調整する。
-
-### Tasks
-- [ ] デフォルトの通知メッセージフォーマットを確認
-- [ ] 必要に応じてカスタムフォーマットを検討
-- [ ] 日本語での表示に問題がないか確認
-- [ ] タイムゾーンの設定を確認
-- [ ] 通知の優先度や色分けを設定
-
-### Acceptance Criteria
-- [ ] 通知メッセージが理解しやすい形式で表示される
-- [ ] 日本語環境で適切に表示される
-- [ ] タイムゾーンが正しく設定されている
-- [ ] 重要度に応じた視覚的な違いがある
-
-### Dependencies
-- Issue #5 (CloudWatch Alarm設定) が完了している必要がある
-
----
-
-## Issue #7: システム全体のテストと動作確認
-
-**Priority:** High  
-**Labels:** `testing`, `validation`  
+**Labels:** `enhancement`, `customization`  
 **Assignee:** TBD  
 **Estimated Time:** 2-3 hours
 
 ### Description
-構築したCloudWatch Alarm → SNS → AWS Chatbot → Slack通知システム全体をテストし、正常に動作することを確認する。
+本格運用に向けて、実際の監視要件に合わせたCloudWatch Alarmの追加とカスタマイズを行う。
 
 ### Tasks
-- [ ] 手動でのアラーム発生テスト
-- [ ] 通知がSlackに正しく送信されることを確認
-- [ ] 通知内容とフォーマットの確認
-- [ ] 復旧時の通知テスト
-- [ ] 複数の異なるアラーム条件でのテスト
-- [ ] エラーケースのテスト
-- [ ] パフォーマンステスト（通知遅延の確認）
+- [ ] 実際の監視対象メトリクスの特定
+- [ ] 適切なしきい値の設定
+- [ ] 複数アラームの追加
+- [ ] メトリクスフィルターの設定（必要に応じて）
+- [ ] 通知メッセージのカスタマイズ
+- [ ] 複数チャンネルへの通知設定（必要に応じて）
 
 ### Acceptance Criteria
-- [ ] アラーム発生時に正しくSlackに通知される
-- [ ] 通知内容が期待通りである
-- [ ] 復旧時の通知も正常に動作する
-- [ ] 通知遅延が許容範囲内である
-- [ ] エラーケースも適切に処理される
-- [ ] テスト結果がドキュメント化されている
+- [ ] 運用要件に合ったアラームが設定されている
+- [ ] しきい値が適切に設定されている
+- [ ] 通知メッセージが運用チームに分かりやすい
+- [ ] 必要なチャンネルに通知が送信される
+
+### Template Modification
+CloudFormationテンプレートに追加リソースを定義：
+```yaml
+AdditionalAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+    # カスタム設定
+```
 
 ### Dependencies
-- すべての設定タスク（Issue #1-#6）が完了している必要がある
+- Issue #5 (アラームテスト) が完了している必要がある
 
-### Test Cases
-- [ ] しきい値超過時の通知
-- [ ] しきい値以下への復旧時の通知
-- [ ] 複数アラームの同時発生
-- [ ] ネットワーク障害時の動作
-- [ ] AWS Chatbotサービス障害時の動作
+---
+
+## Issue #7: 運用監視とトラブルシューティング体制の確立
+
+**Priority:** Medium  
+**Labels:** `operations`, `monitoring`, `documentation`  
+**Assignee:** TBD  
+**Estimated Time:** 2-3 hours
+
+### Description
+システムの安定運用に向けて、監視体制とトラブルシューティング手順を確立する。
+
+### Tasks
+- [ ] CloudWatch Logsの監視設定
+- [ ] AWS Chatbot自体のエラー監視
+- [ ] 運用手順書の作成
+- [ ] トラブルシューティングガイドの作成
+- [ ] 障害時のエスカレーション手順定義
+- [ ] 定期的なヘルスチェック手順の確立
+
+### Acceptance Criteria
+- [ ] システム全体の監視が設定されている
+- [ ] 運用手順が文書化されている
+- [ ] トラブルシューティング手順が明確である
+- [ ] 担当者が手順を理解している
+- [ ] 定期メンテナンス計画が作成されている
+
+### Deliverables
+- [ ] 運用手順書
+- [ ] トラブルシューティングガイド
+- [ ] 監視ダッシュボード（推奨）
+
+### Dependencies
+- すべての設定・テストタスク（Issue #1-#6）が完了している必要がある
 
 ---
 
 ## Epic Summary
 
-**Total Estimated Time:** 11-19 hours  
+**Total Estimated Time:** 8-13 hours  
 **Priority Order:** Issue #1 → #2 → #3 → #4 → #5 → #6 → #7  
 
+### Key Advantages of IaC Approach
+✅ **バージョン管理** - すべての設定がコード化  
+✅ **再現性** - 同じ環境を複数回作成可能  
+✅ **自動化** - CI/CDパイプラインとの統合可能  
+✅ **レビュー可能** - 設定変更をコードレビューで管理  
+✅ **ロールバック** - 問題発生時の迅速な復旧  
+
 ### Prerequisites
-- AWSアカウントへの適切なアクセス権限
-- Slackワークスペースの管理者権限
-- 監視対象リソースとメトリクスの特定
+- AWSアカウントとCloudFormation権限
+- AWS CLI/SAM CLI環境
+- Slackワークスペースアクセス権限
+- Git環境（テンプレート管理用）
 
 ### Success Metrics
-- CloudWatch Alarmがトリガーされた際に、5分以内にSlack通知が届く
-- 通知内容が運用チームにとって理解しやすい
-- システムの可用性が99.9%以上
+- CloudFormation Stackが正常にデプロイされる
+- CloudWatch Alarmトリガー時に5分以内にSlack通知が届く
+- システム可用性99.9%以上
+- インフラ変更がすべてコード管理されている
+
+### Rollback Plan
+```bash
+# 緊急時のスタック削除
+aws cloudformation delete-stack --stack-name chatbot-notifications-stack
+```

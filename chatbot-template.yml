@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: 'AWS Chatbot CloudWatch to Slack notification system'
+
+Parameters:
+  SlackWorkspaceId:
+    Type: String
+    Description: 'Slack Workspace ID (T0XXXXXXXXX形式)'
+    AllowedPattern: '^T[A-Z0-9]{8,}$'
+    
+  SlackChannelId:
+    Type: String
+    Description: 'Slack Channel ID (C0XXXXXXXXX形式)'
+    AllowedPattern: '^C[A-Z0-9]{8,}$'
+    
+  SlackChannelName:
+    Type: String
+    Description: 'Slack Channel Name (表示用)'
+    Default: 'aws-notifications'
+    
+  ProjectName:
+    Type: String
+    Description: 'Project name for resource naming'
+    Default: 'chatbot-notifications'
+    
+  Environment:
+    Type: String
+    Description: 'Environment name'
+    Default: 'prod'
+    AllowedValues: [dev, staging, prod]
+    
+  # CloudWatch Alarm設定用パラメータ
+  MetricNamespace:
+    Type: String
+    Description: 'CloudWatch metric namespace'
+    Default: 'AWS/ApplicationELB'
+    
+  MetricName:
+    Type: String
+    Description: 'CloudWatch metric name'
+    Default: 'TargetResponseTime'
+    
+  AlarmThreshold:
+    Type: Number
+    Description: 'Alarm threshold value'
+    Default: 1.0
+    
+  AlarmComparisonOperator:
+    Type: String
+    Description: 'Comparison operator for alarm'
+    Default: 'GreaterThanThreshold'
+    AllowedValues:
+      - GreaterThanOrEqualToThreshold
+      - GreaterThanThreshold
+      - LessThanThreshold
+      - LessThanOrEqualToThreshold
+
+Resources:
+  # SNS Topic for CloudWatch Alarms
+  CloudWatchAlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${ProjectName}-${Environment}-cloudwatch-alarms'
+      DisplayName: 'CloudWatch Alarms Topic'
+      
+  # IAM Role for AWS Chatbot
+  ChatBotExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-${Environment}-chatbot-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: chatbot.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSNSReadOnlyAccess
+      Policies:
+        - PolicyName: ChatBotExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+              - Effect: Allow
+                Action:
+                  - cloudwatch:Describe*
+                  - cloudwatch:Get*
+                  - cloudwatch:List*
+                Resource: '*'
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # AWS Chatbot Slack Channel Configuration
+  SlackChannelConfiguration:
+    Type: AWS::Chatbot::SlackChannelConfiguration
+    Properties:
+      ConfigurationName: !Sub '${ProjectName}-${Environment}-slack-config'
+      IamRoleArn: !GetAtt ChatBotExecutionRole.Arn
+      SlackChannelId: !Ref SlackChannelId
+      SlackWorkspaceId: !Ref SlackWorkspaceId
+      SnsTopicArns:
+        - !Ref CloudWatchAlarmTopic
+      LoggingLevel: 'INFO'
+      UserRoleRequired: false
+      GuardrailPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSNSReadOnlyAccess
+
+  # CloudWatch Alarm Example
+  SampleCloudWatchAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${ProjectName}-${Environment}-sample-alarm'
+      AlarmDescription: 'Sample CloudWatch Alarm for testing Slack notifications'
+      MetricName: !Ref MetricName
+      Namespace: !Ref MetricNamespace
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: !Ref AlarmThreshold
+      ComparisonOperator: !Ref AlarmComparisonOperator
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref CloudWatchAlarmTopic
+      OKActions:
+        - !Ref CloudWatchAlarmTopic
+      Dimensions:
+        - Name: LoadBalancer
+          Value: 'app/sample-alb/1234567890abcdef'  # 実際のALB ARNに置き換える
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # CloudWatch Log Group for Chatbot logs
+  ChatBotLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/chatbot/${ProjectName}-${Environment}'
+      RetentionInDays: 30
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+Outputs:
+  SNSTopicArn:
+    Description: 'ARN of the SNS Topic for CloudWatch Alarms'
+    Value: !Ref CloudWatchAlarmTopic
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-sns-topic-arn'
+      
+  ChatBotConfigurationArn:
+    Description: 'ARN of the Chatbot Slack Channel Configuration'
+    Value: !Ref SlackChannelConfiguration
+    
+  ChatBotRoleArn:
+    Description: 'ARN of the Chatbot IAM Role'
+    Value: !GetAtt ChatBotExecutionRole.Arn
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-chatbot-role-arn'
+      
+  SlackChannelName:
+    Description: 'Slack Channel Name for notifications'
+    Value: !Ref SlackChannelName
+    
+  SampleAlarmName:
+    Description: 'Name of the sample CloudWatch Alarm'
+    Value: !Ref SampleCloudWatchAlarm
