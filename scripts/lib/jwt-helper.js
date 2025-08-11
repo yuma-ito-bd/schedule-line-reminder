@@ -12,9 +12,12 @@ const __dirname = dirname(__filename);
  * @returns {Promise<string>} 生成されたJWT
  */
 export const makeJWT = async () => {
-  const privateKey = JSON.parse(
+  const privateKeyJson = JSON.parse(
     fs.readFileSync(path.join(__dirname, "..", "assertion-private.key"))
   );
+
+  // JWKを適切にインポートしてKeyLikeオブジェクトを取得
+  const privateKey = await jose.importJWK(privateKeyJson, "RS256");
 
   const header = {
     alg: "RS256",
