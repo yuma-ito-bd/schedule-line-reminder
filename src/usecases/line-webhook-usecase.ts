@@ -155,7 +155,7 @@ export class LineWebhookUseCase {
               action: {
                 type: "uri",
                 label: "Googleでログイン",
-                uri: url,
+                uri: encodeURI(url),
               },
             },
           ]
