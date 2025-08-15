@@ -29,12 +29,13 @@ export class UserCalendarRepository implements Schema$UserCalendarRepository {
    */
   async addCalendar(calendar: CreateUserCalendar): Promise<void> {
     const now = new Date();
+    const nowMs = now.getTime();
     const command = new PutItemCommand({
       TableName: this.tableName,
       Item: marshall({
         ...calendar,
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
+        createdAt: nowMs,
+        updatedAt: nowMs,
       }),
     });
     await this.dynamoClient.send(command);

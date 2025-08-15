@@ -55,14 +55,20 @@ describe("UserCalendarRepository", () => {
       expect(input.Item?.userId.S).toBe(calendar.userId);
       expect(input.Item?.calendarId.S).toBe(calendar.calendarId);
       expect(input.Item?.calendarName.S).toBe(calendar.calendarName);
-      expect(input.Item?.createdAt.S).toBeDefined();
-      expect(input.Item?.updatedAt.S).toBeDefined();
+      expect(input.Item?.createdAt.N).toBeDefined();
+      expect(input.Item?.updatedAt.N).toBeDefined();
       
-      // ISO文字列形式の日付が設定されていることを確認
-      const createdAt = input.Item?.createdAt.S;
-      const updatedAt = input.Item?.updatedAt.S;
-      expect(createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-      expect(updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      // 数値（エポックミリ秒）が設定されていることを確認
+      const createdAt = Number(input.Item?.createdAt.N);
+      const updatedAt = Number(input.Item?.updatedAt.N);
+      expect(Number.isFinite(createdAt)).toBe(true);
+      expect(Number.isFinite(updatedAt)).toBe(true);
+      // 現在時刻±5分の範囲にあること
+      const now = Date.now();
+      expect(createdAt).toBeGreaterThan(now - 5 * 60 * 1000);
+      expect(createdAt).toBeLessThanOrEqual(now + 5 * 60 * 1000);
+      expect(updatedAt).toBeGreaterThan(now - 5 * 60 * 1000);
+      expect(updatedAt).toBeLessThanOrEqual(now + 5 * 60 * 1000);
     });
 
     it("環境変数が設定されていない場合はSTACK_NAMEから推定すること", async () => {
@@ -127,15 +133,15 @@ describe("UserCalendarRepository", () => {
           userId: { S: "test-user" },
           calendarId: { S: "calendar-1" },
           calendarName: { S: "カレンダー1" },
-          createdAt: { S: "2023-01-01T00:00:00.000Z" },
-          updatedAt: { S: "2023-01-01T00:00:00.000Z" },
+          createdAt: { N: String(new Date("2023-01-01T00:00:00.000Z").getTime()) },
+          updatedAt: { N: String(new Date("2023-01-01T00:00:00.000Z").getTime()) },
         },
         {
           userId: { S: "test-user" },
           calendarId: { S: "calendar-2" },
           calendarName: { S: "カレンダー2" },
-          createdAt: { S: "2023-01-02T00:00:00.000Z" },
-          updatedAt: { S: "2023-01-02T00:00:00.000Z" },
+          createdAt: { N: String(new Date("2023-01-02T00:00:00.000Z").getTime()) },
+          updatedAt: { N: String(new Date("2023-01-02T00:00:00.000Z").getTime()) },
         },
       ];
 
@@ -224,14 +230,14 @@ describe("UserCalendarRepository", () => {
     it("Date型の変換が正しく行われること", async () => {
       // テストデータ
       const userId = "test-user";
-      const testDate = "2023-12-25T09:30:00.000Z";
+      const testDate = new Date("2023-12-25T09:30:00.000Z").getTime();
       const mockCalendars = [
         {
           userId: { S: "test-user" },
           calendarId: { S: "calendar-1" },
           calendarName: { S: "テストカレンダー" },
-          createdAt: { S: testDate },
-          updatedAt: { S: testDate },
+          createdAt: { N: String(testDate) },
+          updatedAt: { N: String(testDate) },
         },
       ];
 
@@ -249,8 +255,8 @@ describe("UserCalendarRepository", () => {
       // Date型の確認
       expect(result[0].createdAt).toBeInstanceOf(Date);
       expect(result[0].updatedAt).toBeInstanceOf(Date);
-      expect(result[0].createdAt.toISOString()).toBe(testDate);
-      expect(result[0].updatedAt.toISOString()).toBe(testDate);
+      expect(result[0].createdAt.getTime()).toBe(testDate);
+      expect(result[0].updatedAt.getTime()).toBe(testDate);
     });
   });
 });
