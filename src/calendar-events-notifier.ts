@@ -41,20 +41,19 @@ export class CalendarEventsNotifier {
     const eventsWithId = allEvents.filter((ev) => !!ev.id);
     const eventsWithoutId = allEvents.filter((ev) => !ev.id);
 
-    for (const ev of eventsWithoutId) {
+    eventsWithoutId.forEach((ev) => {
       const startStr = ev.start?.dateTime || ev.start?.date || "unknown";
       console.warn(
         `Event missing id. summary=${ev.summary ?? ""}, start=${startStr}`
       );
-    }
+    });
 
     const uniqueEventsMap = new Map<string, Schema$CalendarEvent>();
-    for (const ev of eventsWithId) {
-      // ev.id は存在
+    eventsWithId.forEach((ev) => {
       if (!uniqueEventsMap.has(ev.id!)) {
         uniqueEventsMap.set(ev.id!, ev);
       }
-    }
+    });
 
     const dedupedEvents = [...uniqueEventsMap.values(), ...eventsWithoutId];
 

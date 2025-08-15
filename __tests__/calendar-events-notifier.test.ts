@@ -41,9 +41,6 @@ describe("CalendarEventsNotifier", () => {
       const googleCalendarApiMock = new GoogleCalendarApiAdapterMock();
       const lineMessagingApiClientMock = new LineMessagingApiClientMock();
 
-      // 1つのカレンダーから以下の3件が返るようにモック
-      // - 同一IDの2件 (重複除去対象)
-      // - IDなしの2件（同内容でも重複除外しない）
       spyOn(googleCalendarApiMock, "fetchCalendarList").mockResolvedValue([
         { id: "primary", accessRole: "owner" } as any,
       ]);
@@ -63,11 +60,6 @@ describe("CalendarEventsNotifier", () => {
       );
 
       await calendarEventsNotifier.call();
-
-      // メッセージ本文を取得
-      const textArg = (lineMessagingApiClientMock.pushTextMessages as any).mock?.calls?.[0]?.[1]?.[0];
-      // fallback: pushのスパイで呼ばれていれば、その引数から検証
-      // ただし bun の spy 仕様に依存するため、代替として warn 呼び出し回数とイベント数を確認
 
       // IDなしイベントは2件分 warn が出る
       expect(warnSpy).toHaveBeenCalled();
@@ -96,8 +88,9 @@ describe("CalendarEventsNotifier", () => {
       await calendarEventsNotifier.call();
 
       expect(pushSpy).toHaveBeenCalled();
-      const sentText = (pushSpy as any).mock.calls[0][1][0] as string;
-      // 2件とも残るので、同日欄に2行出力されることを簡易的に検証
+      // Bunのspyが提供する calls を参照
+      const calls = (pushSpy as any).mock.calls;
+      const sentText = calls[0][1][0] as string;
       const linesForDate = sentText.split("\n").filter((line) => line.includes(": C"));
       expect(linesForDate.length).toBe(2);
     });
