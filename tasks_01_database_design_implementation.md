@@ -13,7 +13,7 @@
   - テーブル名: `UserCalendarsTable`
   - 主キー: `userId` (LINE User ID)
   - ソートキー: `calendarId` (Google Calendar ID)
-  - 属性: `calendarName`, `isEnabled`, `createdAt`, `updatedAt`
+  - 属性: `calendarName`, `createdAt`, `updatedAt`
 
 ### 1.2 DynamoDBテーブルのCloudFormation定義追加
 - **優先度**: High  
@@ -25,13 +25,13 @@
 - **工数**: 2-3時間
 - **内容**: 
   - `src/lib/user-calendar-repository.ts`
-  - CRUD操作 (追加/削除/一覧取得/有効無効切り替え)
+  - CRUD操作 (追加/削除/一覧取得)
   - TypeScript型定義 `src/types/user-calendar-repository.d.ts`
 
 ## 技術的考慮事項
 
 ### データベース設計のポイント
-- **パーティション設計**: ユーザーIDをパーティションキーにして、ユーザーごとのカレンダーリストを効率的に取得
+- **パーティション設計**: ユーザーIDをパーティションキーにして、ユーザーごとの購読カレンダーリストを効率的に取得
 - **スケーラビリティ**: ユーザー数増加に対するDynamoDB設計の考慮
 - **インデックス**: 必要に応じてGSI（Global Secondary Index）の検討
 

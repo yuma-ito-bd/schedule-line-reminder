@@ -30,7 +30,6 @@
 
 #### 改修後の実装
 - ユーザーの購読カレンダーリストを `UserCalendarRepository` から取得
-- 有効なカレンダーのみをフィルタリング
 - 複数カレンダーから並列でイベントを取得
 - イベントを時系列でマージしてメッセージ生成
 
@@ -40,7 +39,7 @@
 const events = await googleCalendarAdapter.fetchEvents('primary', startDate, endDate);
 
 // After  
-const userCalendars = await userCalendarRepository.getEnabledCalendars(userId);
+const userCalendars = await userCalendarRepository.getCalendars(userId);
 const eventsByCalendar = await Promise.all(
   userCalendars.map(calendar => 
     googleCalendarAdapter.fetchEvents(calendar.calendarId, startDate, endDate)
