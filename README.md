@@ -1,6 +1,6 @@
 # スケジュール予報 (schedule-line-reminder)
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/yuma-ito-bd/schedule-line-reminder)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/yuma-ito-bd/schedule-line-reminder) [![Test](https://github.com/yuma-ito-bd/schedule-line-reminder/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/yuma-ito-bd/schedule-line-reminder/actions/workflows/ci.yaml) [![Type Check](https://github.com/yuma-ito-bd/schedule-line-reminder/actions/workflows/type-check.yaml/badge.svg?branch=main)](https://github.com/yuma-ito-bd/schedule-line-reminder/actions/workflows/type-check.yaml)
 
 Googleカレンダーに登録している1週間分の予定をLINEに通知してくれるプロジェクトです。
 

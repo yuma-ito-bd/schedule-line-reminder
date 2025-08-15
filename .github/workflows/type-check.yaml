@@ -2,6 +2,9 @@ name: Type Check
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   type-check:
