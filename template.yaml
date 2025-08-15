@@ -46,6 +46,13 @@ Resources:
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
                   !GetAtt OAuthTokensTable.Arn,
                 ]
+        # UserCalendarsTableに対する権限
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+              Resource: !GetAtt UserCalendarsTable.Arn
       LoggingConfig:
         ApplicationLogLevel: DEBUG
     Metadata:
@@ -100,6 +107,15 @@ Resources:
                   !GetAtt OAuthStateTable.Arn,
                   !GetAtt OAuthTokensTable.Arn,
                 ]
+        # UserCalendarsTableに対する権限
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:Query"
+              Resource: !GetAtt UserCalendarsTable.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -154,6 +170,15 @@ Resources:
                   !GetAtt OAuthStateTable.Arn,
                   !GetAtt OAuthTokensTable.Arn,
                 ]
+        # UserCalendarsTableに対する権限
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:Query"
+              Resource: !GetAtt UserCalendarsTable.Arn
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -256,6 +281,26 @@ Resources:
         - AttributeName: userId
           KeyType: HASH
 
+  # ユーザーカレンダー購読情報を管理するDynamoDBテーブル
+  # ユーザーごとの購読カレンダー情報を保存
+  UserCalendarsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${AWS::StackName}-UserCalendars
+      # 使用量に応じた課金モード
+      BillingMode: PAY_PER_REQUEST
+      # パーティションキーとしてuserIdを使用、ソートキーとしてcalendarIdを使用
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: calendarId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: calendarId
+          KeyType: RANGE
+
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
@@ -274,3 +319,4 @@ Globals:
     Environment:
       Variables:
         STACK_NAME: !Ref AWS::StackName
+        USER_CALENDARS_TABLE: !Ref UserCalendarsTable
