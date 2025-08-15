@@ -44,11 +44,16 @@ describe("CalendarEventsNotifier", () => {
       spyOn(googleCalendarApiMock, "fetchCalendarList").mockResolvedValue([
         { id: "primary", accessRole: "owner" } as any,
       ]);
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const startIso = tomorrow.toISOString();
+
       spyOn(googleCalendarApiMock, "fetchEvents").mockResolvedValue([
-        { id: "same-id", summary: "A", start: { dateTime: "2022-01-01T00:00:00.000Z" }, end: { dateTime: "2022-01-01T01:00:00.000Z" } } as any,
-        { id: "same-id", summary: "A duplicated", start: { dateTime: "2022-01-01T00:00:00.000Z" }, end: { dateTime: "2022-01-01T01:00:00.000Z" } } as any,
-        { summary: "B", start: { dateTime: "2022-01-02T00:00:00.000Z" }, end: { dateTime: "2022-01-02T01:00:00.000Z" } } as any,
-        { summary: "B", start: { dateTime: "2022-01-02T00:00:00.000Z" }, end: { dateTime: "2022-01-02T01:00:00.000Z" } } as any,
+        { id: "same-id", summary: "A", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+        { id: "same-id", summary: "A duplicated", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+        { summary: "B", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+        { summary: "B", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
       ]);
 
       const warnSpy = spyOn(console, "warn");
@@ -72,9 +77,14 @@ describe("CalendarEventsNotifier", () => {
       spyOn(googleCalendarApiMock, "fetchCalendarList").mockResolvedValue([
         { id: "primary", accessRole: "owner" } as any,
       ]);
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const startIso = tomorrow.toISOString();
+
       spyOn(googleCalendarApiMock, "fetchEvents").mockResolvedValue([
-        { summary: "C", start: { dateTime: "2022-01-03T00:00:00.000Z" }, end: { dateTime: "2022-01-03T01:00:00.000Z" } } as any,
-        { summary: "C", start: { dateTime: "2022-01-03T00:00:00.000Z" }, end: { dateTime: "2022-01-03T01:00:00.000Z" } } as any,
+        { summary: "C", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+        { summary: "C", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
       ]);
 
       const pushSpy = spyOn(lineMessagingApiClientMock, "pushTextMessages");
