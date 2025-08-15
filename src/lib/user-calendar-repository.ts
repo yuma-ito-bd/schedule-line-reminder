@@ -28,13 +28,13 @@ export class UserCalendarRepository implements Schema$UserCalendarRepository {
    * @param calendar 追加するカレンダー情報
    */
   async addCalendar(calendar: CreateUserCalendar): Promise<void> {
-    const now = Math.floor(Date.now() / 1000);
+    const now = new Date();
     const command = new PutItemCommand({
       TableName: this.tableName,
       Item: marshall({
         ...calendar,
-        createdAt: now,
-        updatedAt: now,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
       }),
     });
     await this.dynamoClient.send(command);
@@ -76,6 +76,13 @@ export class UserCalendarRepository implements Schema$UserCalendarRepository {
       return [];
     }
 
-    return result.Items.map((item) => unmarshall(item) as UserCalendar);
+    return result.Items.map((item) => {
+      const unmarshalled = unmarshall(item);
+      return {
+        ...unmarshalled,
+        createdAt: new Date(unmarshalled.createdAt),
+        updatedAt: new Date(unmarshalled.updatedAt),
+      } as UserCalendar;
+    });
   }
 }

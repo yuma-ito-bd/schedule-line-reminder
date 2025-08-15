@@ -2,8 +2,8 @@ export type UserCalendar = {
   userId: string;
   calendarId: string;
   calendarName: string;
-  createdAt: number;
-  updatedAt: number;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type CreateUserCalendar = {

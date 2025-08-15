@@ -40,14 +40,19 @@ Resources:
                 - "kms:Decrypt"
                 - "ssm:GetParameter"
                 - "dynamodb:Scan"
-                - "dynamodb:Query"
               Resource:
                 [
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
                   !GetAtt OAuthTokensTable.Arn,
-                  !GetAtt UserCalendarsTable.Arn,
                 ]
+        # UserCalendarsTableに対する権限
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+              Resource: !GetAtt UserCalendarsTable.Arn
       LoggingConfig:
         ApplicationLogLevel: DEBUG
     Metadata:
@@ -95,15 +100,22 @@ Resources:
                 - "ssm:GetParameter"
                 - "dynamodb:PutItem"
                 - "dynamodb:DeleteItem"
-                - "dynamodb:Query"
               Resource:
                 [
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
                   !GetAtt OAuthStateTable.Arn,
                   !GetAtt OAuthTokensTable.Arn,
-                  !GetAtt UserCalendarsTable.Arn,
                 ]
+        # UserCalendarsTableに対する権限
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:Query"
+              Resource: !GetAtt UserCalendarsTable.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -151,15 +163,22 @@ Resources:
                 - "dynamodb:GetItem"
                 - "dynamodb:DeleteItem"
                 - "dynamodb:UpdateItem"
-                - "dynamodb:Query"
               Resource:
                 [
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
                   !GetAtt OAuthStateTable.Arn,
                   !GetAtt OAuthTokensTable.Arn,
-                  !GetAtt UserCalendarsTable.Arn,
                 ]
+        # UserCalendarsTableに対する権限
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:Query"
+              Resource: !GetAtt UserCalendarsTable.Arn
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
