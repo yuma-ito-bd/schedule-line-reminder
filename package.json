@@ -15,7 +15,7 @@
     "@types/aws-lambda": "^8.10.150",
     "@types/bun": "latest",
     "aws-sdk-client-mock": "^4.1.0",
-    "esbuild": "^0.25.5",
+    "esbuild": "^0.25.9",
     "typescript": "^5.0.0"
   },
   "type": "module",
