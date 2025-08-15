@@ -20,6 +20,52 @@
 - **工数**: 1時間
 - **内容**: `template.yaml`に新しいテーブル定義を追加
 
+#### CloudFormation テンプレート設定
+```yaml
+# template.yaml に追加するリソース
+
+# 新しいDynamoDBテーブル
+UserCalendarsTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: !Sub "${StackName}-UserCalendars"
+    BillingMode: PAY_PER_REQUEST
+    AttributeDefinitions:
+      - AttributeName: userId
+        AttributeType: S
+      - AttributeName: calendarId
+        AttributeType: S
+    KeySchema:
+      - AttributeName: userId
+        KeyType: HASH
+      - AttributeName: calendarId
+        KeyType: RANGE
+
+# Lambda実行ロールの権限更新
+LambdaExecutionRole:
+  Properties:
+    Policies:
+      - PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+              Resource: 
+                - !GetAtt UserCalendarsTable.Arn
+```
+
+#### 環境変数の追加
+```yaml
+Environment:
+  Variables:
+    USER_CALENDARS_TABLE: !Ref UserCalendarsTable
+```
+
 ### 1.3 ユーザーカレンダーリポジトリクラス実装
 - **優先度**: High
 - **工数**: 2-3時間

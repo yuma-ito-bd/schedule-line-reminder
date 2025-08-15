@@ -9,6 +9,7 @@
 - **優先度**: High
 - **工数**: 30分
 - **内容**: `template.yaml`でDynamoDB新テーブルへのアクセス権限追加
+- **参照**: 詳細なCloudFormation定義は [1. データベース設計・実装](./tasks_01_database_design_implementation.md) を参照
 
 ### 6.2 既存データ移行（該当する場合）
 - **優先度**: Low
@@ -23,54 +24,6 @@
 - **内容**: README.mdに新機能の説明追加
 
 ## デプロイメント詳細
-
-### 6.1 IAM権限とリソース設定
-
-#### CloudFormation テンプレート更新
-```yaml
-# template.yaml に追加するリソース
-
-# 新しいDynamoDBテーブル
-UserCalendarsTable:
-  Type: AWS::DynamoDB::Table
-  Properties:
-    TableName: !Sub "${StackName}-UserCalendars"
-    BillingMode: PAY_PER_REQUEST
-    AttributeDefinitions:
-      - AttributeName: userId
-        AttributeType: S
-      - AttributeName: calendarId
-        AttributeType: S
-    KeySchema:
-      - AttributeName: userId
-        KeyType: HASH
-      - AttributeName: calendarId
-        KeyType: RANGE
-
-# Lambda実行ロールの権限更新
-LambdaExecutionRole:
-  Properties:
-    Policies:
-      - PolicyDocument:
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:GetItem
-                - dynamodb:PutItem
-                - dynamodb:UpdateItem
-                - dynamodb:DeleteItem
-                - dynamodb:Query
-                - dynamodb:Scan
-              Resource: 
-                - !GetAtt UserCalendarsTable.Arn
-```
-
-#### 環境変数の追加
-```yaml
-Environment:
-  Variables:
-    USER_CALENDARS_TABLE: !Ref UserCalendarsTable
-```
 
 ### 6.2 データ移行戦略
 

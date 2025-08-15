@@ -1,133 +1,94 @@
-# 5. テスト実装
+# 5. テスト実装方針
 
 ## 概要
-複数カレンダー管理機能の品質保証のため、新規実装コンポーネントのユニットテストと、システム全体の結合テストを実装する。テスト駆動開発（TDD）のアプローチも考慮し、堅牢なシステムを構築する。
+複数カレンダー管理機能の品質保証のため、**各実装フェーズで対応するテストを実施**します。独立したテスト実装フェーズは設けず、開発と並行してテストを進める統合的なアプローチを採用します。
 
-## タスク詳細
+## テスト実装方針
 
-### 5.1 ユニットテスト追加
-- **優先度**: Medium
-- **工数**: 4-5時間
-- **内容**:
-  - `UserCalendarRepository`のテスト
-  - 新しい`GoogleCalendarApiAdapter`メソッドのテスト  
-  - `LineWebhookUseCase`の拡張機能テスト
+### 各フェーズでのテスト実施
 
-### 5.2 結合テスト
-- **優先度**: Low
-- **工数**: 2-3時間
-- **内容**:
-  - LINE Bot全体のフロー確認
-  - 実際のGoogle Calendar APIとの連携テスト
+#### Phase 1: Core Infrastructure でのテスト
+**対象**: データベース設計・実装、Google Calendar API拡張、既存機能リファクタリング
 
-## テスト実装詳細
+- **データベーステスト**
+  - `UserCalendarRepository` の CRUD操作テスト
+  - DynamoDB接続・エラーハンドリングテスト
 
-### 5.1 ユニットテスト詳細
+- **API拡張テスト**
+  - `GoogleCalendarApiAdapter` の新機能テスト
+  - 複数カレンダー並列取得テスト
+  - Google Calendar API モック化テスト
 
-#### UserCalendarRepository テスト
-- **ファイル**: `test/lib/user-calendar-repository.test.ts`
-- **テスト対象メソッド**:
-  - `addCalendar()` - カレンダー追加
-  - `removeCalendar()` - カレンダー削除  
-  - `getCalendars()` - カレンダー一覧取得
+- **リファクタリングテスト**
+  - 既存機能の回帰テスト
+  - イベント取得ロジックのユニットテスト
 
-- **テストケース**:
-  - 正常系: 各メソッドの基本動作
-  - 異常系: 存在しないカレンダーの操作
-  - 境界値: 空のリスト、大量のカレンダー
-  - DynamoDB接続エラーのモック
+#### Phase 2: LINE Bot機能 でのテスト
+**対象**: カレンダー管理コマンド実装
 
-#### GoogleCalendarApiAdapter テスト
-- **ファイル**: `test/adapters/google-calendar-api-adapter.test.ts`
-- **テスト対象メソッド**:
-  - `fetchCalendarList()` - カレンダーリスト取得
-  - `fetchEvents()` - 複数カレンダー対応版
+- **コマンド処理テスト**
+  - 各コマンドの解析・実行テスト
+  - LINEメッセージフォーマット検証
+  - エラー応答テスト
 
-- **テストケース**:
-  - 正常系: APIレスポンスの適切な処理
-  - 異常系: API制限、権限エラー、ネットワークエラー
-  - モック: Google Calendar APIレスポンスのモック化
-  - 並列処理: 複数カレンダーの同時取得テスト
+#### Phase 3: UX改善 でのテスト
+**対象**: 対話式フロー、エラーハンドリング
 
-#### LineWebhookUseCase テスト
-- **ファイル**: `test/use-cases/line-webhook-use-case.test.ts`
-- **テスト対象機能**:
-  - カレンダー管理コマンドの処理
-  - 対話式フローのセッション管理
-  - エラーメッセージの生成
+- **対話フローテスト**
+  - セッション管理テスト
+  - Postback Action処理テスト
 
-- **テストケース**:
-  - コマンド解析: 各種コマンドの正確な認識
-  - レスポンス生成: 適切なLINEメッセージフォーマット
-  - セッション管理: 状態の保持と復元
-  - エラーハンドリング: 各種エラー状況での適切な応答
+- **統合テスト**
+  - エンドツーエンドの機能テスト
+  - 実際のGoogle Calendar API連携テスト
 
-### 5.2 結合テスト詳細
+#### Phase 4: 運用・保守 でのテスト
+**対象**: データ移行、本格運用準備
 
-#### LINE Bot フロー テスト
-- **ファイル**: `test/integration/line-bot-flow.test.ts`
-- **テストシナリオ**:
-  1. ユーザー認証フロー
-  2. カレンダー追加から通知までの完全フロー
-  3. カレンダー削除
-  4. 複数カレンダーでの通知動作
+- **移行テスト**
+  - データ移行スクリプトテスト
+  - 移行前後の整合性確認
 
-#### Google Calendar API 連携テスト
-- **ファイル**: `test/integration/google-calendar-integration.test.ts`
-- **テスト内容**:
-  - 実際のGoogle Calendar APIとの通信
-  - OAuth認証フローの動作確認
-  - レート制限への対応確認
-  - 権限エラーの適切な処理
+- **運用テスト**
+  - パフォーマンステスト
+  - 負荷テスト
 
 ## テスト環境・設定
 
-### モックとスタブ
-- **DynamoDB**: AWS SDK のモック化
-- **Google Calendar API**: axios-mock-adapter を使用
-- **LINE Messaging API**: 送信APIのモック化
+### 共通設定
+- **モック・スタブ**: AWS SDK、Google Calendar API、LINE Messaging API
+- **テストデータ**: 各フェーズで必要なテストデータセットを準備
+- **CI/CD**: GitHub Actionsでの自動テスト実行
 
-### テストデータ
-- **ユーザー**: テスト用のLINE User ID
-- **カレンダー**: モックカレンダーデータ
-- **イベント**: 様々なパターンのテストイベント
+### テストカバレッジ目標
+- **最低目標**: 80%のコードカバレッジ
+- **重要機能**: 90%以上のカバレッジ
 
-### 環境変数設定
-```bash
-# テスト専用環境変数
-NODE_ENV=test
-DYNAMODB_ENDPOINT=http://localhost:8000  # DynamoDB Local
-GOOGLE_CALENDAR_CLIENT_ID=test_client_id
-LINE_CHANNEL_ACCESS_TOKEN=test_token
-```
+## 各実装ファイルでのテスト詳細
 
-### CI/CD 統合
-- **GitHub Actions**: プルリクエスト時の自動テスト実行
-- **カバレッジ**: 最低80%のコードカバレッジを目標
-- **レポート**: テスト結果とカバレッジレポートの生成
+### 📊 データベース設計・実装 (tasks_01)
+- `UserCalendarRepository` クラスのユニットテスト
+- DynamoDB操作のモック化テスト
 
-## テスト戦略
+### 🔌 Google Calendar API拡張 (tasks_02) 
+- `fetchCalendarList()`, `fetchEvents()` メソッドテスト
+- API制限・権限エラーのハンドリングテスト
 
-### テストピラミッド
-- **ユニットテスト (70%)**: 各コンポーネントの詳細テスト
-- **結合テスト (20%)**: コンポーネント間の連携テスト  
-- **E2Eテスト (10%)**: ユーザーシナリオベースのテスト
+### 🤖 LINE Bot機能拡張 (tasks_03)
+- コマンド処理ロジックのユニットテスト
+- セッション管理のテスト
 
-### テストの優先順位
-1. **High**: 核となるビジネスロジック（UserCalendarRepository）
-2. **Medium**: API連携部分（GoogleCalendarApiAdapter）
-3. **Low**: UI/UX部分（LineWebhookUseCase の詳細）
+### 🔄 既存機能リファクタリング (tasks_04)
+- 既存機能の回帰テスト
+- リファクタリング前後の動作比較テスト
 
-### 継続的テスト
-- **リグレッションテスト**: 既存機能への影響確認
-- **パフォーマンステスト**: レスポンス時間の監視
-- **セキュリティテスト**: 認証・認可の適切性確認
+## 利点
 
-## 関連ファイル
-- `test/lib/user-calendar-repository.test.ts` - リポジトリテスト
-- `test/adapters/google-calendar-api-adapter.test.ts` - APIアダプターテスト
-- `test/use-cases/line-webhook-use-case.test.ts` - UseCase テスト
-- `test/integration/line-bot-flow.test.ts` - 結合テスト
-- `test/integration/google-calendar-integration.test.ts` - API連携テスト
-- `jest.config.js` - Jest設定
-- `.github/workflows/test.yml` - CI/CD設定
+### 統合的開発アプローチ
+- **早期発見**: 各フェーズで問題を早期発見
+- **効率性**: 開発と並行してテスト実装
+- **品質保証**: 段階的な品質確保
+
+### 実装者の責任明確化
+- 各フェーズの実装者がテスト実装も担当
+- ドメイン知識を活かした効果的なテスト設計
