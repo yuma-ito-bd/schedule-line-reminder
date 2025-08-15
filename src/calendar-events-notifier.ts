@@ -37,16 +37,26 @@ export class CalendarEventsNotifier {
       .filter((r): r is PromiseFulfilledResult<Schema$CalendarEvent[]> => r.status === "fulfilled")
       .flatMap((r) => r.value);
 
-    // 重複除去（event.id で重複判断）
+    // IDがあるイベントのみ重複除去。IDがないイベントは重複除去しない
+    const eventsWithId = allEvents.filter((ev) => !!ev.id);
+    const eventsWithoutId = allEvents.filter((ev) => !ev.id);
+
+    for (const ev of eventsWithoutId) {
+      const startStr = ev.start?.dateTime || ev.start?.date || "unknown";
+      console.warn(
+        `Event missing id. summary=${ev.summary ?? ""}, start=${startStr}`
+      );
+    }
+
     const uniqueEventsMap = new Map<string, Schema$CalendarEvent>();
-    for (const ev of allEvents) {
-      const id = ev.id || `${ev.summary}-${ev.start?.dateTime || ev.start?.date}`;
-      if (id && !uniqueEventsMap.has(id)) {
-        uniqueEventsMap.set(id, ev);
+    for (const ev of eventsWithId) {
+      // ev.id は存在
+      if (!uniqueEventsMap.has(ev.id!)) {
+        uniqueEventsMap.set(ev.id!, ev);
       }
     }
 
-    const dedupedEvents = [...uniqueEventsMap.values()];
+    const dedupedEvents = [...uniqueEventsMap.values(), ...eventsWithoutId];
 
     // 表示用に変換
     const eventSummaries = dedupedEvents
