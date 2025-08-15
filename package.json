@@ -16,15 +16,15 @@
     "@types/bun": "latest",
     "aws-sdk-client-mock": "^4.1.0",
     "esbuild": "^0.25.5",
-    "typescript": "^5.0.0"
+    "typescript": "^5.9.2"
   },
-
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.840.0",
     "@aws-sdk/util-dynamodb": "^3.840.0",
     "@googleapis/calendar": "^9.8.0",
     "@line/bot-sdk": "^9.5.1",
+    "bun": "^1.2.20",
     "jose": "^5.9.6"
   }
 }

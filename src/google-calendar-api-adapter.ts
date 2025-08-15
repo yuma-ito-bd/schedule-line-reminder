@@ -2,6 +2,7 @@ import { calendar, calendar_v3 } from "@googleapis/calendar";
 import type {
   FetchEventsParams,
   Schema$GoogleCalendarApiAdapter,
+  Schema$CalendarListEntry,
 } from "./types/google-calendar-api-adapter";
 import type { Schema$GoogleAuth } from "./types/google-auth";
 
@@ -32,6 +33,11 @@ export class GoogleCalendarApiAdapter
     };
     const response = await this.calendarClient.events.list(params);
 
+    return response.data.items || [];
+  }
+
+  async fetchCalendarList(): Promise<Schema$CalendarListEntry[]> {
+    const response = await this.calendarClient.calendarList.list();
     return response.data.items || [];
   }
 }
