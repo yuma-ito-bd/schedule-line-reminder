@@ -16,9 +16,9 @@
     "@types/bun": "latest",
     "aws-sdk-client-mock": "^4.1.0",
     "esbuild": "^0.25.5",
-    "js-yaml": "^4.1.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.0.0"
   },
+
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.840.0",
