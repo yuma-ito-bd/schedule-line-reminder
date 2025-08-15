@@ -36,5 +36,73 @@ describe("CalendarEventsNotifier", () => {
         expect.any(String),
       ]);
     });
+
+    it("同一IDのイベントは重複除外されるが、IDのないイベントは重複除外されない", async () => {
+      const googleCalendarApiMock = new GoogleCalendarApiAdapterMock();
+      const lineMessagingApiClientMock = new LineMessagingApiClientMock();
+
+      spyOn(googleCalendarApiMock, "fetchCalendarList").mockResolvedValue([
+        { id: "primary", accessRole: "owner" } as any,
+      ]);
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const startIso = tomorrow.toISOString();
+
+      spyOn(googleCalendarApiMock, "fetchEvents").mockResolvedValue([
+        { id: "same-id", summary: "A", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+        { id: "same-id", summary: "A duplicated", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+        { summary: "B", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+        { summary: "B", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+      ]);
+
+      const warnSpy = spyOn(console, "warn");
+
+      const calendarEventsNotifier = new CalendarEventsNotifier(
+        googleCalendarApiMock,
+        lineMessagingApiClientMock,
+        "test-user-id"
+      );
+
+      await calendarEventsNotifier.call();
+
+      // IDなしイベントは2件分 warn が出る
+      expect(warnSpy).toHaveBeenCalled();
+    });
+
+    it("IDがないイベントはsummary/startが同じでも両方残る", async () => {
+      const googleCalendarApiMock = new GoogleCalendarApiAdapterMock();
+      const lineMessagingApiClientMock = new LineMessagingApiClientMock();
+
+      spyOn(googleCalendarApiMock, "fetchCalendarList").mockResolvedValue([
+        { id: "primary", accessRole: "owner" } as any,
+      ]);
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const startIso = tomorrow.toISOString();
+
+      spyOn(googleCalendarApiMock, "fetchEvents").mockResolvedValue([
+        { summary: "C", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+        { summary: "C", start: { dateTime: startIso }, end: { dateTime: startIso } } as any,
+      ]);
+
+      const pushSpy = spyOn(lineMessagingApiClientMock, "pushTextMessages");
+
+      const calendarEventsNotifier = new CalendarEventsNotifier(
+        googleCalendarApiMock,
+        lineMessagingApiClientMock,
+        "test-user-id"
+      );
+
+      await calendarEventsNotifier.call();
+
+      expect(pushSpy).toHaveBeenCalled();
+      // Bunのspyが提供する calls を参照
+      const calls = (pushSpy as any).mock.calls;
+      const sentText = calls[0][1][0] as string;
+      const linesForDate = sentText.split("\n").filter((line) => line.includes(": C"));
+      expect(linesForDate.length).toBe(2);
+    });
   });
 });

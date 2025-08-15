@@ -17,4 +17,10 @@ export class GoogleCalendarApiAdapterMock
       },
     ];
   }
+
+  async fetchCalendarList() {
+    return [
+      { id: "primary", accessRole: "owner" },
+    ] as any;
+  }
 }
