@@ -46,6 +46,24 @@ export class LineWebhookUseCase {
       webhookEvent.message.type === "text"
     ) {
       const text = webhookEvent.message.text;
+      if (/^(?:カレンダー一覧|カレンダー)$/.test(text)) {
+        const userId = webhookEvent.source.userId;
+        const calendars = await this.userCalendarRepository.getUserCalendars(userId);
+        if (calendars.length > 0) {
+          const lines = calendars.map((c) => `- ${c.calendarName} (${c.calendarId})`);
+          const message = ["購読中のカレンダー:", ...lines].join("\n");
+          await this.lineClient.replyTextMessages(webhookEvent.replyToken, [message]);
+        } else {
+          await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
+            "購読中のカレンダーはありません。『カレンダー追加』で登録できます。",
+          ]);
+        }
+
+        return {
+          success: true,
+          message: "カレンダー一覧を返信しました",
+        };
+      }
       if (text === "カレンダー追加") {
         const { url, state } = this.googleAuth.generateAuthUrl();
         await this.stateRepository.saveState(state, webhookEvent.source.userId);
