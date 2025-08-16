@@ -433,5 +433,35 @@ describe("LineWebhookUseCase", () => {
       expect(replySpy).toHaveBeenCalled();
       expect(result).toEqual({ success: true, message: "カレンダー削除を完了しました" });
     });
+
+    // New tests for Help
+    test("ヘルプ/ help メッセージの場合、ヘルプを返信する", async () => {
+      // Given
+      const event1 = createTextMessageEvent("ヘルプ");
+      const event2 = createTextMessageEvent("help");
+      const replyTextSpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // When
+      const result1 = await useCase.handleWebhookEvent(event1);
+      const result2 = await useCase.handleWebhookEvent(event2);
+
+      // Then
+      expect(replyTextSpy).toHaveBeenCalledWith("test-reply-token", [expect.stringContaining("利用可能なコマンド:")]);
+      expect(result1).toEqual({ success: true, message: "ヘルプを返信しました" });
+      expect(result2).toEqual({ success: true, message: "ヘルプを返信しました" });
+    });
+
+    test("ヘルプメッセージ送信に失敗した場合はエラーを返す", async () => {
+      // Given
+      const event = createTextMessageEvent("ヘルプ");
+      const replyTextSpy = spyOn(mockLineClient, "replyTextMessages").mockRejectedValue(new Error("send error"));
+
+      // When
+      const result = await useCase.handleWebhookEvent(event);
+
+      // Then
+      expect(replyTextSpy).toHaveBeenCalledWith("test-reply-token", [expect.any(String)]);
+      expect(result).toEqual({ success: false, message: "ヘルプメッセージの送信に失敗しました" });
+    });
   });
 });
