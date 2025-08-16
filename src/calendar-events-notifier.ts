@@ -5,13 +5,14 @@ import type {
 import type { Schema$LineMessagingApiClient } from "./types/line-messaging-api-adapter";
 import type { Event } from "./types/event";
 import { CalendarMessageBuilder } from "./calendar-message-builder";
+import type { Schema$UserCalendarRepository } from "./types/user-calendar-repository";
 
 export class CalendarEventsNotifier {
   constructor(
     private readonly googleCalendarApi: Schema$GoogleCalendarApiAdapter,
     private readonly lineMessagingApiClient: Schema$LineMessagingApiClient,
     private readonly lineUserId: string,
-    private readonly targetCalendarIdsProvider?: () => Promise<string[]>
+    private readonly userCalendarRepository: Schema$UserCalendarRepository
   ) {}
 
   async call() {
@@ -20,8 +21,7 @@ export class CalendarEventsNotifier {
   }
 
   private async fetchEvents(): Promise<Event[]> {
-    // カレンダーリストを取得し、購読可能なカレンダーID一覧を得る
-    // 取得に失敗した場合は primary のみで続行
+    // 購読中のカレンダーID一覧を得る（失敗・未登録なら primary のみで続行）
     const calendarIds = await this.getTargetCalendarIds();
 
     // 翌日から1週間後までの予定を取得
@@ -71,22 +71,9 @@ export class CalendarEventsNotifier {
   }
 
   private async getTargetCalendarIds(): Promise<string[]> {
-    // まずは外部からのプロバイダがあればそれを使用
-    if (this.targetCalendarIdsProvider) {
-      try {
-        const ids = await this.targetCalendarIdsProvider();
-        return ids.length > 0 ? ids : ["primary"];
-      } catch (e) {
-        // フォールバックしてGoogleのカレンダーリストから取得
-      }
-    }
-
     try {
-      const list = await this.googleCalendarApi.fetchCalendarList();
-      // オーナーまたは閲覧可能なカレンダーを対象にする
-      const allowed = list.filter((c) => c.accessRole === "owner" || c.accessRole === "reader" || c.accessRole === "writer");
-      const ids = allowed.map((c) => c.id).filter((id): id is string => !!id);
-      // fallback
+      const calendars = await this.userCalendarRepository.getUserCalendars(this.lineUserId);
+      const ids = calendars.map((c) => c.calendarId).filter((id): id is string => !!id);
       return ids.length > 0 ? ids : ["primary"];
     } catch (e) {
       return ["primary"];

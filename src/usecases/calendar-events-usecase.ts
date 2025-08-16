@@ -44,22 +44,11 @@ export class CalendarEventsUseCase {
 
       const googleCalendarApi = new GoogleCalendarApiAdapter(auth);
 
-      // ユーザーの購読カレンダー一覧を取得するプロバイダ
-      const targetCalendarIdsProvider = async () => {
-        try {
-          const calendars = await this.userCalendarRepository.getUserCalendars(token.userId);
-          const enabledIds = calendars.map((c) => c.calendarId).filter((id) => !!id);
-          return enabledIds.length > 0 ? enabledIds : ["primary"];
-        } catch (e) {
-          return ["primary"];
-        }
-      };
-
       await new CalendarEventsNotifier(
         googleCalendarApi,
         this.lineMessagingApiClient,
         token.userId,
-        targetCalendarIdsProvider
+        this.userCalendarRepository
       ).call();
     } catch (error) {
       console.error(
