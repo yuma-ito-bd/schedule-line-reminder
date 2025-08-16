@@ -107,6 +107,10 @@ Resources:
                   !GetAtt OAuthStateTable.Arn,
                   !GetAtt OAuthTokensTable.Arn,
                 ]
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+              Resource: !GetAtt OAuthTokensTable.Arn
         # UserCalendarsTableに対する権限
         - Version: "2012-10-17"
           Statement:
