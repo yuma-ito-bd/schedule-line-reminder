@@ -72,6 +72,13 @@
 2. フェーズ2: helper 抽出・型ガードのテスト追加
 3. フェーズ3: （任意）ファイル分割・コマンド化
 
+## 実行時の品質ゲート（必須）
+- すべての変更は以下を必ず実行してグリーンであることを確認する
+  - 型チェック: `bun x tsc -p tsconfig.json --noEmit`
+  - テスト: `bun test`
+- 失敗があれば修正して再実行すること（計画外の変更は行わない）
+- CI導入時も同コマンドで検証可能なことを前提とする
+
 ---
 - 対象: `src/usecases/line-webhook-usecase.ts`
 - 関連: `src/handlers/line-webhook-handler.ts`, `__tests__/line-webhook-usecase.test.ts`
