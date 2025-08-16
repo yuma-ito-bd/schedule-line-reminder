@@ -170,6 +170,7 @@ Resources:
             - Effect: Allow
               Action:
                 - "dynamodb:PutItem"
+                - "dynamodb:GetItem"
                 - "dynamodb:DeleteItem"
               Resource: !GetAtt OAuthStateTable.Arn
             - Effect: Allow
