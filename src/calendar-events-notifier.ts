@@ -34,36 +34,25 @@ export class CalendarEventsNotifier {
       )
     );
 
-    // 取得結果にカレンダー名を付与
-    const annotated = results.flatMap((r, idx) => {
+    // 取得結果にカレンダー名を付与（重複除去しない）
+    const annotated: { ev: Schema$CalendarEvent; calendarName?: string }[] = results.flatMap((r, idx) => {
       if (r.status !== "fulfilled") return [] as { ev: Schema$CalendarEvent; calendarName?: string }[];
       const name = calendars[idx]?.name;
       return r.value.map((ev) => ({ ev, calendarName: name }));
     });
 
-    // IDがあるイベントのみ重複除去。IDがないイベントは重複除去しない
-    const withId = annotated.filter((a) => !!a.ev.id);
-    const withoutId = annotated.filter((a) => !a.ev.id);
-
-    withoutId.forEach((a) => {
-      const startStr = a.ev.start?.dateTime || a.ev.start?.date || "unknown";
-      console.warn(
-        `Event missing id. summary=${a.ev.summary ?? ""}, start=${startStr}`
-      );
-    });
-
-    const uniqueEventsMap = new Map<string, { ev: Schema$CalendarEvent; calendarName?: string }>();
-    withId.forEach((a) => {
-      const id = a.ev.id as string;
-      if (!uniqueEventsMap.has(id)) {
-        uniqueEventsMap.set(id, a);
+    // IDがないイベントはログに出す（重複は許容）
+    annotated.forEach((a) => {
+      if (!a.ev.id) {
+        const startStr = a.ev.start?.dateTime || a.ev.start?.date || "unknown";
+        console.warn(
+          `Event missing id. summary=${a.ev.summary ?? ""}, start=${startStr}`
+        );
       }
     });
 
-    const dedupedAnnotated = [...uniqueEventsMap.values(), ...withoutId];
-
     // 表示用に変換（カレンダー名を保持）
-    const eventSummaries = dedupedAnnotated
+    const eventSummaries = annotated
       .map((a) => {
         const summary = this.toEventSummary(a.ev);
         return { ...summary, calendarName: a.calendarName } satisfies Event;
