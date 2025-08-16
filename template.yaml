@@ -39,13 +39,13 @@ Resources:
               Action:
                 - "kms:Decrypt"
                 - "ssm:GetParameter"
-                - "dynamodb:Scan"
               Resource:
-                [
-                  Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
-                  Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
-                  !GetAtt OAuthTokensTable.Arn,
-                ]
+                - Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm"
+                - Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*"
+            - Effect: Allow
+              Action:
+                - "dynamodb:Scan"
+              Resource: !GetAtt OAuthTokensTable.Arn
         # UserCalendarsTableに対する権限
         - Version: "2012-10-17"
           Statement:
@@ -164,17 +164,21 @@ Resources:
               Action:
                 - "kms:Decrypt"
                 - "ssm:GetParameter"
+              Resource:
+                - Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm"
+                - Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*"
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+              Resource: !GetAtt OAuthStateTable.Arn
+            - Effect: Allow
+              Action:
                 - "dynamodb:PutItem"
                 - "dynamodb:GetItem"
                 - "dynamodb:DeleteItem"
                 - "dynamodb:UpdateItem"
-              Resource:
-                [
-                  Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
-                  Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
-                  !GetAtt OAuthStateTable.Arn,
-                  !GetAtt OAuthTokensTable.Arn,
-                ]
+              Resource: !GetAtt OAuthTokensTable.Arn
         # UserCalendarsTableに対する権限
         - Version: "2012-10-17"
           Statement:
