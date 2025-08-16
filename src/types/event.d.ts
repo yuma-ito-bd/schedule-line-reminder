@@ -3,4 +3,5 @@ export type Event = {
   startDateTime: Date | null;
   endDateTime: Date | null;
   isAllDay: boolean;
+  calendarName?: string;
 };

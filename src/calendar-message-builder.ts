@@ -18,10 +18,10 @@ export class CalendarMessageBuilder {
    * ```
    * 明日から1週間の予定です。
    * 2021/01/01
-   * 09:00-10:00: 予定1
+   * 09:00-10:00 予定1
    *
    * 2021/01/02
-   * 09:00-10:00: 予定2
+   * 09:00-10:00 予定2
    * ```
    * @returns フォーマットされたメッセージ
    */
@@ -68,8 +68,9 @@ export class CalendarMessageBuilder {
   }
 
   private formatEvent(event: Event): string {
+    const cal = event.calendarName ? ` [${event.calendarName}]` : "";
     if (event.isAllDay) {
-      return `終日: ${event.summary}`;
+      return `終日${cal} ${event.summary}`.trim();
     }
     const eventStartTime = event.startDateTime
       ? DateFormatter.jstHm(event.startDateTime)
@@ -78,7 +79,7 @@ export class CalendarMessageBuilder {
       ? DateFormatter.jstHm(event.endDateTime)
       : "";
 
-    return `${eventStartTime}-${eventEndTime}: ${event.summary}`;
+    return `${eventStartTime}-${eventEndTime}${cal} ${event.summary}`.trim();
   }
 
   private headerText(): string {

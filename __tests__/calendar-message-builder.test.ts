@@ -11,6 +11,7 @@ describe("CalendarMessageBuilder", () => {
           startDateTime: new Date("2021-01-01T00:00:00Z"),
           endDateTime: new Date("2021-01-01T01:00:00Z"),
           isAllDay: false,
+          calendarName: "メインカレンダー",
         },
       ];
       const builder = new CalendarMessageBuilder(events);
@@ -27,12 +28,14 @@ describe("CalendarMessageBuilder", () => {
           startDateTime: new Date("2021-01-01T00:00:00Z"),
           endDateTime: new Date("2021-01-01T01:00:00Z"),
           isAllDay: false,
+          calendarName: "メインカレンダー",
         },
         {
           summary: "予定2",
           startDateTime: new Date("2021-01-02T00:00:00Z"),
           endDateTime: new Date("2021-01-02T01:00:00Z"),
           isAllDay: false,
+          calendarName: "仕事",
         },
       ];
       const builder = new CalendarMessageBuilder(events, today);
@@ -40,10 +43,10 @@ describe("CalendarMessageBuilder", () => {
       expect(message).toBe(
         `明日から1週間の予定です。
 📅 2021/01/01
-09:00-10:00: 予定1
+09:00-10:00 [メインカレンダー] 予定1
 
 📅 2021/01/02
-09:00-10:00: 予定2
+09:00-10:00 [仕事] 予定2
 
 📅 2021/01/03
 予定なし
@@ -70,6 +73,7 @@ describe("CalendarMessageBuilder", () => {
           startDateTime: new Date("2021-01-01"),
           endDateTime: new Date("2021-01-02"),
           isAllDay: true,
+          calendarName: "プライベート",
         },
       ];
       const builder = new CalendarMessageBuilder(events, today);
@@ -77,7 +81,7 @@ describe("CalendarMessageBuilder", () => {
       expect(message).toBe(
         `明日から1週間の予定です。
 📅 2021/01/01
-終日: 予定1
+終日 [プライベート] 予定1
 
 📅 2021/01/02
 予定なし

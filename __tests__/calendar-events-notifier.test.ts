@@ -3,6 +3,16 @@ import { GoogleCalendarApiAdapterMock } from "./mocks/google-calendar-api-adapte
 import { CalendarEventsNotifier } from "../src/calendar-events-notifier";
 import { LineMessagingApiClientMock } from "./mocks/line-messaging-api-client-mock";
 
+class DummyUserCalendarRepository {
+  async addCalendar() {}
+  async deleteCalendar() {}
+  async getUserCalendars() {
+    return [
+      { userId: "test-user-id", calendarId: "primary", calendarName: "メインカレンダー", createdAt: new Date(), updatedAt: new Date() },
+    ];
+  }
+}
+
 describe("CalendarEventsNotifier", () => {
   describe("#call", () => {
     it("fetchEventsを呼び出すこと", async () => {
@@ -12,7 +22,8 @@ describe("CalendarEventsNotifier", () => {
       const calendarEventsNotifier = new CalendarEventsNotifier(
         googleCalendarApiMock,
         lineMessagingApiClientMock,
-        "test-user-id"
+        "test-user-id",
+        new DummyUserCalendarRepository() as any
       );
       await calendarEventsNotifier.call();
       expect(fetchEventsSpy).toHaveBeenCalled();
@@ -28,7 +39,8 @@ describe("CalendarEventsNotifier", () => {
       const calendarEventsNotifier = new CalendarEventsNotifier(
         googleCalendarApiMock,
         lineMessagingApiClientMock,
-        "test-user-id"
+        "test-user-id",
+        new DummyUserCalendarRepository() as any
       );
       await calendarEventsNotifier.call();
       // 第1引数がtest-user-idであること
@@ -40,10 +52,6 @@ describe("CalendarEventsNotifier", () => {
     it("同一IDのイベントは重複除外されるが、IDのないイベントは重複除外されない", async () => {
       const googleCalendarApiMock = new GoogleCalendarApiAdapterMock();
       const lineMessagingApiClientMock = new LineMessagingApiClientMock();
-
-      spyOn(googleCalendarApiMock, "fetchCalendarList").mockResolvedValue([
-        { id: "primary", accessRole: "owner" } as any,
-      ]);
 
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -61,7 +69,8 @@ describe("CalendarEventsNotifier", () => {
       const calendarEventsNotifier = new CalendarEventsNotifier(
         googleCalendarApiMock,
         lineMessagingApiClientMock,
-        "test-user-id"
+        "test-user-id",
+        new DummyUserCalendarRepository() as any
       );
 
       await calendarEventsNotifier.call();
@@ -73,10 +82,6 @@ describe("CalendarEventsNotifier", () => {
     it("IDがないイベントはsummary/startが同じでも両方残る", async () => {
       const googleCalendarApiMock = new GoogleCalendarApiAdapterMock();
       const lineMessagingApiClientMock = new LineMessagingApiClientMock();
-
-      spyOn(googleCalendarApiMock, "fetchCalendarList").mockResolvedValue([
-        { id: "primary", accessRole: "owner" } as any,
-      ]);
 
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -92,7 +97,8 @@ describe("CalendarEventsNotifier", () => {
       const calendarEventsNotifier = new CalendarEventsNotifier(
         googleCalendarApiMock,
         lineMessagingApiClientMock,
-        "test-user-id"
+        "test-user-id",
+        new DummyUserCalendarRepository() as any
       );
 
       await calendarEventsNotifier.call();
@@ -101,7 +107,7 @@ describe("CalendarEventsNotifier", () => {
       // Bunのspyが提供する calls を参照
       const calls = (pushSpy as any).mock.calls;
       const sentText = calls[0][1][0] as string;
-      const linesForDate = sentText.split("\n").filter((line) => line.includes(": C"));
+      const linesForDate = sentText.split("\n").filter((line) => line.includes(" C"));
       expect(linesForDate.length).toBe(2);
     });
   });

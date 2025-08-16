@@ -5,6 +5,16 @@ import { LineMessagingApiClientMock } from "../mocks/line-messaging-api-client-m
 import { GoogleCalendarApiAdapter } from "../../src/google-calendar-api-adapter";
 import { CalendarEventsNotifier } from "../../src/calendar-events-notifier";
 
+class DummyUserCalendarRepository {
+  async addCalendar() {}
+  async deleteCalendar() {}
+  async getUserCalendars() {
+    return [
+      { userId: "user1", calendarId: "primary", calendarName: "メインカレンダー", createdAt: new Date(), updatedAt: new Date() },
+    ];
+  }
+}
+
 describe("CalendarEventsUseCase", () => {
   let notifierSpy: ReturnType<typeof spyOn>;
   let fetchEventsSpy: ReturnType<typeof spyOn>;
@@ -19,9 +29,11 @@ describe("CalendarEventsUseCase", () => {
       // Given
       const tokenRepository = new MockTokenRepository();
       const lineMessagingApiClient = new LineMessagingApiClientMock();
+      const userCalendarRepository = new DummyUserCalendarRepository() as any;
       const useCase = new CalendarEventsUseCase(
         tokenRepository,
-        lineMessagingApiClient
+        lineMessagingApiClient,
+        userCalendarRepository
       );
 
       // GoogleCalendarApiAdapterのモック
@@ -48,9 +60,11 @@ describe("CalendarEventsUseCase", () => {
       // Given
       const tokenRepository = new MockTokenRepository();
       const lineMessagingApiClient = new LineMessagingApiClientMock();
+      const userCalendarRepository = new DummyUserCalendarRepository() as any;
       const useCase = new CalendarEventsUseCase(
         tokenRepository,
-        lineMessagingApiClient
+        lineMessagingApiClient,
+        userCalendarRepository
       );
 
       // GoogleCalendarApiAdapterのモック
@@ -83,9 +97,11 @@ describe("CalendarEventsUseCase", () => {
       }
       const tokenRepository = new EmptyTokenRepository();
       const lineMessagingApiClient = new LineMessagingApiClientMock();
+      const userCalendarRepository = new DummyUserCalendarRepository() as any;
       const useCase = new CalendarEventsUseCase(
         tokenRepository,
-        lineMessagingApiClient
+        lineMessagingApiClient,
+        userCalendarRepository
       );
 
       // GoogleCalendarApiAdapterのモック
