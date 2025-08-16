@@ -1,16 +1,9 @@
 {
   "name": "Cursor Background Agent Env",
-  "docker": {
+  "install": "bun install",
+  "start": "echo 'Environment started successfully'",
+  "build": {
     "dockerfile": "Dockerfile",
     "context": "."
-  },
-  "install": [
-    "set -eux",
-    "if [ -f package.json ] || [ -f bun.lockb ]; then bun install; fi",
-    "git --version",
-    "bun --version",
-    "sam --version"
-  ],
-  "terminals": [],
-  "env": {}
+  }
 }
