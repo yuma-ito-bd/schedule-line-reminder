@@ -7,6 +7,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install system packages
 # - git: version control
 # - curl, unzip, ca-certificates: required for SAM CLI installer and common tooling
+# - vim, nano: text editors for development
+# - tree: directory listing utility
+# - htop: system monitoring
+# - jq: JSON processor
 # Clean apt cache to reduce image size
 RUN set -eux; \
 	apt-get update; \
@@ -14,7 +18,13 @@ RUN set -eux; \
 		git \
 		curl \
 		unzip \
-		ca-certificates; \
+		ca-certificates \
+		vim \
+		nano \
+		tree \
+		htop \
+		jq \
+		bash-completion; \
 	rm -rf /var/lib/apt/lists/*
 
 # Install AWS SAM CLI via the official installer (per AWS docs)
@@ -35,8 +45,13 @@ RUN set -eux; \
 	git --version; \
 	sam --version
 
-# Set default working directory for Cursor-managed workspaces
-WORKDIR /workspace
+# Create a non-root user for development
+RUN useradd -m -s /bin/bash ubuntu && \
+	echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Set user and working directory to home directory (best practice for Cursor)
+USER ubuntu
+WORKDIR /home/ubuntu
 
 # The agent's runtime dependency installation should happen via your install script
 # configured in .cursor/environment.json, not in this Dockerfile.
