@@ -146,10 +146,20 @@ export class LineWebhookUseCase {
       try {
         const { url, state } = this.googleAuth.generateAuthUrl();
         await this.stateRepository.saveState(state, userId);
-        await this.lineClient.replyTextMessages(replyToken, [
+        await this.lineClient.replyTextWithQuickReply(
+          replyToken,
           MessageTemplates.sendAuthGuidance,
-          url,
-        ]);
+          [
+            {
+              type: "action",
+              action: {
+                type: "uri",
+                label: "Googleでログイン",
+                uri: url,
+              },
+            },
+          ]
+        );
         return {
           success: true,
           message: MessageTemplates.sendAuthUrlResult,
