@@ -6,6 +6,7 @@ import type { Schema$OAuthStateRepository } from "../types/oauth-state-repositor
 import type { Schema$TokenRepository } from "../types/token-repository";
 import type { Schema$UserCalendarRepository } from "../types/user-calendar-repository";
 import { GoogleCalendarApiAdapter } from "../google-calendar-api-adapter";
+import type { Schema$GoogleCalendarApiAdapter } from "../types/google-calendar-api-adapter";
 import type { messagingApi } from "@line/bot-sdk";
 
 const QUICK_REPLY_CALENDAR_LIMIT = 12; // LINE API limit is 13; we use 12 to leave room if needed
@@ -28,7 +29,10 @@ export class LineWebhookUseCase {
     private readonly googleAuth: Schema$GoogleAuth,
     private readonly stateRepository: Schema$OAuthStateRepository,
     private readonly tokenRepository: Schema$TokenRepository,
-    private readonly userCalendarRepository: Schema$UserCalendarRepository
+    private readonly userCalendarRepository: Schema$UserCalendarRepository,
+    private readonly calendarApiFactory: (
+      auth: Schema$GoogleAuth
+    ) => Schema$GoogleCalendarApiAdapter = (auth) => new GoogleCalendarApiAdapter(auth)
   ) {}
 
   async handleWebhookEvent(
@@ -121,7 +125,7 @@ export class LineWebhookUseCase {
 
         // トークンが登録済みの場合は、利用可能なカレンダーを取得してクイックリプライで提示
         this.googleAuth.setTokens(token);
-        const calendarApi = new GoogleCalendarApiAdapter(this.googleAuth);
+        const calendarApi = this.calendarApiFactory(this.googleAuth);
         const list = await calendarApi.fetchCalendarList();
         const items: messagingApi.QuickReplyItem[] = list
           .slice(0, QUICK_REPLY_CALENDAR_LIMIT)

@@ -252,7 +252,7 @@ describe("LineWebhookUseCase", () => {
       });
     });
 
-    // New tests for calendar add quick reply flow
+    // New tests for calendar add quick reply flow (with factory DI)
     test("カレンダー追加: トークン登録済みならクイックリプライを送信し、ラベルは20文字に切り詰められる", async () => {
       // Given
       const event = createTextMessageEvent("カレンダー追加");
@@ -272,33 +272,27 @@ describe("LineWebhookUseCase", () => {
             };
           },
         } as any,
-        mockUserCalendarRepository as any
+        mockUserCalendarRepository as any,
+        () => ({
+          async fetchCalendarList() {
+            return [
+              { id: "cal-1", summary: longName },
+              { id: "cal-2", summary: "短い" },
+            ] as any;
+          },
+          async fetchEvents() { return []; },
+        }) as any
       );
       // stub google auth setTokens (no-op)
       spyOn(mockAuthUrlGenerator, "setTokens").mockReturnValue();
-      // stub calendar list via spy on adapter constructor method usage
-      // We cannot easily intercept new GoogleCalendarApiAdapter() here, but we can
-      // simulate by temporarily replacing its prototype method if needed; for simplicity,
-      // rely on using primary id and long summary through actual adapter would return.
 
       // Spy on client to assert quick reply was used
       const replyQuickSpy = spyOn(mockLineClient, "replyTextWithQuickReply");
-
-      // Temporarily monkey-patch adapter method on instance created inside use case
-      // by spying on the adapter prototype
-      const fetchSpy = spyOn(
-        (require("../src/google-calendar-api-adapter") as any).GoogleCalendarApiAdapter.prototype,
-        "fetchCalendarList"
-      ).mockResolvedValue([
-        { id: "cal-1", summary: longName },
-        { id: "cal-2", summary: "短い" },
-      ]);
 
       // When
       const result = await useCaseWithToken.handleWebhookEvent(event);
 
       // Then
-      expect(fetchSpy).toHaveBeenCalled();
       expect(replyQuickSpy).toHaveBeenCalled();
       const args = (replyQuickSpy.mock.calls[0] as any[]);
       expect(args[0]).toBe("test-reply-token");
