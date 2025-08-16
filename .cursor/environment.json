@@ -3,7 +3,7 @@
   "install": "bun install",
   "start": "echo 'Environment started successfully'",
   "build": {
-    "dockerfile": "Dockerfile",
+    "dockerfile": ".cursor/Dockerfile",
     "context": "."
   }
 }
