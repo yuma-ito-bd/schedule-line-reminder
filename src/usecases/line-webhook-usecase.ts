@@ -186,9 +186,9 @@ export class LineWebhookUseCase {
       return null;
     } catch (error) {
       console.error("Failed to handle postback", {
-        userId: webhookEvent?.source?.userId,
+        userId: webhookEvent.source.userId,
         action: "postback",
-        rawData: webhookEvent?.type === "postback" ? webhookEvent.postback?.data : undefined,
+        rawData: webhookEvent.postback.data,
         error,
       });
       return { success: false, message: MessageTemplates.postbackError };
