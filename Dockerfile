@@ -1,5 +1,5 @@
 # Base image with Bun preinstalled (Debian-based)
-FROM oven/bun:1
+FROM oven/bun:1.2-debian
 
 # Avoid interactive prompts during apt operations
 ENV DEBIAN_FRONTEND=noninteractive
