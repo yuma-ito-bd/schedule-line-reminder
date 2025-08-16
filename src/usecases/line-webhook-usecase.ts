@@ -39,6 +39,7 @@ const MessageTemplates = {
   authUrlSendFailure: "認可URLの送信に失敗しました",
   addQuickFailure: "カレンダー追加クイックリプライの送信に失敗しました",
   deleteQuickFailure: "カレンダー削除クイックリプライの送信に失敗しました",
+  tokenFetchFailure: "認可状態の取得に失敗しました",
 } as const;
 
 // Narrowed event types derived from the discriminated union
@@ -224,64 +225,68 @@ export class LineWebhookUseCase {
   }
 
   private async handleCalendarAdd(userId: string, replyToken: string): Promise<WebhookUseCaseResult> {
+    // Step 1: fetch token
+    let token;
     try {
-      const token = await this.tokenRepository.getToken(userId);
-      if (!token) {
-        try {
-          const { url, state } = this.googleAuth.generateAuthUrl();
-          await this.stateRepository.saveState(state, userId);
-          await this.lineClient.replyTextMessages(replyToken, [
-            MessageTemplates.sendAuthGuidance,
-            url,
-          ]);
-          return {
-            success: true,
-            message: MessageTemplates.sendAuthUrlResult,
-          };
-        } catch (error) {
-          console.error("Failed to send auth URL", {
-            userId,
-            action: "calendar_add_auth",
-            error,
-          });
-          return { success: false, message: MessageTemplates.authUrlSendFailure };
-        }
-      }
+      token = await this.tokenRepository.getToken(userId);
+    } catch (error) {
+      console.error("Failed to fetch token", {
+        userId,
+        action: "calendar_add_get_token",
+        error,
+      });
+      return { success: false, message: MessageTemplates.tokenFetchFailure };
+    }
 
-      // トークンが登録済みの場合は、利用可能なカレンダーを取得してクイックリプライで提示
+    // Step 2: if token is missing, send auth guidance and URL
+    if (!token) {
       try {
-        this.googleAuth.setTokens(token);
-        const calendarApi = this.calendarApiFactory(this.googleAuth);
-        const list = await calendarApi.fetchCalendarList();
-        const calendarsForQuick = list
-          .filter((entry) => !!entry.id)
-          .map((entry) => ({
-            id: entry.id as string,
-            name: entry.summary || (entry.id as string) || "(no title)",
-          }));
-        const items = createCalendarQuickReplyItems(
-          calendarsForQuick,
-          ADD_CALENDAR_SELECT
-        );
-        await this.lineClient.replyTextWithQuickReply(
-          replyToken,
-          MessageTemplates.addQuickPrompt,
-          items
-        );
-
-        return { success: true, message: MessageTemplates.addQuickResult };
+        const { url, state } = this.googleAuth.generateAuthUrl();
+        await this.stateRepository.saveState(state, userId);
+        await this.lineClient.replyTextMessages(replyToken, [
+          MessageTemplates.sendAuthGuidance,
+          url,
+        ]);
+        return {
+          success: true,
+          message: MessageTemplates.sendAuthUrlResult,
+        };
       } catch (error) {
-        console.error("Failed to send add-calendar quick reply", {
+        console.error("Failed to send auth URL", {
           userId,
-          action: "calendar_add_quick_reply",
+          action: "calendar_add_auth",
           error,
         });
-        return { success: false, message: MessageTemplates.addQuickFailure };
+        return { success: false, message: MessageTemplates.authUrlSendFailure };
       }
+    }
+
+    // Step 3: token exists → fetch calendar list and send quick reply
+    try {
+      this.googleAuth.setTokens(token);
+      const calendarApi = this.calendarApiFactory(this.googleAuth);
+      const list = await calendarApi.fetchCalendarList();
+      const calendarsForQuick = list
+        .filter((entry) => !!entry.id)
+        .map((entry) => ({
+          id: entry.id as string,
+          name: entry.summary || (entry.id as string) || "(no title)",
+        }));
+      const items = createCalendarQuickReplyItems(
+        calendarsForQuick,
+        ADD_CALENDAR_SELECT
+      );
+      await this.lineClient.replyTextWithQuickReply(
+        replyToken,
+        MessageTemplates.addQuickPrompt,
+        items
+      );
+
+      return { success: true, message: MessageTemplates.addQuickResult };
     } catch (error) {
-      console.error("Failed in calendar add flow", {
+      console.error("Failed to send add-calendar quick reply", {
         userId,
-        action: "calendar_add",
+        action: "calendar_add_quick_reply",
         error,
       });
       return { success: false, message: MessageTemplates.addQuickFailure };
