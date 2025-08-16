@@ -4,6 +4,7 @@ import { CalendarEventsUseCase } from "../usecases/calendar-events-usecase";
 import { Config } from "../lib/config";
 import { TokenRepository } from "../lib/token-repository";
 import { LineMessagingApiClient } from "../line-messaging-api-client";
+import { UserCalendarRepository } from "../lib/user-calendar-repository";
 
 const configInitialization = (Config.getInstance()).init();
 
@@ -15,9 +16,11 @@ export const calendarEventsHandler =
     try {
       const tokenRepository = new TokenRepository();
       const lineMessagingApiClient = new LineMessagingApiClient();
+      const userCalendarRepository = new UserCalendarRepository();
       await new CalendarEventsUseCase(
         tokenRepository,
-        lineMessagingApiClient
+        lineMessagingApiClient,
+        userCalendarRepository
       ).execute();
       console.info("End calendar events handler");
 

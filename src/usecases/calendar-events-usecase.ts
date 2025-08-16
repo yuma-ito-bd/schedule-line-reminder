@@ -3,11 +3,13 @@ import { GoogleCalendarApiAdapter } from "../google-calendar-api-adapter";
 import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
 import type { Schema$LineMessagingApiClient } from "../types/line-messaging-api-adapter";
 import type { Schema$TokenRepository, Token } from "../types/token-repository";
+import type { Schema$UserCalendarRepository } from "../types/user-calendar-repository";
 
 export class CalendarEventsUseCase {
   constructor(
     private readonly tokenRepository: Schema$TokenRepository,
-    private readonly lineMessagingApiClient: Schema$LineMessagingApiClient
+    private readonly lineMessagingApiClient: Schema$LineMessagingApiClient,
+    private readonly userCalendarRepository: Schema$UserCalendarRepository
   ) {}
 
   async execute(): Promise<void> {
@@ -41,10 +43,12 @@ export class CalendarEventsUseCase {
       });
 
       const googleCalendarApi = new GoogleCalendarApiAdapter(auth);
+
       await new CalendarEventsNotifier(
         googleCalendarApi,
         this.lineMessagingApiClient,
-        token.userId
+        token.userId,
+        this.userCalendarRepository
       ).call();
     } catch (error) {
       console.error(
