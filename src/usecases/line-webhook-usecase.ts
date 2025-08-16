@@ -13,6 +13,8 @@ const QUICK_REPLY_CALENDAR_LIMIT = 12; // LINE API limit is 13; we use 12 to lea
 const ADD_CALENDAR_SELECT = "ADD_CALENDAR_SELECT" as const;
 const DELETE_CALENDAR_SELECT = "DELETE_CALENDAR_SELECT" as const;
 
+type PostbackAction = typeof ADD_CALENDAR_SELECT | typeof DELETE_CALENDAR_SELECT;
+
 const MessageTemplates = {
   tokenDeleteSuccess: "トークン情報を削除しました",
   tokenDeleteFailure: "トークン情報の削除に失敗しました",
@@ -40,7 +42,7 @@ type PostbackEventType = Extract<LineWebhookEvent, { type: "postback" }>;
 type MessageEventType = Extract<LineWebhookEvent, { type: "message" }>;
 
 type ParsedPostbackData = {
-  action: string;
+  action: PostbackAction;
   calendarId?: string;
   calendarName?: string;
 };
