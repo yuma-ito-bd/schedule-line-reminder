@@ -23,4 +23,14 @@ export const MessageTemplates = {
   addQuickFailure: "カレンダー追加クイックリプライの送信に失敗しました",
   deleteQuickFailure: "カレンダー削除クイックリプライの送信に失敗しました",
   tokenFetchFailure: "認可状態の取得に失敗しました",
+  // Help
+  helpText: [
+    "利用可能なコマンド:",
+    "- カレンダー一覧 / カレンダー: 購読中のカレンダー一覧を表示",
+    "- カレンダー追加: Googleカレンダーからカレンダーを追加",
+    "- カレンダー削除: 購読中のカレンダーを削除",
+    "- ヘルプ / help: このメッセージを表示",
+  ].join("\n"),
+  helpResult: "ヘルプを返信しました",
+  helpSendFailure: "ヘルプメッセージの送信に失敗しました",
 } as const;

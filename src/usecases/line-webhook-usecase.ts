@@ -229,6 +229,20 @@ export class LineWebhookUseCase {
     }
   }
 
+  private async handleHelp(userId: string, replyToken: string): Promise<WebhookUseCaseResult> {
+    try {
+      await this.lineClient.replyTextMessages(replyToken, [MessageTemplates.helpText]);
+      return { success: true, message: MessageTemplates.helpResult };
+    } catch (error) {
+      console.error("Failed to send help message", {
+        userId,
+        action: "help",
+        error,
+      });
+      return { success: false, message: MessageTemplates.helpSendFailure };
+    }
+  }
+
   private async handleMessage(webhookEvent: MessageEventType): Promise<WebhookUseCaseResult | null> {
     if (webhookEvent.message.type !== "text") return null;
     const text = webhookEvent.message.text;
@@ -241,6 +255,9 @@ export class LineWebhookUseCase {
     }
     if (text === "カレンダー削除") {
       return this.handleCalendarDelete(webhookEvent.source.userId, webhookEvent.replyToken);
+    }
+    if (/^(?:ヘルプ|help)$/i.test(text)) {
+      return this.handleHelp(webhookEvent.source.userId, webhookEvent.replyToken);
     }
 
     return null;
