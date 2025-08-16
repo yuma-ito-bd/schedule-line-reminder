@@ -336,5 +336,102 @@ describe("LineWebhookUseCase", () => {
       expect(result.success).toBe(false);
       expect(result.message).toBe("ポストバック処理でエラーが発生しました");
     });
+
+    // New tests for delete quick reply and postback deletion
+    test("カレンダー削除: 購読中がある場合、クイックリプライを送信し、ラベルは20文字に切り詰められる", async () => {
+      // Given
+      const event = createTextMessageEvent("カレンダー削除");
+      const longName = "とてもとても長い購読中のカレンダー名で二十文字超";
+      const mockUserCalendarRepository = {
+        async getUserCalendars(userId: string) {
+          expect(userId).toBe("test-user-id");
+          return [
+            {
+              userId: "test-user-id",
+              calendarId: "cal-1",
+              calendarName: longName,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+            {
+              userId: "test-user-id",
+              calendarId: "cal-2",
+              calendarName: "短い",
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          ];
+        },
+      } as any;
+      const useCaseWithCalendars = new LineWebhookUseCase(
+        mockLineClient,
+        mockAuthUrlGenerator,
+        mockStateRepository,
+        mockTokenRepository,
+        mockUserCalendarRepository
+      );
+      const replyQuickSpy = spyOn(mockLineClient, "replyTextWithQuickReply");
+
+      // When
+      const result = await useCaseWithCalendars.handleWebhookEvent(event);
+
+      // Then
+      expect(replyQuickSpy).toHaveBeenCalled();
+      const args = (replyQuickSpy.mock.calls[0] as any[]);
+      expect(args[0]).toBe("test-reply-token");
+      expect(args[1]).toBe("削除するカレンダーを選択してください");
+      const items = args[2];
+      expect(Array.isArray(items)).toBe(true);
+      expect(items.length).toBe(2);
+      // label truncated to <= 20
+      expect(items[0].action.label.length).toBeLessThanOrEqual(20);
+      expect(items[0].action.data).toContain("\"action\":\"DELETE_CALENDAR_SELECT\"");
+      expect(items[0].action.data).toContain("cal-1");
+      expect(items[0].action.data).toContain(longName);
+      expect(result).toEqual({ success: true, message: "カレンダー削除クイックリプライを送信しました" });
+    });
+
+    test("カレンダー削除: 購読が0件なら案内を返信する", async () => {
+      // Given
+      const event = createTextMessageEvent("カレンダー削除");
+      const mockUserCalendarRepository = {
+        async getUserCalendars() { return []; },
+      } as any;
+      const useCaseNoCalendars = new LineWebhookUseCase(
+        mockLineClient,
+        mockAuthUrlGenerator,
+        mockStateRepository,
+        mockTokenRepository,
+        mockUserCalendarRepository
+      );
+      const replyTextSpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // When
+      const result = await useCaseNoCalendars.handleWebhookEvent(event);
+
+      // Then
+      expect(replyTextSpy).toHaveBeenCalledWith(
+        "test-reply-token",
+        ["購読中のカレンダーはありません。『カレンダー追加』で登録できます。"]
+      );
+      expect(result).toEqual({ success: true, message: "削除対象のカレンダーがありませんでした" });
+    });
+
+    test("Postback: DELETE_CALENDAR_SELECT でカレンダーを削除し、完了メッセージを返す", async () => {
+      // Given
+      const event = createPostbackEvent(
+        JSON.stringify({ action: "DELETE_CALENDAR_SELECT", calendarId: "cal-1", calendarName: "仕事" })
+      );
+      const deleteSpy: any = spyOn(DummyUserCalendarRepository.prototype, "deleteCalendar");
+      const replySpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // When
+      const result = await useCase.handleWebhookEvent(event);
+
+      // Then
+      expect(deleteSpy).toHaveBeenCalledWith("test-user-id", "cal-1");
+      expect(replySpy).toHaveBeenCalled();
+      expect(result).toEqual({ success: true, message: "カレンダー削除を完了しました" });
+    });
   });
 });
