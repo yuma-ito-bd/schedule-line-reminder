@@ -4,32 +4,32 @@ FROM oven/bun:1
 # Avoid interactive prompts during apt operations
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system packages and pipx for SAM CLI
+# Install system packages
 # - git: version control
-# - python3, python3-venv, python3-pip: required for pipx/venv
-# - pipx: recommended installer for aws-sam-cli
-# - curl, unzip, ca-certificates: common tooling used by many build scripts
+# - curl, unzip, ca-certificates: required for SAM CLI installer and common tooling
 # Clean apt cache to reduce image size
 RUN set -eux; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
 		git \
-		python3 \
-		python3-venv \
-		python3-pip \
-		pipx \
 		curl \
 		unzip \
 		ca-certificates; \
 	rm -rf /var/lib/apt/lists/*
 
-# Configure pipx to install binaries into a global, conventional path
-ENV PIPX_HOME=/opt/pipx \
-	PIPX_BIN_DIR=/usr/local/bin
-
-# Install AWS SAM CLI via pipx
+# Install AWS SAM CLI via the official installer (per AWS docs)
+# Detect architecture and download the corresponding release zip
 RUN set -eux; \
-	pipx install aws-sam-cli; \
+	arch="$(dpkg --print-architecture)"; \
+	case "$arch" in \
+		amd64) sam_arch="x86_64" ;; \
+		arm64) sam_arch="arm64" ;; \
+		*) echo "Unsupported architecture: $arch" >&2; exit 1 ;; \
+	esac; \
+	curl -L "https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-${sam_arch}.zip" -o /tmp/aws-sam-cli.zip; \
+	unzip /tmp/aws-sam-cli.zip -d /tmp/sam-installation; \
+	/tmp/sam-installation/install; \
+	rm -rf /tmp/aws-sam-cli.zip /tmp/sam-installation; \
 	# Show versions to verify install succeeded during image build
 	bun --version; \
 	git --version; \
