@@ -13,21 +13,37 @@ const QUICK_REPLY_CALENDAR_LIMIT = 12; // LINE API limit is 13; we use 12 to lea
 const ADD_CALENDAR_SELECT = "ADD_CALENDAR_SELECT" as const;
 const DELETE_CALENDAR_SELECT = "DELETE_CALENDAR_SELECT" as const;
 
-type ParsedPostbackData = {
-  action: string;
-  calendarId?: string;
-  calendarName?: string;
-};
+const MessageTemplates = {
+  tokenDeleteSuccess: "トークン情報を削除しました",
+  tokenDeleteFailure: "トークン情報の削除に失敗しました",
+  postbackAddReply: (calendarName: string) => `『${calendarName}』を購読カレンダーに追加しました。`,
+  postbackAddResult: "カレンダー追加を完了しました",
+  postbackDeleteReply: (name: string) => `『${name}』を購読カレンダーから削除しました。`,
+  postbackDeleteResult: "カレンダー削除を完了しました",
+  calendarListHeader: "購読中のカレンダー:",
+  noSubscribedCalendars: "購読中のカレンダーはありません。『カレンダー追加』で登録できます。",
+  sendAuthGuidance: "Googleカレンダーとの連携を開始します。以下のURLをクリックして認可を行ってください：",
+  sendAuthUrlResult: "認可URLを送信しました",
+  addQuickPrompt: "追加するカレンダーを選択してください",
+  addQuickResult: "カレンダー追加クイックリプライを送信しました",
+  deleteQuickPrompt: "削除するカレンダーを選択してください",
+  deleteQuickResult: "カレンダー削除クイックリプライを送信しました",
+  deleteNoTargetResult: "削除対象のカレンダーがありませんでした",
+  noEvent: "no event",
+  unsupportedMessage: "未対応のメッセージです",
+  postbackError: "ポストバック処理でエラーが発生しました",
+} as const;
 
 // Narrowed event types derived from the discriminated union
 type UnfollowEventType = Extract<LineWebhookEvent, { type: "unfollow" }>;
 type PostbackEventType = Extract<LineWebhookEvent, { type: "postback" }>;
 type MessageEventType = Extract<LineWebhookEvent, { type: "message" }>;
 
-function truncateLabel(label: string, maxLength = 20): string {
-  if (!label) return "";
-  return label.length <= maxLength ? label : label.slice(0, maxLength);
-}
+type ParsedPostbackData = {
+  action: string;
+  calendarId?: string;
+  calendarName?: string;
+};
 
 export class LineWebhookUseCase {
   constructor(
@@ -41,6 +57,11 @@ export class LineWebhookUseCase {
     ) => Schema$GoogleCalendarApiAdapter = (auth) => new GoogleCalendarApiAdapter(auth)
   ) {}
 
+  private truncateLabel(label: string, maxLength = 20): string {
+    if (!label) return "";
+    return label.length <= maxLength ? label : label.slice(0, maxLength);
+  }
+
   private createCalendarQuickReplyItems(
     calendars: Array<{ id: string; name: string }>,
     action: typeof ADD_CALENDAR_SELECT | typeof DELETE_CALENDAR_SELECT
@@ -48,7 +69,7 @@ export class LineWebhookUseCase {
     return calendars
       .slice(0, QUICK_REPLY_CALENDAR_LIMIT)
       .map((cal) => {
-        const label = truncateLabel(cal.name, 20);
+        const label = this.truncateLabel(cal.name, 20);
         const data = JSON.stringify({
           action: action,
           calendarId: cal.id,
@@ -70,13 +91,13 @@ export class LineWebhookUseCase {
       await this.tokenRepository.deleteToken(webhookEvent.source.userId);
       return {
         success: true,
-        message: "トークン情報を削除しました",
+        message: MessageTemplates.tokenDeleteSuccess,
       };
     } catch (error) {
       console.error("Failed to delete token:", error);
       return {
         success: false,
-        message: "トークン情報の削除に失敗しました",
+        message: MessageTemplates.tokenDeleteFailure,
       };
     }
   }
@@ -93,21 +114,21 @@ export class LineWebhookUseCase {
           calendarName: parsed.calendarName,
         });
         await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
-          `『${parsed.calendarName}』を購読カレンダーに追加しました。`,
+          MessageTemplates.postbackAddReply(parsed.calendarName),
         ]);
-        return { success: true, message: "カレンダー追加を完了しました" };
+        return { success: true, message: MessageTemplates.postbackAddResult };
       } else if (parsed.action === DELETE_CALENDAR_SELECT && parsed.calendarId) {
         await this.userCalendarRepository.deleteCalendar(userId, parsed.calendarId);
         const name = parsed.calendarName || parsed.calendarId;
         await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
-          `『${name}』を購読カレンダーから削除しました。`,
+          MessageTemplates.postbackDeleteReply(name),
         ]);
-        return { success: true, message: "カレンダー削除を完了しました" };
+        return { success: true, message: MessageTemplates.postbackDeleteResult };
       }
       return null;
     } catch (error) {
       console.error("Failed to handle postback:", error);
-      return { success: false, message: "ポストバック処理でエラーが発生しました" };
+      return { success: false, message: MessageTemplates.postbackError };
     }
   }
 
@@ -115,11 +136,11 @@ export class LineWebhookUseCase {
     const calendars = await this.userCalendarRepository.getUserCalendars(userId);
     if (calendars.length > 0) {
       const lines = calendars.map((c) => `- ${c.calendarName} (${c.calendarId})`);
-      const message = ["購読中のカレンダー:", ...lines].join("\n");
+      const message = [MessageTemplates.calendarListHeader, ...lines].join("\n");
       await this.lineClient.replyTextMessages(replyToken, [message]);
     } else {
       await this.lineClient.replyTextMessages(replyToken, [
-        "購読中のカレンダーはありません。『カレンダー追加』で登録できます。",
+        MessageTemplates.noSubscribedCalendars,
       ]);
     }
     return {
@@ -134,12 +155,12 @@ export class LineWebhookUseCase {
       const { url, state } = this.googleAuth.generateAuthUrl();
       await this.stateRepository.saveState(state, userId);
       await this.lineClient.replyTextMessages(replyToken, [
-        "Googleカレンダーとの連携を開始します。以下のURLをクリックして認可を行ってください：",
+        MessageTemplates.sendAuthGuidance,
         url,
       ]);
       return {
         success: true,
-        message: "認可URLを送信しました",
+        message: MessageTemplates.sendAuthUrlResult,
       };
     }
 
@@ -159,20 +180,20 @@ export class LineWebhookUseCase {
     );
     await this.lineClient.replyTextWithQuickReply(
       replyToken,
-      "追加するカレンダーを選択してください",
+      MessageTemplates.addQuickPrompt,
       items
     );
 
-    return { success: true, message: "カレンダー追加クイックリプライを送信しました" };
+    return { success: true, message: MessageTemplates.addQuickResult };
   }
 
   private async handleCalendarDelete(userId: string, replyToken: string): Promise<WebhookUseCaseResult> {
     const calendars = await this.userCalendarRepository.getUserCalendars(userId);
     if (calendars.length === 0) {
       await this.lineClient.replyTextMessages(replyToken, [
-        "購読中のカレンダーはありません。『カレンダー追加』で登録できます。",
+        MessageTemplates.noSubscribedCalendars,
       ]);
-      return { success: true, message: "削除対象のカレンダーがありませんでした" };
+      return { success: true, message: MessageTemplates.deleteNoTargetResult };
     }
     const calendarsForQuick = calendars.map((entry) => ({
       id: entry.calendarId,
@@ -184,10 +205,10 @@ export class LineWebhookUseCase {
     );
     await this.lineClient.replyTextWithQuickReply(
       replyToken,
-      "削除するカレンダーを選択してください",
+      MessageTemplates.deleteQuickPrompt,
       items
     );
-    return { success: true, message: "カレンダー削除クイックリプライを送信しました" };
+    return { success: true, message: MessageTemplates.deleteQuickResult };
   }
 
   private async handleMessage(webhookEvent: MessageEventType): Promise<WebhookUseCaseResult | null> {
@@ -213,7 +234,7 @@ export class LineWebhookUseCase {
     if (!webhookEvent) {
       return {
         success: true,
-        message: "no event",
+        message: MessageTemplates.noEvent,
       };
     }
 
@@ -236,7 +257,7 @@ export class LineWebhookUseCase {
 
     return {
       success: true,
-      message: "未対応のメッセージです",
+      message: MessageTemplates.unsupportedMessage,
     };
   }
 }
