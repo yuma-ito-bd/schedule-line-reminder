@@ -11,6 +11,8 @@ import type { messagingApi } from "@line/bot-sdk";
 
 const QUICK_REPLY_CALENDAR_LIMIT = 12; // LINE API limit is 13; we use 12 to leave room if needed
 const ADD_CALENDAR_SELECT = "ADD_CALENDAR_SELECT" as const;
+const DELETE_CALENDAR_CONFIRM = "DELETE_CALENDAR_CONFIRM" as const;
+const CANCEL = "CANCEL" as const;
 
 type ParsedPostbackData = {
   action: string;
@@ -76,6 +78,18 @@ export class LineWebhookUseCase {
             `『${parsed.calendarName}』を購読カレンダーに追加しました。`,
           ]);
           return { success: true, message: "カレンダー追加を完了しました" };
+        } else if (parsed.action === DELETE_CALENDAR_CONFIRM && parsed.calendarId) {
+          await this.userCalendarRepository.deleteCalendar(userId, parsed.calendarId);
+          const name = parsed.calendarName || parsed.calendarId;
+          await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
+            `『${name}』を購読カレンダーから削除しました。`,
+          ]);
+          return { success: true, message: "カレンダー削除を完了しました" };
+        } else if (parsed.action === CANCEL) {
+          await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
+            "操作をキャンセルしました。",
+          ]);
+          return { success: true, message: "ユーザーが操作をキャンセルしました" };
         }
       } catch (error) {
         console.error("Failed to handle postback:", error);
@@ -153,6 +167,53 @@ export class LineWebhookUseCase {
         );
 
         return { success: true, message: "カレンダー追加クイックリプライを送信しました" };
+      }
+      const deleteMatch = text.match(/^カレンダー削除\s+(.+)$/);
+      if (deleteMatch) {
+        const userId = webhookEvent.source.userId;
+        const calendarName = deleteMatch[1].trim();
+        const calendars = await this.userCalendarRepository.getUserCalendars(userId);
+        const matched = calendars.filter((c) => c.calendarName === calendarName);
+        if (matched.length === 0) {
+          await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
+            `『${calendarName}』に一致するカレンダーが見つかりません。『カレンダー一覧』で名称を確認してください。`,
+          ]);
+          return { success: true, message: "削除対象のカレンダーが見つかりませんでした" };
+        }
+        if (matched.length > 1) {
+          await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
+            "同名のカレンダーが複数見つかりました。削除するカレンダー名をもう一度、より具体的に指定してください。",
+          ]);
+          return { success: true, message: "カレンダー名の再指定を促しました" };
+        }
+
+        const target = matched[0];
+        const template: messagingApi.ConfirmTemplate = {
+          type: "confirm",
+          text: `『${target.calendarName}』を購読カレンダーから削除します。よろしいですか？`,
+          actions: [
+            {
+              type: "postback",
+              label: "OK",
+              data: JSON.stringify({
+                action: DELETE_CALENDAR_CONFIRM,
+                calendarId: target.calendarId,
+                calendarName: target.calendarName,
+              }),
+            },
+            {
+              type: "postback",
+              label: "キャンセル",
+              data: JSON.stringify({ action: CANCEL }),
+            },
+          ],
+        };
+        await this.lineClient.replyTemplateMessage(
+          webhookEvent.replyToken,
+          "カレンダー削除の確認",
+          template
+        );
+        return { success: true, message: "カレンダー削除確認テンプレートを送信しました" };
       }
     }
 
