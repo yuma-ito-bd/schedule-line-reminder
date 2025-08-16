@@ -10,7 +10,8 @@ export class CalendarEventsNotifier {
   constructor(
     private readonly googleCalendarApi: Schema$GoogleCalendarApiAdapter,
     private readonly lineMessagingApiClient: Schema$LineMessagingApiClient,
-    private readonly lineUserId: string
+    private readonly lineUserId: string,
+    private readonly targetCalendarIdsProvider?: () => Promise<string[]>
   ) {}
 
   async call() {
@@ -70,6 +71,16 @@ export class CalendarEventsNotifier {
   }
 
   private async getTargetCalendarIds(): Promise<string[]> {
+    // まずは外部からのプロバイダがあればそれを使用
+    if (this.targetCalendarIdsProvider) {
+      try {
+        const ids = await this.targetCalendarIdsProvider();
+        return ids.length > 0 ? ids : ["primary"];
+      } catch (e) {
+        // フォールバックしてGoogleのカレンダーリストから取得
+      }
+    }
+
     try {
       const list = await this.googleCalendarApi.fetchCalendarList();
       // オーナーまたは閲覧可能なカレンダーを対象にする
