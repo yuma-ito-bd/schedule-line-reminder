@@ -24,7 +24,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run tests (with lcov coverage)
-        run: bun test __tests__ --coverage --coverage-reporter=lcov
+        run: bun run test
 
       - name: Run octocov
         uses: k1LoW/octocov-action@v1
@@ -40,12 +40,3 @@ jobs:
           else
             echo "(No summary available)" > docs/development/coverage_latest.md
           fi
-
-      - name: Upload coverage artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-and-report
-          path: |
-            coverage/**
-            docs/development/coverage_latest.md

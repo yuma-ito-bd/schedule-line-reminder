@@ -6,7 +6,7 @@
     "build": "sam build",
     "deploy": "sam deploy --profile private-admin",
     "build_and_deploy": "bun run build && bun run deploy",
-    "test": "bun test __tests__ --coverage",
+    "test": "bun test __tests__ --coverage --coverage-reporter=lcov",
     "generate-line-token": "bun run scripts/make_token.js",
     "get-line-token-kid": "bun run scripts/get_line_token_kid.js",
     "type_check": "tsc --noEmit"
