@@ -7,85 +7,17 @@ import type { Schema$TokenRepository } from "../types/token-repository";
 import type { Schema$UserCalendarRepository } from "../types/user-calendar-repository";
 import { GoogleCalendarApiAdapter } from "../google-calendar-api-adapter";
 import type { Schema$GoogleCalendarApiAdapter } from "../types/google-calendar-api-adapter";
-import type { messagingApi } from "@line/bot-sdk";
+import { ADD_CALENDAR_SELECT, DELETE_CALENDAR_SELECT, isAddCalendarPostback, isDeleteCalendarPostback } from "../types/postback";
+import { createCalendarQuickReplyItems } from "./helpers/quick-reply";
+import { MessageTemplates } from "./messages";
 
-const QUICK_REPLY_CALENDAR_LIMIT = 12; // LINE API limit is 13; we use 12 to leave room if needed
-const ADD_CALENDAR_SELECT = "ADD_CALENDAR_SELECT" as const;
-const DELETE_CALENDAR_SELECT = "DELETE_CALENDAR_SELECT" as const;
-
-type PostbackAction = typeof ADD_CALENDAR_SELECT | typeof DELETE_CALENDAR_SELECT;
-
-const MessageTemplates = {
-  tokenDeleteSuccess: "トークン情報を削除しました",
-  tokenDeleteFailure: "トークン情報の削除に失敗しました",
-  postbackAddReply: (calendarName: string) => `『${calendarName}』を購読カレンダーに追加しました。`,
-  postbackAddResult: "カレンダー追加を完了しました",
-  postbackDeleteReply: (name: string) => `『${name}』を購読カレンダーから削除しました。`,
-  postbackDeleteResult: "カレンダー削除を完了しました",
-  calendarListHeader: "購読中のカレンダー:",
-  noSubscribedCalendars: "購読中のカレンダーはありません。『カレンダー追加』で登録できます。",
-  sendAuthGuidance: "Googleカレンダーとの連携を開始します。以下のURLをクリックして認可を行ってください：",
-  sendAuthUrlResult: "認可URLを送信しました",
-  addQuickPrompt: "追加するカレンダーを選択してください",
-  addQuickResult: "カレンダー追加クイックリプライを送信しました",
-  deleteQuickPrompt: "削除するカレンダーを選択してください",
-  deleteQuickResult: "カレンダー削除クイックリプライを送信しました",
-  deleteNoTargetResult: "削除対象のカレンダーがありませんでした",
-  noEvent: "no event",
-  unsupportedMessage: "未対応のメッセージです",
-  postbackError: "ポストバック処理でエラーが発生しました",
-  // Failure messages for unified error handling
-  calendarListFailure: "カレンダー一覧の返信に失敗しました",
-  authUrlSendFailure: "認可URLの送信に失敗しました",
-  addQuickFailure: "カレンダー追加クイックリプライの送信に失敗しました",
-  deleteQuickFailure: "カレンダー削除クイックリプライの送信に失敗しました",
-  tokenFetchFailure: "認可状態の取得に失敗しました",
-} as const;
 
 // Narrowed event types derived from the discriminated union
 type UnfollowEventType = Extract<LineWebhookEvent, { type: "unfollow" }>;
 type PostbackEventType = Extract<LineWebhookEvent, { type: "postback" }>;
 type MessageEventType = Extract<LineWebhookEvent, { type: "message" }>;
 
-type ParsedPostbackData = {
-  action: PostbackAction;
-  calendarId?: string;
-  calendarName?: string;
-};
 
-// Type-safe postback payloads
-type AddCalendarPostback = {
-  action: typeof ADD_CALENDAR_SELECT;
-  calendarId: string;
-  calendarName: string;
-};
-
-type DeleteCalendarPostback = {
-  action: typeof DELETE_CALENDAR_SELECT;
-  calendarId: string;
-  calendarName?: string;
-};
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isAddCalendarPostback(value: unknown): value is AddCalendarPostback {
-  if (!isRecord(value)) return false;
-  return (
-    value["action"] === ADD_CALENDAR_SELECT &&
-    typeof value["calendarId"] === "string" &&
-    typeof value["calendarName"] === "string"
-  );
-}
-
-function isDeleteCalendarPostback(value: unknown): value is DeleteCalendarPostback {
-  if (!isRecord(value)) return false;
-  return (
-    value["action"] === DELETE_CALENDAR_SELECT &&
-    typeof value["calendarId"] === "string"
-  );
-}
 
 function isTextMessageEvent(event: LineWebhookEvent): event is MessageEventType & { message: { type: "text"; text: string } } {
   return (
@@ -94,35 +26,6 @@ function isTextMessageEvent(event: LineWebhookEvent): event is MessageEventType 
   );
 }
 
-// Pure helpers for Quick Reply generation
-function truncateLabel(label: string, maxLength = 20): string {
-  if (!label) return "";
-  return label.length <= maxLength ? label : label.slice(0, maxLength);
-}
-
-function createCalendarQuickReplyItems(
-  calendars: Array<{ id: string; name: string }>,
-  action: typeof ADD_CALENDAR_SELECT | typeof DELETE_CALENDAR_SELECT
-): messagingApi.QuickReplyItem[] {
-  return calendars
-    .slice(0, QUICK_REPLY_CALENDAR_LIMIT)
-    .map((cal) => {
-      const label = truncateLabel(cal.name, 20);
-      const data = JSON.stringify({
-        action: action,
-        calendarId: cal.id,
-        calendarName: cal.name,
-      });
-      return {
-        type: "action",
-        action: {
-          type: "postback",
-          label,
-          data,
-        },
-      } as messagingApi.QuickReplyItem;
-    });
-}
 
 export class LineWebhookUseCase {
   constructor(
