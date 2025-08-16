@@ -34,6 +34,12 @@ const MessageTemplates = {
   noEvent: "no event",
   unsupportedMessage: "未対応のメッセージです",
   postbackError: "ポストバック処理でエラーが発生しました",
+  // Failure messages for unified error handling
+  calendarListFailure: "カレンダー一覧の返信に失敗しました",
+  authUrlSendFailure: "認可URLの送信に失敗しました",
+  addQuickFailure: "カレンダー追加クイックリプライの送信に失敗しました",
+  deleteQuickFailure: "カレンダー削除クイックリプライの送信に失敗しました",
+  tokenFetchFailure: "認可状態の取得に失敗しました",
 } as const;
 
 // Narrowed event types derived from the discriminated union
@@ -138,7 +144,11 @@ export class LineWebhookUseCase {
         message: MessageTemplates.tokenDeleteSuccess,
       };
     } catch (error) {
-      console.error("Failed to delete token:", error);
+      console.error("Failed to delete token", {
+        userId: webhookEvent.source.userId,
+        action: "unfollow",
+        error,
+      });
       return {
         success: false,
         message: MessageTemplates.tokenDeleteFailure,
@@ -175,88 +185,145 @@ export class LineWebhookUseCase {
 
       return null;
     } catch (error) {
-      console.error("Failed to handle postback:", error);
+      console.error("Failed to handle postback", {
+        userId: webhookEvent.source.userId,
+        action: "postback",
+        rawData: webhookEvent.postback.data,
+        error,
+      });
       return { success: false, message: MessageTemplates.postbackError };
     }
   }
 
   private async handleCalendarList(userId: string, replyToken: string): Promise<WebhookUseCaseResult> {
-    const calendars = await this.userCalendarRepository.getUserCalendars(userId);
-    if (calendars.length > 0) {
-      const lines = calendars.map((c) => `- ${c.calendarName} (${c.calendarId})`);
-      const message = [MessageTemplates.calendarListHeader, ...lines].join("\n");
-      await this.lineClient.replyTextMessages(replyToken, [message]);
-    } else {
-      await this.lineClient.replyTextMessages(replyToken, [
-        MessageTemplates.noSubscribedCalendars,
-      ]);
+    try {
+      const calendars = await this.userCalendarRepository.getUserCalendars(userId);
+      if (calendars.length > 0) {
+        const lines = calendars.map((c) => `- ${c.calendarName} (${c.calendarId})`);
+        const message = [MessageTemplates.calendarListHeader, ...lines].join("\n");
+        await this.lineClient.replyTextMessages(replyToken, [message]);
+      } else {
+        await this.lineClient.replyTextMessages(replyToken, [
+          MessageTemplates.noSubscribedCalendars,
+        ]);
+      }
+      return {
+        success: true,
+        message: "カレンダー一覧を返信しました",
+      };
+    } catch (error) {
+      console.error("Failed to reply calendar list", {
+        userId,
+        action: "calendar_list",
+        error,
+      });
+      return {
+        success: false,
+        message: MessageTemplates.calendarListFailure,
+      };
     }
-    return {
-      success: true,
-      message: "カレンダー一覧を返信しました",
-    };
   }
 
   private async handleCalendarAdd(userId: string, replyToken: string): Promise<WebhookUseCaseResult> {
-    const token = await this.tokenRepository.getToken(userId);
-    if (!token) {
-      const { url, state } = this.googleAuth.generateAuthUrl();
-      await this.stateRepository.saveState(state, userId);
-      await this.lineClient.replyTextMessages(replyToken, [
-        MessageTemplates.sendAuthGuidance,
-        url,
-      ]);
-      return {
-        success: true,
-        message: MessageTemplates.sendAuthUrlResult,
-      };
+    // Step 1: fetch token
+    let token;
+    try {
+      token = await this.tokenRepository.getToken(userId);
+    } catch (error) {
+      console.error("Failed to fetch token", {
+        userId,
+        action: "calendar_add_get_token",
+        error,
+      });
+      return { success: false, message: MessageTemplates.tokenFetchFailure };
     }
 
-    // トークンが登録済みの場合は、利用可能なカレンダーを取得してクイックリプライで提示
-    this.googleAuth.setTokens(token);
-    const calendarApi = this.calendarApiFactory(this.googleAuth);
-    const list = await calendarApi.fetchCalendarList();
-    const calendarsForQuick = list
-      .filter((entry) => !!entry.id)
-      .map((entry) => ({
-        id: entry.id as string,
-        name: entry.summary || (entry.id as string) || "(no title)",
-      }));
-    const items = createCalendarQuickReplyItems(
-      calendarsForQuick,
-      ADD_CALENDAR_SELECT
-    );
-    await this.lineClient.replyTextWithQuickReply(
-      replyToken,
-      MessageTemplates.addQuickPrompt,
-      items
-    );
+    // Step 2: if token is missing, send auth guidance and URL
+    if (!token) {
+      try {
+        const { url, state } = this.googleAuth.generateAuthUrl();
+        await this.stateRepository.saveState(state, userId);
+        await this.lineClient.replyTextMessages(replyToken, [
+          MessageTemplates.sendAuthGuidance,
+          url,
+        ]);
+        return {
+          success: true,
+          message: MessageTemplates.sendAuthUrlResult,
+        };
+      } catch (error) {
+        console.error("Failed to send auth URL", {
+          userId,
+          action: "calendar_add_auth",
+          error,
+        });
+        return { success: false, message: MessageTemplates.authUrlSendFailure };
+      }
+    }
 
-    return { success: true, message: MessageTemplates.addQuickResult };
+    // Step 3: token exists → fetch calendar list and send quick reply
+    try {
+      this.googleAuth.setTokens(token);
+      const calendarApi = this.calendarApiFactory(this.googleAuth);
+      const list = await calendarApi.fetchCalendarList();
+      const calendarsForQuick = list
+        .filter((entry) => !!entry.id)
+        .map((entry) => ({
+          id: entry.id as string,
+          name: entry.summary || (entry.id as string) || "(no title)",
+        }));
+      const items = createCalendarQuickReplyItems(
+        calendarsForQuick,
+        ADD_CALENDAR_SELECT
+      );
+      await this.lineClient.replyTextWithQuickReply(
+        replyToken,
+        MessageTemplates.addQuickPrompt,
+        items
+      );
+
+      return { success: true, message: MessageTemplates.addQuickResult };
+    } catch (error) {
+      console.error("Failed to send add-calendar quick reply", {
+        userId,
+        action: "calendar_add_quick_reply",
+        error,
+      });
+      return { success: false, message: MessageTemplates.addQuickFailure };
+    }
   }
 
   private async handleCalendarDelete(userId: string, replyToken: string): Promise<WebhookUseCaseResult> {
-    const calendars = await this.userCalendarRepository.getUserCalendars(userId);
-    if (calendars.length === 0) {
-      await this.lineClient.replyTextMessages(replyToken, [
-        MessageTemplates.noSubscribedCalendars,
-      ]);
-      return { success: true, message: MessageTemplates.deleteNoTargetResult };
+    try {
+      const calendars = await this.userCalendarRepository.getUserCalendars(userId);
+      if (calendars.length === 0) {
+        await this.lineClient.replyTextMessages(replyToken, [
+          MessageTemplates.noSubscribedCalendars,
+        ]);
+        return { success: true, message: MessageTemplates.deleteNoTargetResult };
+      }
+      const calendarsForQuick = calendars.map((entry) => ({
+        id: entry.calendarId,
+        name: entry.calendarName || entry.calendarId,
+      }));
+      const items = createCalendarQuickReplyItems(
+        calendarsForQuick,
+        DELETE_CALENDAR_SELECT
+      );
+      await this.lineClient.replyTextWithQuickReply(
+        replyToken,
+        MessageTemplates.deleteQuickPrompt,
+        items
+      );
+      return { success: true, message: MessageTemplates.deleteQuickResult };
+    } catch (error) {
+      console.error("Failed to send delete-calendar quick reply", {
+        userId,
+        action: "calendar_delete_quick_reply",
+        error,
+      });
+      return { success: false, message: MessageTemplates.deleteQuickFailure };
     }
-    const calendarsForQuick = calendars.map((entry) => ({
-      id: entry.calendarId,
-      name: entry.calendarName || entry.calendarId,
-    }));
-    const items = createCalendarQuickReplyItems(
-      calendarsForQuick,
-      DELETE_CALENDAR_SELECT
-    );
-    await this.lineClient.replyTextWithQuickReply(
-      replyToken,
-      MessageTemplates.deleteQuickPrompt,
-      items
-    );
-    return { success: true, message: MessageTemplates.deleteQuickResult };
   }
 
   private async handleMessage(webhookEvent: MessageEventType): Promise<WebhookUseCaseResult | null> {
