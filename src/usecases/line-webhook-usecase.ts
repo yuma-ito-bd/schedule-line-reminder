@@ -5,6 +5,7 @@ import type { LineWebhookEvent } from "../types/line-webhook-event";
 import type { Schema$OAuthStateRepository } from "../types/oauth-state-repository";
 import type { Schema$TokenRepository } from "../types/token-repository";
 import type { Schema$UserCalendarRepository } from "../types/user-calendar-repository";
+import { GoogleCalendarApiAdapter } from "../google-calendar-api-adapter";
 
 export class LineWebhookUseCase {
   constructor(
@@ -41,6 +42,27 @@ export class LineWebhookUseCase {
       }
     }
 
+    if (webhookEvent.type === "postback") {
+      try {
+        const userId = webhookEvent.source.userId;
+        const data = webhookEvent.postback.data;
+        const parsed = JSON.parse(data) as { action: string; calendarId?: string; calendarName?: string };
+        if (parsed.action === "ADD_CALENDAR_SELECT" && parsed.calendarId && parsed.calendarName) {
+          await this.userCalendarRepository.addCalendar({
+            userId,
+            calendarId: parsed.calendarId,
+            calendarName: parsed.calendarName,
+          });
+          await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
+            `『${parsed.calendarName}』を購読カレンダーに追加しました。`,
+          ]);
+          return { success: true, message: "カレンダー追加を完了しました" };
+        }
+      } catch (error) {
+        console.error("Failed to handle postback:", error);
+      }
+    }
+
     if (
       webhookEvent.type === "message" &&
       webhookEvent.message.type === "text"
@@ -65,17 +87,49 @@ export class LineWebhookUseCase {
         };
       }
       if (text === "カレンダー追加") {
-        const { url, state } = this.googleAuth.generateAuthUrl();
-        await this.stateRepository.saveState(state, webhookEvent.source.userId);
-        await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
-          "Googleカレンダーとの連携を開始します。以下のURLをクリックして認可を行ってください：",
-          url,
-        ]);
+        const userId = webhookEvent.source.userId;
+        const token = await this.tokenRepository.getToken(userId);
+        if (!token) {
+          const { url, state } = this.googleAuth.generateAuthUrl();
+          await this.stateRepository.saveState(state, userId);
+          await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
+            "Googleカレンダーとの連携を開始します。以下のURLをクリックして認可を行ってください：",
+            url,
+          ]);
 
-        return {
-          success: true,
-          message: "認可URLを送信しました",
-        };
+          return {
+            success: true,
+            message: "認可URLを送信しました",
+          };
+        }
+
+        // トークンが登録済みの場合は、利用可能なカレンダーを取得してクイックリプライで提示
+        this.googleAuth.setTokens(token);
+        const calendarApi = new GoogleCalendarApiAdapter(this.googleAuth);
+        const list = await calendarApi.fetchCalendarList();
+        const items = list.slice(0, 12).map((entry) => {
+          const label = entry.summary || entry.id || "(no title)";
+          const data = JSON.stringify({
+            action: "ADD_CALENDAR_SELECT",
+            calendarId: entry.id,
+            calendarName: label,
+          });
+          return {
+            type: "action",
+            action: {
+              type: "postback",
+              label,
+              data,
+            },
+          };
+        });
+        await this.lineClient.replyTextWithQuickReply(
+          webhookEvent.replyToken,
+          "追加するカレンダーを選択してください",
+          items as any
+        );
+
+        return { success: true, message: "カレンダー追加クイックリプライを送信しました" };
       }
     }
 
