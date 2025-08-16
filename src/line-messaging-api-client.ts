@@ -41,4 +41,46 @@ export class LineMessagingApiClient implements Schema$LineMessagingApiClient {
     console.debug(response);
     return response.body;
   }
+
+  async replyTextWithQuickReply(
+    replyToken: string,
+    text: string,
+    items: messagingApi.QuickReplyItem[]
+  ) {
+    const message: messagingApi.TextMessage = {
+      type: "text",
+      text,
+      quickReply: {
+        items,
+      },
+    };
+    const request: messagingApi.ReplyMessageRequest = {
+      replyToken,
+      messages: [message],
+    };
+    console.debug(request);
+    const response = await this.client.replyMessageWithHttpInfo(request);
+    console.debug(response);
+    return response.body;
+  }
+
+  async replyTemplateMessage(
+    replyToken: string,
+    altText: string,
+    template: messagingApi.TemplateMessage["template"]
+  ) {
+    const message: messagingApi.TemplateMessage = {
+      type: "template",
+      altText,
+      template,
+    };
+    const request: messagingApi.ReplyMessageRequest = {
+      replyToken,
+      messages: [message],
+    };
+    console.debug(request);
+    const response = await this.client.replyMessageWithHttpInfo(request);
+    console.debug(response);
+    return response.body;
+  }
 }

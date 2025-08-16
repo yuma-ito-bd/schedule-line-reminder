@@ -68,7 +68,7 @@
 
 ## 関連ファイル
 - `src/use-cases/line-webhook-use-case.ts` - Webhook処理ロジック
-- `src/adapters/line-messaging-api-adapter.ts` - LINE API アダプター
+- `src/line-messaging-api-client.ts` - LINE API クライアント
 - `src/lib/session-manager.ts` - セッション管理（新規作成）
 - `src/types/line-bot.d.ts` - 型定義
 
