@@ -242,6 +242,10 @@ export class LineWebhookUseCase {
     if (text === "カレンダー削除") {
       return this.handleCalendarDelete(webhookEvent.source.userId, webhookEvent.replyToken);
     }
+    if (/^(?:ヘルプ|help)$/.test(text)) {
+      await this.lineClient.replyTextMessages(webhookEvent.replyToken, [MessageTemplates.helpText]);
+      return { success: true, message: MessageTemplates.helpResult };
+    }
 
     return null;
   }
