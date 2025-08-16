@@ -152,5 +152,90 @@ describe("LineWebhookUseCase", () => {
         message: "トークン情報の削除に失敗しました",
       });
     });
+
+    // New tests for "カレンダー一覧" feature
+    test("カレンダー一覧メッセージの場合、購読中カレンダーを整形して返信する", async () => {
+      // Given
+      const event = createTextMessageEvent("カレンダー一覧");
+      const mockUserCalendarRepository = {
+        async getUserCalendars(userId: string) {
+          expect(userId).toBe("test-user-id");
+          return [
+            {
+              userId: "test-user-id",
+              calendarId: "cal-1",
+              calendarName: "仕事",
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+            {
+              userId: "test-user-id",
+              calendarId: "cal-2",
+              calendarName: "プライベート",
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          ];
+        },
+      } as any;
+      const useCaseWithCalendars = new LineWebhookUseCase(
+        mockLineClient,
+        mockAuthUrlGenerator,
+        mockStateRepository,
+        mockTokenRepository,
+        mockUserCalendarRepository
+      );
+      const replyTextMessagesSpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // When
+      const result = await useCaseWithCalendars.handleWebhookEvent(event);
+
+      // Then
+      expect(replyTextMessagesSpy).toHaveBeenCalledWith(
+        "test-reply-token",
+        [
+          [
+            "購読中のカレンダー:",
+            "- 仕事 (cal-1)",
+            "- プライベート (cal-2)",
+          ].join("\n"),
+        ]
+      );
+      expect(result).toEqual({
+        success: true,
+        message: "カレンダー一覧を返信しました",
+      });
+    });
+
+    test("カレンダー（短縮コマンド）の場合、購読カレンダーがない時はガイダンスを返信する", async () => {
+      // Given
+      const event = createTextMessageEvent("カレンダー");
+      const mockUserCalendarRepository = {
+        async getUserCalendars() {
+          return [];
+        },
+      } as any;
+      const useCaseNoCalendars = new LineWebhookUseCase(
+        mockLineClient,
+        mockAuthUrlGenerator,
+        mockStateRepository,
+        mockTokenRepository,
+        mockUserCalendarRepository
+      );
+      const replyTextMessagesSpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // When
+      const result = await useCaseNoCalendars.handleWebhookEvent(event);
+
+      // Then
+      expect(replyTextMessagesSpy).toHaveBeenCalledWith(
+        "test-reply-token",
+        ["購読中のカレンダーはありません。『カレンダー追加』で登録できます。"]
+      );
+      expect(result).toEqual({
+        success: true,
+        message: "カレンダー一覧を返信しました",
+      });
+    });
   });
 });
