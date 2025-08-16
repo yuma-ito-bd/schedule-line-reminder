@@ -6,6 +6,14 @@ import type { Schema$OAuthStateRepository } from "../types/oauth-state-repositor
 import type { Schema$TokenRepository } from "../types/token-repository";
 import type { Schema$UserCalendarRepository } from "../types/user-calendar-repository";
 import { GoogleCalendarApiAdapter } from "../google-calendar-api-adapter";
+import type { messagingApi } from "@line/bot-sdk";
+
+const QUICK_REPLY_CALENDAR_LIMIT = 12; // LINE API limit is 13; we use 12 to leave room if needed
+
+function truncateLabel(label: string, maxLength = 20): string {
+  if (!label) return "";
+  return label.length <= maxLength ? label : label.slice(0, maxLength);
+}
 
 export class LineWebhookUseCase {
   constructor(
@@ -60,6 +68,7 @@ export class LineWebhookUseCase {
         }
       } catch (error) {
         console.error("Failed to handle postback:", error);
+        return { success: false, message: "ポストバック処理でエラーが発生しました" };
       }
     }
 
@@ -107,12 +116,13 @@ export class LineWebhookUseCase {
         this.googleAuth.setTokens(token);
         const calendarApi = new GoogleCalendarApiAdapter(this.googleAuth);
         const list = await calendarApi.fetchCalendarList();
-        const items = list.slice(0, 12).map((entry) => {
-          const label = entry.summary || entry.id || "(no title)";
+        const items = list.slice(0, QUICK_REPLY_CALENDAR_LIMIT).map((entry) => {
+          const rawLabel = entry.summary || entry.id || "(no title)";
+          const label = truncateLabel(rawLabel, 20);
           const data = JSON.stringify({
             action: "ADD_CALENDAR_SELECT",
             calendarId: entry.id,
-            calendarName: label,
+            calendarName: rawLabel,
           });
           return {
             type: "action",
@@ -126,7 +136,7 @@ export class LineWebhookUseCase {
         await this.lineClient.replyTextWithQuickReply(
           webhookEvent.replyToken,
           "追加するカレンダーを選択してください",
-          items as any
+          items as messagingApi.QuickReplyItem[]
         );
 
         return { success: true, message: "カレンダー追加クイックリプライを送信しました" };
