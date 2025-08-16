@@ -46,5 +46,31 @@ type UnfollowEvent = {
   mode: "active";
 };
 
+/** Postbackイベントの型定義 */
+type PostbackEvent = {
+  /** イベントの種類 */
+  type: "postback";
+  /** リプライトークン。メッセージに返信する際に使用 */
+  replyToken: string;
+  /** イベントの送信元情報 */
+  source: {
+    /** 送信元の種類。ユーザーからのメッセージの場合は "user" */
+    type: "user";
+    /** 送信元のユーザーID */
+    userId: string;
+  };
+  /** Postbackの内容 */
+  postback: {
+    /** data にシリアライズされた文字列 */
+    data: string;
+    /** 日付選択などの追加パラメータ */
+    params?: Record<string, unknown>;
+  };
+  /** イベントの発生時刻（UNIX時間） */
+  timestamp: number;
+  /** チャネルの状態。通常は "active" */
+  mode: "active";
+};
+
 /** LINE Messaging APIから受け取るWebhookイベントの型定義 */
-export type LineWebhookEvent = MessageEvent | UnfollowEvent;
+export type LineWebhookEvent = MessageEvent | UnfollowEvent | PostbackEvent;

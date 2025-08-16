@@ -35,6 +35,12 @@ function createUnfollowEvent(): LineWebhookEvent {
   };
 }
 
+class DummyUserCalendarRepository {
+  async addCalendar() {}
+  async deleteCalendar() {}
+  async getUserCalendars() { return []; }
+}
+
 describe("LineWebhookUseCase", () => {
   let mockLineClient: LineMessagingApiClientMock;
   let mockAuthUrlGenerator: MockGoogleAuth;
@@ -51,7 +57,8 @@ describe("LineWebhookUseCase", () => {
       mockLineClient,
       mockAuthUrlGenerator,
       mockStateRepository,
-      mockTokenRepository
+      mockTokenRepository,
+      new DummyUserCalendarRepository() as any
     );
   });
 

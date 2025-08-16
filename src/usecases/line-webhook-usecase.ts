@@ -4,13 +4,15 @@ import type { WebhookUseCaseResult } from "../types/webhook-usecase-result";
 import type { LineWebhookEvent } from "../types/line-webhook-event";
 import type { Schema$OAuthStateRepository } from "../types/oauth-state-repository";
 import type { Schema$TokenRepository } from "../types/token-repository";
+import type { Schema$UserCalendarRepository } from "../types/user-calendar-repository";
 
 export class LineWebhookUseCase {
   constructor(
     private readonly lineClient: Schema$LineMessagingApiClient,
     private readonly googleAuth: Schema$GoogleAuth,
     private readonly stateRepository: Schema$OAuthStateRepository,
-    private readonly tokenRepository: Schema$TokenRepository
+    private readonly tokenRepository: Schema$TokenRepository,
+    private readonly userCalendarRepository: Schema$UserCalendarRepository
   ) {}
 
   async handleWebhookEvent(

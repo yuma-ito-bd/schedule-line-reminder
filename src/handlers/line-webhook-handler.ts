@@ -8,6 +8,7 @@ import { Config } from "../lib/config";
 import { OAuthStateRepository } from "../lib/oauth-state-repository";
 import { TokenRepository } from "../lib/token-repository";
 import { ApiResponseBuilder } from "../lib/api-response-builder";
+import { UserCalendarRepository } from "../lib/user-calendar-repository";
 
 const configInitialization = (Config.getInstance()).init();
 
@@ -62,11 +63,13 @@ export const handler = async (
     const googleAuth = new GoogleAuthAdapter();
     const stateRepository = new OAuthStateRepository();
     const tokenRepository = new TokenRepository();
+    const userCalendarRepository = new UserCalendarRepository();
     const webhookUseCase = new LineWebhookUseCase(
       lineClient,
       googleAuth,
       stateRepository,
-      tokenRepository
+      tokenRepository,
+      userCalendarRepository
     );
 
     // Webhookイベントの処理

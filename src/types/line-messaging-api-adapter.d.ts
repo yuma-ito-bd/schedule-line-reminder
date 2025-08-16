@@ -9,4 +9,14 @@ export type Schema$LineMessagingApiClient = {
     replyToken: string,
     texts: string[]
   ) => Promise<messagingApi.ReplyMessageResponse>;
+  replyTextWithQuickReply: (
+    replyToken: string,
+    text: string,
+    items: messagingApi.QuickReplyItem[]
+  ) => Promise<messagingApi.ReplyMessageResponse>;
+  replyTemplateMessage: (
+    replyToken: string,
+    altText: string,
+    template: messagingApi.TemplateMessage["template"]
+  ) => Promise<messagingApi.ReplyMessageResponse>;
 };
