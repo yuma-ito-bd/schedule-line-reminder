@@ -47,6 +47,47 @@ type ParsedPostbackData = {
   calendarName?: string;
 };
 
+// Type-safe postback payloads
+type AddCalendarPostback = {
+  action: typeof ADD_CALENDAR_SELECT;
+  calendarId: string;
+  calendarName: string;
+};
+
+type DeleteCalendarPostback = {
+  action: typeof DELETE_CALENDAR_SELECT;
+  calendarId: string;
+  calendarName?: string;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isAddCalendarPostback(value: unknown): value is AddCalendarPostback {
+  if (!isRecord(value)) return false;
+  return (
+    value["action"] === ADD_CALENDAR_SELECT &&
+    typeof value["calendarId"] === "string" &&
+    typeof value["calendarName"] === "string"
+  );
+}
+
+function isDeleteCalendarPostback(value: unknown): value is DeleteCalendarPostback {
+  if (!isRecord(value)) return false;
+  return (
+    value["action"] === DELETE_CALENDAR_SELECT &&
+    typeof value["calendarId"] === "string"
+  );
+}
+
+function isTextMessageEvent(event: LineWebhookEvent): event is MessageEventType & { message: { type: "text"; text: string } } {
+  return (
+    event?.type === "message" &&
+    (event as MessageEventType).message?.type === "text"
+  );
+}
+
 export class LineWebhookUseCase {
   constructor(
     private readonly lineClient: Schema$LineMessagingApiClient,
@@ -108,25 +149,29 @@ export class LineWebhookUseCase {
     try {
       const userId = webhookEvent.source.userId;
       const data = webhookEvent.postback.data;
-      const parsed = JSON.parse(data) as ParsedPostbackData;
-      if (parsed.action === ADD_CALENDAR_SELECT && parsed.calendarId && parsed.calendarName) {
+      const parsedUnknown = JSON.parse(data) as unknown;
+
+      if (isAddCalendarPostback(parsedUnknown)) {
         await this.userCalendarRepository.addCalendar({
           userId,
-          calendarId: parsed.calendarId,
-          calendarName: parsed.calendarName,
+          calendarId: parsedUnknown.calendarId,
+          calendarName: parsedUnknown.calendarName,
         });
         await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
-          MessageTemplates.postbackAddReply(parsed.calendarName),
+          MessageTemplates.postbackAddReply(parsedUnknown.calendarName),
         ]);
         return { success: true, message: MessageTemplates.postbackAddResult };
-      } else if (parsed.action === DELETE_CALENDAR_SELECT && parsed.calendarId) {
-        await this.userCalendarRepository.deleteCalendar(userId, parsed.calendarId);
-        const name = parsed.calendarName || parsed.calendarId;
+      }
+
+      if (isDeleteCalendarPostback(parsedUnknown)) {
+        await this.userCalendarRepository.deleteCalendar(userId, parsedUnknown.calendarId);
+        const name = parsedUnknown.calendarName || parsedUnknown.calendarId;
         await this.lineClient.replyTextMessages(webhookEvent.replyToken, [
           MessageTemplates.postbackDeleteReply(name),
         ]);
         return { success: true, message: MessageTemplates.postbackDeleteResult };
       }
+
       return null;
     } catch (error) {
       console.error("Failed to handle postback:", error);
@@ -249,10 +294,7 @@ export class LineWebhookUseCase {
       if (postbackResult) return postbackResult;
     }
 
-    if (
-      webhookEvent.type === "message" &&
-      webhookEvent.message.type === "text"
-    ) {
+    if (isTextMessageEvent(webhookEvent)) {
       const messageResult = await this.handleMessage(webhookEvent);
       if (messageResult) return messageResult;
     }
