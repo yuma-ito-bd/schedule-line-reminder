@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   exec-test:
     runs-on: ubuntu-latest
@@ -19,5 +23,29 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run tests
-        run: bun run test
+      - name: Run tests (with lcov coverage)
+        run: bun test __tests__ --coverage --coverage-reporter=lcov
+
+      - name: Run octocov
+        uses: k1LoW/octocov-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save markdown coverage summary
+        if: always()
+        run: |
+          mkdir -p docs/development
+          if [ -n "${GITHUB_STEP_SUMMARY}" ] && [ -f "${GITHUB_STEP_SUMMARY}" ]; then
+            cp "${GITHUB_STEP_SUMMARY}" docs/development/coverage_latest.md
+          else
+            echo "(No summary available)" > docs/development/coverage_latest.md
+          fi
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-and-report
+          path: |
+            coverage/**
+            docs/development/coverage_latest.md
