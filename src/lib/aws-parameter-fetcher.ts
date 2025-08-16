@@ -11,8 +11,8 @@ export class AwsParameterFetcher implements Schema$ParameterFetcher {
 
     // AWSパラメータストアのGet Parameter APIから値を取得する
     const queryParams = new URLSearchParams({
-      name: encodeURIComponent(parameterKey),
-      withDecryption: "true", // 暗号化されたパラメータを復号化する
+      name: parameterKey,
+      withDecryption: "true",
     });
     const url = `${this.PARAMETER_STORE_URL}?${queryParams.toString()}`;
 
