@@ -36,6 +36,30 @@ export class LineWebhookUseCase {
     ) => Schema$GoogleCalendarApiAdapter = (auth) => new GoogleCalendarApiAdapter(auth)
   ) {}
 
+  private createCalendarQuickReplyItems(
+    calendars: Array<{ id: string; name: string }>,
+    action: typeof ADD_CALENDAR_SELECT | typeof DELETE_CALENDAR_SELECT
+  ): messagingApi.QuickReplyItem[] {
+    return calendars
+      .slice(0, QUICK_REPLY_CALENDAR_LIMIT)
+      .map((cal) => {
+        const label = truncateLabel(cal.name, 20);
+        const data = JSON.stringify({
+          action: action,
+          calendarId: cal.id,
+          calendarName: cal.name,
+        });
+        return {
+          type: "action",
+          action: {
+            type: "postback",
+            label,
+            data,
+          },
+        } as messagingApi.QuickReplyItem;
+      });
+  }
+
   async handleWebhookEvent(
     webhookEvent: LineWebhookEvent
   ): Promise<WebhookUseCaseResult> {
@@ -135,25 +159,14 @@ export class LineWebhookUseCase {
         this.googleAuth.setTokens(token);
         const calendarApi = this.calendarApiFactory(this.googleAuth);
         const list = await calendarApi.fetchCalendarList();
-        const items: messagingApi.QuickReplyItem[] = list
-          .slice(0, QUICK_REPLY_CALENDAR_LIMIT)
-          .map((entry) => {
-            const rawLabel = entry.summary || entry.id || "(no title)";
-            const label = truncateLabel(rawLabel, 20);
-            const data = JSON.stringify({
-              action: ADD_CALENDAR_SELECT,
-              calendarId: entry.id,
-              calendarName: rawLabel,
-            });
-            return {
-              type: "action",
-              action: {
-                type: "postback",
-                label,
-                data,
-              },
-            } as messagingApi.QuickReplyItem;
-          });
+        const calendarsForQuick = list.map((entry) => ({
+          id: entry.id,
+          name: entry.summary || entry.id || "(no title)",
+        }));
+        const items = this.createCalendarQuickReplyItems(
+          calendarsForQuick,
+          ADD_CALENDAR_SELECT
+        );
         await this.lineClient.replyTextWithQuickReply(
           webhookEvent.replyToken,
           "追加するカレンダーを選択してください",
@@ -171,25 +184,14 @@ export class LineWebhookUseCase {
           ]);
           return { success: true, message: "削除対象のカレンダーがありませんでした" };
         }
-        const items: messagingApi.QuickReplyItem[] = calendars
-          .slice(0, QUICK_REPLY_CALENDAR_LIMIT)
-          .map((entry) => {
-            const rawLabel = entry.calendarName || entry.calendarId;
-            const label = truncateLabel(rawLabel, 20);
-            const data = JSON.stringify({
-              action: DELETE_CALENDAR_SELECT,
-              calendarId: entry.calendarId,
-              calendarName: entry.calendarName,
-            });
-            return {
-              type: "action",
-              action: {
-                type: "postback",
-                label,
-                data,
-              },
-            } as messagingApi.QuickReplyItem;
-          });
+        const calendarsForQuick = calendars.map((entry) => ({
+          id: entry.calendarId,
+          name: entry.calendarName || entry.calendarId,
+        }));
+        const items = this.createCalendarQuickReplyItems(
+          calendarsForQuick,
+          DELETE_CALENDAR_SELECT
+        );
         await this.lineClient.replyTextWithQuickReply(
           webhookEvent.replyToken,
           "削除するカレンダーを選択してください",
