@@ -159,10 +159,12 @@ export class LineWebhookUseCase {
         this.googleAuth.setTokens(token);
         const calendarApi = this.calendarApiFactory(this.googleAuth);
         const list = await calendarApi.fetchCalendarList();
-        const calendarsForQuick = list.map((entry) => ({
-          id: entry.id,
-          name: entry.summary || entry.id || "(no title)",
-        }));
+        const calendarsForQuick = list
+          .filter((entry) => !!entry.id)
+          .map((entry) => ({
+            id: entry.id as string,
+            name: entry.summary || (entry.id as string) || "(no title)",
+          }));
         const items = this.createCalendarQuickReplyItems(
           calendarsForQuick,
           ADD_CALENDAR_SELECT
