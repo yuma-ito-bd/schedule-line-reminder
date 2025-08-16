@@ -98,15 +98,20 @@ Resources:
               Action:
                 - "kms:Decrypt"
                 - "ssm:GetParameter"
-                - "dynamodb:PutItem"
-                - "dynamodb:DeleteItem"
               Resource:
                 [
                   Fn::Sub: "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm",
                   Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/schedule-line-reminder/*",
-                  !GetAtt OAuthStateTable.Arn,
-                  !GetAtt OAuthTokensTable.Arn,
                 ]
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+              Resource: !GetAtt OAuthStateTable.Arn
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:DeleteItem"
+              Resource: !GetAtt OAuthTokensTable.Arn
         # UserCalendarsTableに対する権限
         - Version: "2012-10-17"
           Statement:
