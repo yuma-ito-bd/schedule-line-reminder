@@ -56,3 +56,10 @@
 - Test files should be in `__tests__/` directory
 - Mock files should be in `__tests__/mocks/` directory
 - Test naming: `*.test.ts`
+
+## Formatting Rules
+
+- End every file with a single trailing newline (blank final line). This improves diff clarity and complies with POSIX tools.
+
+### Cursor Rules
+- Ensure editors and generators (Cursor) preserve a trailing newline at EOF for all files.
