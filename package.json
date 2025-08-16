@@ -24,6 +24,6 @@
     "@aws-sdk/util-dynamodb": "^3.840.0",
     "@googleapis/calendar": "^9.8.0",
     "@line/bot-sdk": "^9.5.1",
-    "jose": "^5.9.6"
+    "jose": "^6.0.12"
   }
 }
