@@ -19,6 +19,11 @@ type ParsedPostbackData = {
   calendarName?: string;
 };
 
+// Narrowed event types derived from the discriminated union
+type UnfollowEventType = Extract<LineWebhookEvent, { type: "unfollow" }>;
+type PostbackEventType = Extract<LineWebhookEvent, { type: "postback" }>;
+type MessageEventType = Extract<LineWebhookEvent, { type: "message" }>;
+
 function truncateLabel(label: string, maxLength = 20): string {
   if (!label) return "";
   return label.length <= maxLength ? label : label.slice(0, maxLength);
@@ -60,7 +65,7 @@ export class LineWebhookUseCase {
       });
   }
 
-  private async handleUnfollow(webhookEvent: LineWebhookEvent): Promise<WebhookUseCaseResult> {
+  private async handleUnfollow(webhookEvent: UnfollowEventType): Promise<WebhookUseCaseResult> {
     try {
       await this.tokenRepository.deleteToken(webhookEvent.source.userId);
       return {
@@ -76,7 +81,7 @@ export class LineWebhookUseCase {
     }
   }
 
-  private async handlePostback(webhookEvent: LineWebhookEvent): Promise<WebhookUseCaseResult | null> {
+  private async handlePostback(webhookEvent: PostbackEventType): Promise<WebhookUseCaseResult | null> {
     try {
       const userId = webhookEvent.source.userId;
       const data = webhookEvent.postback.data;
@@ -185,7 +190,7 @@ export class LineWebhookUseCase {
     return { success: true, message: "カレンダー削除クイックリプライを送信しました" };
   }
 
-  private async handleMessage(webhookEvent: LineWebhookEvent): Promise<WebhookUseCaseResult | null> {
+  private async handleMessage(webhookEvent: MessageEventType): Promise<WebhookUseCaseResult | null> {
     if (webhookEvent.message.type !== "text") return null;
     const text = webhookEvent.message.text;
 
