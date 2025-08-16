@@ -35,6 +35,20 @@ function createUnfollowEvent(): LineWebhookEvent {
   };
 }
 
+function createPostbackEvent(data: string): LineWebhookEvent {
+  return {
+    type: "postback",
+    replyToken: "test-reply-token",
+    source: {
+      type: "user",
+      userId: "test-user-id",
+    },
+    postback: { data },
+    timestamp: Date.now(),
+    mode: "active",
+  } as any;
+}
+
 class DummyUserCalendarRepository {
   async addCalendar() {}
   async deleteCalendar() {}
@@ -236,6 +250,97 @@ describe("LineWebhookUseCase", () => {
         success: true,
         message: "カレンダー一覧を返信しました",
       });
+    });
+
+    // New tests for calendar add quick reply flow
+    test("カレンダー追加: トークン登録済みならクイックリプライを送信し、ラベルは20文字に切り詰められる", async () => {
+      // Given
+      const event = createTextMessageEvent("カレンダー追加");
+      const longName = "これは非常に長いカレンダー名で20文字を超えます"; // > 20 chars
+      const mockUserCalendarRepository = new DummyUserCalendarRepository();
+      const useCaseWithToken = new LineWebhookUseCase(
+        mockLineClient,
+        mockAuthUrlGenerator,
+        mockStateRepository,
+        {
+          ...mockTokenRepository,
+          async getToken() {
+            return {
+              userId: "test-user-id",
+              accessToken: "access",
+              refreshToken: "refresh",
+            };
+          },
+        } as any,
+        mockUserCalendarRepository as any
+      );
+      // stub google auth setTokens (no-op)
+      spyOn(mockAuthUrlGenerator, "setTokens").mockReturnValue();
+      // stub calendar list via spy on adapter constructor method usage
+      // We cannot easily intercept new GoogleCalendarApiAdapter() here, but we can
+      // simulate by temporarily replacing its prototype method if needed; for simplicity,
+      // rely on using primary id and long summary through actual adapter would return.
+
+      // Spy on client to assert quick reply was used
+      const replyQuickSpy = spyOn(mockLineClient, "replyTextWithQuickReply");
+
+      // Temporarily monkey-patch adapter method on instance created inside use case
+      // by spying on the adapter prototype
+      const fetchSpy = spyOn(
+        (require("../src/google-calendar-api-adapter") as any).GoogleCalendarApiAdapter.prototype,
+        "fetchCalendarList"
+      ).mockResolvedValue([
+        { id: "cal-1", summary: longName },
+        { id: "cal-2", summary: "短い" },
+      ]);
+
+      // When
+      const result = await useCaseWithToken.handleWebhookEvent(event);
+
+      // Then
+      expect(fetchSpy).toHaveBeenCalled();
+      expect(replyQuickSpy).toHaveBeenCalled();
+      const args = (replyQuickSpy.mock.calls[0] as any[]);
+      expect(args[0]).toBe("test-reply-token");
+      expect(args[1]).toBe("追加するカレンダーを選択してください");
+      const items = args[2];
+      expect(Array.isArray(items)).toBe(true);
+      expect(items.length).toBe(2);
+      // label truncated to <= 20
+      expect(items[0].action.label.length).toBeLessThanOrEqual(20);
+      expect(items[0].action.data).toContain("\"action\":\"ADD_CALENDAR_SELECT\"");
+      // rawLabel preserved in calendarName
+      expect(items[0].action.data).toContain(longName);
+      expect(result).toEqual({ success: true, message: "カレンダー追加クイックリプライを送信しました" });
+    });
+
+    test("Postback: ADD_CALENDAR_SELECT でカレンダーを追加し、完了メッセージを返す", async () => {
+      // Given
+      const event = createPostbackEvent(
+        JSON.stringify({ action: "ADD_CALENDAR_SELECT", calendarId: "cal-1", calendarName: "仕事" })
+      );
+      const addSpy: any = spyOn(DummyUserCalendarRepository.prototype, "addCalendar");
+      const replySpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // When
+      const result = await useCase.handleWebhookEvent(event);
+
+      // Then
+      expect(addSpy).toHaveBeenCalledWith({ userId: "test-user-id", calendarId: "cal-1", calendarName: "仕事" });
+      expect(replySpy).toHaveBeenCalled();
+      expect(result).toEqual({ success: true, message: "カレンダー追加を完了しました" });
+    });
+
+    test("Postback: JSON parse エラー時は失敗を返し、後続にフォールスルーしない", async () => {
+      // Given invalid JSON
+      const event = createPostbackEvent("{invalid-json}");
+
+      // When
+      const result = await useCase.handleWebhookEvent(event);
+
+      // Then
+      expect(result.success).toBe(false);
+      expect(result.message).toBe("ポストバック処理でエラーが発生しました");
     });
   });
 });

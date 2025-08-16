@@ -9,6 +9,13 @@ import { GoogleCalendarApiAdapter } from "../google-calendar-api-adapter";
 import type { messagingApi } from "@line/bot-sdk";
 
 const QUICK_REPLY_CALENDAR_LIMIT = 12; // LINE API limit is 13; we use 12 to leave room if needed
+const ADD_CALENDAR_SELECT = "ADD_CALENDAR_SELECT" as const;
+
+type ParsedPostbackData = {
+  action: string;
+  calendarId?: string;
+  calendarName?: string;
+};
 
 function truncateLabel(label: string, maxLength = 20): string {
   if (!label) return "";
@@ -54,8 +61,8 @@ export class LineWebhookUseCase {
       try {
         const userId = webhookEvent.source.userId;
         const data = webhookEvent.postback.data;
-        const parsed = JSON.parse(data) as { action: string; calendarId?: string; calendarName?: string };
-        if (parsed.action === "ADD_CALENDAR_SELECT" && parsed.calendarId && parsed.calendarName) {
+        const parsed = JSON.parse(data) as ParsedPostbackData;
+        if (parsed.action === ADD_CALENDAR_SELECT && parsed.calendarId && parsed.calendarName) {
           await this.userCalendarRepository.addCalendar({
             userId,
             calendarId: parsed.calendarId,
@@ -116,27 +123,29 @@ export class LineWebhookUseCase {
         this.googleAuth.setTokens(token);
         const calendarApi = new GoogleCalendarApiAdapter(this.googleAuth);
         const list = await calendarApi.fetchCalendarList();
-        const items = list.slice(0, QUICK_REPLY_CALENDAR_LIMIT).map((entry) => {
-          const rawLabel = entry.summary || entry.id || "(no title)";
-          const label = truncateLabel(rawLabel, 20);
-          const data = JSON.stringify({
-            action: "ADD_CALENDAR_SELECT",
-            calendarId: entry.id,
-            calendarName: rawLabel,
+        const items: messagingApi.QuickReplyItem[] = list
+          .slice(0, QUICK_REPLY_CALENDAR_LIMIT)
+          .map((entry) => {
+            const rawLabel = entry.summary || entry.id || "(no title)";
+            const label = truncateLabel(rawLabel, 20);
+            const data = JSON.stringify({
+              action: ADD_CALENDAR_SELECT,
+              calendarId: entry.id,
+              calendarName: rawLabel,
+            });
+            return {
+              type: "action",
+              action: {
+                type: "postback",
+                label,
+                data,
+              },
+            } as messagingApi.QuickReplyItem;
           });
-          return {
-            type: "action",
-            action: {
-              type: "postback",
-              label,
-              data,
-            },
-          };
-        });
         await this.lineClient.replyTextWithQuickReply(
           webhookEvent.replyToken,
           "追加するカレンダーを選択してください",
-          items as messagingApi.QuickReplyItem[]
+          items
         );
 
         return { success: true, message: "カレンダー追加クイックリプライを送信しました" };
