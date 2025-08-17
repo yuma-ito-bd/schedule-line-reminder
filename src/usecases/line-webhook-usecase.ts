@@ -47,12 +47,9 @@ export class LineWebhookUseCase {
 
       // 2) Delete all user calendars
       const calendars = await this.userCalendarRepository.getUserCalendars(userId);
-      if (calendars.length > 0) {
-        await Promise.all(
-          calendars.map((c) =>
-            this.userCalendarRepository.deleteCalendar(userId, c.calendarId)
-          )
-        );
+      const calendarIds = calendars.map((c) => c.calendarId);
+      if (calendarIds.length > 0) {
+        await this.userCalendarRepository.deleteAll(userId, calendarIds);
       }
 
       return {

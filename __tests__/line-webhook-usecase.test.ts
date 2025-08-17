@@ -53,6 +53,7 @@ class DummyUserCalendarRepository {
   async addCalendar() {}
   async deleteCalendar() {}
   async getUserCalendars() { return []; }
+  async deleteAll(userId: string, calendarIds: string[]) {}
 }
 
 describe("LineWebhookUseCase", () => {
@@ -147,9 +148,9 @@ describe("LineWebhookUseCase", () => {
         { userId: "test-user-id", calendarId: "cal-1", calendarName: "仕事", createdAt: new Date(), updatedAt: new Date() },
         { userId: "test-user-id", calendarId: "cal-2", calendarName: "プライベート", createdAt: new Date(), updatedAt: new Date() },
       ]);
-      const deleteCalendarSpy = spyOn(
+      const deleteAllSpy = spyOn(
         DummyUserCalendarRepository.prototype as any,
-        "deleteCalendar"
+        "deleteAll"
       ).mockResolvedValue(undefined);
 
       // When
@@ -158,9 +159,7 @@ describe("LineWebhookUseCase", () => {
       // Then
       expect(deleteTokenSpy).toHaveBeenCalledWith("test-user-id");
       expect(getCalendarsSpy).toHaveBeenCalledWith("test-user-id");
-      expect(deleteCalendarSpy).toHaveBeenCalledTimes(2);
-      expect(deleteCalendarSpy).toHaveBeenCalledWith("test-user-id", "cal-1");
-      expect(deleteCalendarSpy).toHaveBeenCalledWith("test-user-id", "cal-2");
+      expect(deleteAllSpy).toHaveBeenCalledWith("test-user-id", ["cal-1", "cal-2"]);
       expect(result).toEqual({
         success: true,
         message: "トークン情報を削除しました",
