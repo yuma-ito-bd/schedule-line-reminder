@@ -10,8 +10,6 @@ import { TokenRepository } from "../lib/token-repository";
 import { ApiResponseBuilder } from "../lib/api-response-builder";
 import { UserCalendarRepository } from "../lib/user-calendar-repository";
 
-const configInitialization = (Config.getInstance()).init();
-
 /**
  * LINE Messaging APIのWebhookイベントを処理するLambda関数
  * @param event - API Gateway Lambda Proxy Input Format
@@ -25,7 +23,7 @@ export const handler = async (
     console.debug({ event });
 
     // Configの初期化（環境変数やパラメータストアから設定値を取得）
-    await configInitialization;
+    await Config.getInstance().init();
 
     // Signature validation
     const signature =

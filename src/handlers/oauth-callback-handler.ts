@@ -6,14 +6,11 @@ import { GoogleAuthAdapter } from "../lib/google-auth-adapter";
 import { TokenRepository } from "../lib/token-repository";
 import { ApiResponseBuilder } from "../lib/api-response-builder";
 
-// 設定の初期化
-const configInitialization = (Config.getInstance()).init();
-
 export const oauthCallbackHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  await configInitialization;
   try {
+    await Config.getInstance().init();
     console.info("Start OAuth callback handler");
 
     // クエリパラメータから認可コードとstateを取得

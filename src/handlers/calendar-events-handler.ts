@@ -6,14 +6,12 @@ import { TokenRepository } from "../lib/token-repository";
 import { LineMessagingApiClient } from "../line-messaging-api-client";
 import { UserCalendarRepository } from "../lib/user-calendar-repository";
 
-const configInitialization = (Config.getInstance()).init();
-
 export const calendarEventsHandler =
   async (): Promise<APIGatewayProxyResult> => {
-    await configInitialization;
     const responseBuilder = new ApiResponseBuilder();
-    console.info("Start calendar events handler");
     try {
+      await Config.getInstance().init();
+      console.info("Start calendar events handler");
       const tokenRepository = new TokenRepository();
       const lineMessagingApiClient = new LineMessagingApiClient();
       const userCalendarRepository = new UserCalendarRepository();
