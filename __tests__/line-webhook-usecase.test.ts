@@ -53,6 +53,7 @@ class DummyUserCalendarRepository {
   async addCalendar() {}
   async deleteCalendar() {}
   async getUserCalendars() { return []; }
+  async deleteAll(userId: string, calendarIds: string[]) {}
 }
 
 describe("LineWebhookUseCase", () => {
@@ -136,16 +137,29 @@ describe("LineWebhookUseCase", () => {
       });
     });
 
-    test("unfollowイベントの場合、トークン情報を削除する", async () => {
+    test("unfollowイベントの場合、トークン情報を削除しユーザーカレンダーも削除する", async () => {
       // Given
       const event = createUnfollowEvent();
       const deleteTokenSpy = spyOn(mockTokenRepository, "deleteToken");
+      const getCalendarsSpy = spyOn(
+        DummyUserCalendarRepository.prototype as any,
+        "getUserCalendars"
+      ).mockResolvedValue([
+        { userId: "test-user-id", calendarId: "cal-1", calendarName: "仕事", createdAt: new Date(), updatedAt: new Date() },
+        { userId: "test-user-id", calendarId: "cal-2", calendarName: "プライベート", createdAt: new Date(), updatedAt: new Date() },
+      ]);
+      const deleteAllSpy = spyOn(
+        DummyUserCalendarRepository.prototype as any,
+        "deleteAll"
+      ).mockResolvedValue(undefined);
 
       // When
       const result = await useCase.handleWebhookEvent(event);
 
       // Then
       expect(deleteTokenSpy).toHaveBeenCalledWith("test-user-id");
+      expect(getCalendarsSpy).toHaveBeenCalledWith("test-user-id");
+      expect(deleteAllSpy).toHaveBeenCalledWith("test-user-id", ["cal-1", "cal-2"]);
       expect(result).toEqual({
         success: true,
         message: "トークン情報を削除しました",

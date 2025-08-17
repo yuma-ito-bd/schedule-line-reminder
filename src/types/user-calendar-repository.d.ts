@@ -15,5 +15,6 @@ export type CreateUserCalendar = {
 export type Schema$UserCalendarRepository = {
   addCalendar(calendar: CreateUserCalendar): Promise<void>;
   deleteCalendar(userId: string, calendarId: string): Promise<void>;
+  deleteAll(userId: string, calendarIds: string[]): Promise<void>;
   getUserCalendars(userId: string): Promise<UserCalendar[]>;
 };

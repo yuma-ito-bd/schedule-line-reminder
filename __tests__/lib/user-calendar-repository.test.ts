@@ -124,6 +124,42 @@ describe("UserCalendarRepository", () => {
     });
   });
 
+  describe("deleteAll", () => {
+    it("複数のカレンダーをまとめて削除できること", async () => {
+      // Given
+      const userId = "test-user";
+      const ids = ["cal-1", "cal-2", "cal-3"];
+      dynamoDBMock.on(DeleteItemCommand).resolves({
+        $metadata: { httpStatusCode: 200 },
+      });
+
+      // When
+      await repository.deleteAll(userId, ids);
+
+      // Then: DeleteItemCommand が3回呼ばれる
+      const calls = dynamoDBMock.commandCalls(DeleteItemCommand);
+      expect(calls).toHaveLength(3);
+      const keys = calls.map((c) => (c.args[0].input as DeleteItemCommandInput).Key);
+      expect(keys?.[0]?.userId?.S).toBe(userId);
+      expect(keys?.[0]?.calendarId?.S).toBe("cal-1");
+      expect(keys?.[1]?.calendarId?.S).toBe("cal-2");
+      expect(keys?.[2]?.calendarId?.S).toBe("cal-3");
+    });
+
+    it("空配列の場合は何もしないこと", async () => {
+      // Given
+      const userId = "test-user";
+      const ids: string[] = [];
+
+      // When
+      await repository.deleteAll(userId, ids);
+
+      // Then
+      const calls = dynamoDBMock.commandCalls(DeleteItemCommand);
+      expect(calls).toHaveLength(0);
+    });
+  });
+
   describe("getUserCalendars", () => {
     it("ユーザーのカレンダー一覧を取得できること", async () => {
       // テストデータ

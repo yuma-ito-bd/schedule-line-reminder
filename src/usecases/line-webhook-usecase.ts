@@ -40,15 +40,23 @@ export class LineWebhookUseCase {
   ) {}
 
   private async handleUnfollow(webhookEvent: UnfollowEventType): Promise<WebhookUseCaseResult> {
+    const userId = webhookEvent.source.userId;
     try {
-      await this.tokenRepository.deleteToken(webhookEvent.source.userId);
+      // 1) Delete OAuth token
+      await this.tokenRepository.deleteToken(userId);
+
+      // 2) Delete all user calendars
+      const calendars = await this.userCalendarRepository.getUserCalendars(userId);
+      const calendarIds = calendars.map((c) => c.calendarId);
+      await this.userCalendarRepository.deleteAll(userId, calendarIds);
+
       return {
         success: true,
         message: MessageTemplates.tokenDeleteSuccess,
       };
     } catch (error) {
-      console.error("Failed to delete token", {
-        userId: webhookEvent.source.userId,
+      console.error("Failed to cleanup on unfollow", {
+        userId,
         action: "unfollow",
         error,
       });

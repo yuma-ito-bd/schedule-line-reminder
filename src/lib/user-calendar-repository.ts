@@ -58,6 +58,25 @@ export class UserCalendarRepository implements Schema$UserCalendarRepository {
   }
 
   /**
+   * 複数のカレンダーをまとめて削除する
+   * @param userId ユーザーID
+   * @param calendarIds 削除対象のカレンダーID一覧
+   */
+  async deleteAll(userId: string, calendarIds: string[]): Promise<void> {
+    if (!Array.isArray(calendarIds) || calendarIds.length === 0) return;
+    await Promise.all(
+      calendarIds.map((calendarId) =>
+        this.dynamoClient.send(
+          new DeleteItemCommand({
+            TableName: this.tableName,
+            Key: marshall({ userId, calendarId }),
+          })
+        )
+      )
+    );
+  }
+
+  /**
    * ユーザーの購読カレンダー一覧を取得する
    * @param userId ユーザーID
    * @returns ユーザーの購読カレンダー一覧
