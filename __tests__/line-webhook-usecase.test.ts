@@ -88,6 +88,7 @@ describe("LineWebhookUseCase", () => {
       // Given
       const event = createTextMessageEvent("カレンダー追加");
       const guidance = "Googleカレンダーとの連携を開始します。以下のURLをクリックして認可を行ってください：";
+      const expectedUrl = "https://example.com/auth?openExternalBrowser=1";
 
       const generateAuthUrlSpy = spyOn(mockAuthUrlGenerator, "generateAuthUrl");
       const replyQuickSpy = spyOn(mockLineClient, "replyTextWithQuickReply");
@@ -105,14 +106,14 @@ describe("LineWebhookUseCase", () => {
       expect(replyQuickSpy).toHaveBeenCalled();
       const args = (replyQuickSpy.mock.calls[0] as any[]);
       expect(args[0]).toBe("test-reply-token");
-      expect(args[1]).toBe(guidance);
+      expect(args[1]).toBe(`${guidance}\n${expectedUrl}`);
       const items = args[2];
       expect(Array.isArray(items)).toBe(true);
       expect(items.length).toBe(1);
       expect(items[0].type).toBe("action");
       expect(items[0].action.type).toBe("uri");
       expect(items[0].action.label).toBe("Googleでログイン");
-      expect(items[0].action.uri).toBe("https://example.com/auth");
+      expect(items[0].action.uri).toBe(expectedUrl);
 
       expect(result).toEqual({
         success: true,
