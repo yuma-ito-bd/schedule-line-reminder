@@ -159,17 +159,16 @@ export class LineWebhookUseCase {
 			try {
 				const { url, state } = this.googleAuth.generateAuthUrl();
 				await this.stateRepository.saveState(state, userId);
-				const urlWithParam = url.includes("?") ? `${url}&openExternalBrowser=1` : `${url}?openExternalBrowser=1`;
 				await this.lineClient.replyTextWithQuickReply(
 					replyToken,
-					`${MessageTemplates.sendAuthGuidance}\n${urlWithParam}`,
+					MessageTemplates.sendAuthGuidance,
 					[
 						{
 							type: "action",
 							action: {
 								type: "uri",
 								label: "Googleでログイン",
-								uri: urlWithParam,
+								uri: url,
 							},
 						},
 					]

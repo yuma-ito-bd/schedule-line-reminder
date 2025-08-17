@@ -105,17 +105,14 @@ describe("LineWebhookUseCase", () => {
 			expect(replyQuickSpy).toHaveBeenCalled();
 			const args = (replyQuickSpy.mock.calls[0] as any[]);
 			expect(args[0]).toBe("test-reply-token");
-			// message should include guidance and the URL with openExternalBrowser=1
-			expect(args[1]).toContain(guidance);
-			expect(args[1]).toContain("openExternalBrowser=1");
+			expect(args[1]).toBe(guidance);
 			const items = args[2];
 			expect(Array.isArray(items)).toBe(true);
 			expect(items.length).toBe(1);
 			expect(items[0].type).toBe("action");
 			expect(items[0].action.type).toBe("uri");
 			expect(items[0].action.label).toBe("Googleでログイン");
-			expect(items[0].action.uri).toContain("https://example.com/auth");
-			expect(items[0].action.uri).toContain("openExternalBrowser=1");
+			expect(items[0].action.uri).toBe("https://example.com/auth");
 
 			expect(result).toEqual({
 				success: true,
