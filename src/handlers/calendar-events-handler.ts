@@ -8,10 +8,10 @@ import { UserCalendarRepository } from "../lib/user-calendar-repository";
 
 export const calendarEventsHandler =
   async (): Promise<APIGatewayProxyResult> => {
-    await Config.getInstance().init();
     const responseBuilder = new ApiResponseBuilder();
-    console.info("Start calendar events handler");
     try {
+      await Config.getInstance().init();
+      console.info("Start calendar events handler");
       const tokenRepository = new TokenRepository();
       const lineMessagingApiClient = new LineMessagingApiClient();
       const userCalendarRepository = new UserCalendarRepository();
