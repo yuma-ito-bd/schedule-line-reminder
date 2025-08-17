@@ -146,16 +146,9 @@ export class LineWebhookUseCase {
       try {
         const { url, state } = this.googleAuth.generateAuthUrl();
         await this.stateRepository.saveState(state, userId);
-        const authUrlWithExternal = (() => {
-          try {
-            const u = new URL(url);
-            u.searchParams.set("openExternalBrowser", "1");
-            return u.toString();
-          } catch {
-            const sep = url.includes("?") ? "&" : "?";
-            return `${url}${sep}openExternalBrowser=1`;
-          }
-        })();
+        const u = new URL(url);
+        u.searchParams.set("openExternalBrowser", "1");
+        const authUrlWithExternal = u.toString();
         await this.lineClient.replyTextWithQuickReply(
           replyToken,
           `${MessageTemplates.sendAuthGuidance}\n${authUrlWithExternal}`,
