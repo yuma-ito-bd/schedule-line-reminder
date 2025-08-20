@@ -137,248 +137,39 @@
   - ユニーク `commandName` を CI で検査（簡易テストで担保）
 #### ステップバイステップ実施手順（フェーズ7）
 1. ブランチ作成（任意）
-   - 
+   - `git switch -c feat/command-routing-phase7`
 2. ディレクトリの用意
-   -  を作成
-   - 初期ファイル: , 
-3. インターフェースの定義（）
-   - ,  を定義
-   -  をハンドラに任意プロパティとして許容
-4. レジストリの実装（）
-   - （, ）を実装
-   -  を追加（既定コマンドを登録）
+   - `src/usecases/commands/` を作成
+   - 初期ファイル: `types.ts`, `registry.ts`
+3. インターフェースの定義（`src/usecases/commands/types.ts`）
+   - `CommandHandler`, `CommandContext` を定義
+   - `priority?: number` をハンドラに任意プロパティとして許容
+4. レジストリの実装（`src/usecases/commands/registry.ts`）
+   - `MessageCommandRegistry`（`register`, `resolve`）を実装
+   - `createDefaultCommandRegistry(deps)` を追加（既定コマンドを登録）
 5. コマンド実装ファイルの追加
-   - 
-   - 
-   - 
-   - それぞれ  のトリガー語彙と  を実装
+   - `src/usecases/commands/calendar-list.ts`
+   - `src/usecases/commands/calendar-add.ts`
+   - `src/usecases/commands/calendar-delete.ts`
+   - それぞれ `canHandle` のトリガー語彙と `handle` を実装
 6. フィーチャーフラグの導入
-   -  を設定取得できる箇所に追加（環境変数 or 設定モジュール）
+   - `ENABLE_COMMAND_ROUTING` を設定取得できる箇所に追加（環境変数 or 設定モジュール）
    - 既定は OFF（従来フローを維持）
-7. ルーティング統合（）
-   -  内で FF が ON のとき  を使用
+7. ルーティング統合（`LineWebhookUseCase`）
+   - `handleMessage` 内で FF が ON のとき `registry.resolve(...).handle(...)` を使用
    - OFF のとき既存分岐をそのまま使用
 8. 文言テンプレート更新
-   - 未知コマンド用のヘルプ/ガイダンスを  に追加
+   - 未知コマンド用のヘルプ/ガイダンスを `MessageTemplates` に追加
 9. ユニットテストの追加
-   - : 登録/解決/優先度
-   - : 各コマンドの正常/異常
-   - : FF ON/OFF の互換
+   - `__tests__/commands/registry.test.ts`: 登録/解決/優先度
+   - `__tests__/commands/calendar-*.test.ts`: 各コマンドの正常/異常
+   - `__tests__/line-webhook-usecase.command-routing.test.ts`: FF ON/OFF の互換
 10. 型チェック/テスト実行
-    - 
-    - [0m[1mbun test [0m[2mv1.2.20 (6ad208bc)[0m
-{
-  [0mevent[2m:[0m {
-    [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-    [0mheaders[2m:[0m {}[0m[2m,[0m
-    [0misBase64Encoded[2m:[0m [0m[33mfalse[0m[0m[2m,[0m
-    [0mmultiValueHeaders[2m:[0m {}[0m[2m,[0m
-    [0mmultiValueQueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-    [0mpathParameters[2m:[0m {}[0m[2m,[0m
-    [0mqueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mrequestContext[2m:[0m {
-      [0maccountId[2m:[0m [0m[32m[0m[32m"123456789012"[0m[0m[0m[2m,[0m
-      [0mapiId[2m:[0m [0m[32m[0m[32m"1234"[0m[0m[0m[2m,[0m
-      [0mauthorizer[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-      [0midentity[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mprotocol[2m:[0m [0m[32m[0m[32m"HTTP/1.1"[0m[0m[0m[2m,[0m
-      [0mrequestId[2m:[0m [0m[32m[0m[32m"c6af9ac6-7b61-11e6-9a41-93e8deadbeef"[0m[0m[0m[2m,[0m
-      [0mrequestTimeEpoch[2m:[0m [0m[33m1428582896000[0m[0m[2m,[0m
-      [0mresourceId[2m:[0m [0m[32m[0m[32m"123456"[0m[0m[0m[2m,[0m
-      [0mresourcePath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mstage[2m:[0m [0m[32m[0m[32m"dev"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m
-    [0mresource[2m:[0m [0m[32m""[0m[0m[2m,[0m
-    [0mstageVariables[2m:[0m {}[0m[2m,[0m
-    [0mbody[2m:[0m [0m[32m[0m[32m"{"events":[{"type":"message"}]}"[0m[0m[0m[2m,[0m
-  }[0m[2m,[0m
-}
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-{
-  [0mevent[2m:[0m {
-    [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-    [0mheaders[2m:[0m {
-      [0m[32m"x-line-signature"[0m[2m:[0m [0m[32m[0m[32m"test-signature"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m
-    [0misBase64Encoded[2m:[0m [0m[33mfalse[0m[0m[2m,[0m
-    [0mmultiValueHeaders[2m:[0m {}[0m[2m,[0m
-    [0mmultiValueQueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-    [0mpathParameters[2m:[0m {}[0m[2m,[0m
-    [0mqueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mrequestContext[2m:[0m {
-      [0maccountId[2m:[0m [0m[32m[0m[32m"123456789012"[0m[0m[0m[2m,[0m
-      [0mapiId[2m:[0m [0m[32m[0m[32m"1234"[0m[0m[0m[2m,[0m
-      [0mauthorizer[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-      [0midentity[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mprotocol[2m:[0m [0m[32m[0m[32m"HTTP/1.1"[0m[0m[0m[2m,[0m
-      [0mrequestId[2m:[0m [0m[32m[0m[32m"c6af9ac6-7b61-11e6-9a41-93e8deadbeef"[0m[0m[0m[2m,[0m
-      [0mrequestTimeEpoch[2m:[0m [0m[33m1428582896000[0m[0m[2m,[0m
-      [0mresourceId[2m:[0m [0m[32m[0m[32m"123456"[0m[0m[0m[2m,[0m
-      [0mresourcePath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mstage[2m:[0m [0m[32m[0m[32m"dev"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m
-    [0mresource[2m:[0m [0m[32m""[0m[0m[2m,[0m
-    [0mstageVariables[2m:[0m {}[0m[2m,[0m
-    [0mbody[2m:[0m [0m[33mnull[0m[0m[2m,[0m
-  }[0m[2m,[0m
-}
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-{
-  [0mevent[2m:[0m {
-    [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-    [0mheaders[2m:[0m {
-      [0m[32m"x-line-signature"[0m[2m:[0m [0m[32m[0m[32m"invalid-signature"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m
-    [0misBase64Encoded[2m:[0m [0m[33mfalse[0m[0m[2m,[0m
-    [0mmultiValueHeaders[2m:[0m {}[0m[2m,[0m
-    [0mmultiValueQueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-    [0mpathParameters[2m:[0m {}[0m[2m,[0m
-    [0mqueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mrequestContext[2m:[0m {
-      [0maccountId[2m:[0m [0m[32m[0m[32m"123456789012"[0m[0m[0m[2m,[0m
-      [0mapiId[2m:[0m [0m[32m[0m[32m"1234"[0m[0m[0m[2m,[0m
-      [0mauthorizer[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-      [0midentity[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mprotocol[2m:[0m [0m[32m[0m[32m"HTTP/1.1"[0m[0m[0m[2m,[0m
-      [0mrequestId[2m:[0m [0m[32m[0m[32m"c6af9ac6-7b61-11e6-9a41-93e8deadbeef"[0m[0m[0m[2m,[0m
-      [0mrequestTimeEpoch[2m:[0m [0m[33m1428582896000[0m[0m[2m,[0m
-      [0mresourceId[2m:[0m [0m[32m[0m[32m"123456"[0m[0m[0m[2m,[0m
-      [0mresourcePath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mstage[2m:[0m [0m[32m[0m[32m"dev"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m
-    [0mresource[2m:[0m [0m[32m""[0m[0m[2m,[0m
-    [0mstageVariables[2m:[0m {}[0m[2m,[0m
-    [0mbody[2m:[0m [0m[32m[0m[32m"{"events":[{"type":"message"}]}"[0m[0m[0m[2m,[0m
-  }[0m[2m,[0m
-}
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-{
-  [0mevent[2m:[0m {
-    [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-    [0mheaders[2m:[0m {
-      [0m[32m"x-line-signature"[0m[2m:[0m [0m[32m[0m[32m"valid-signature"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m
-    [0misBase64Encoded[2m:[0m [0m[33mfalse[0m[0m[2m,[0m
-    [0mmultiValueHeaders[2m:[0m {}[0m[2m,[0m
-    [0mmultiValueQueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-    [0mpathParameters[2m:[0m {}[0m[2m,[0m
-    [0mqueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mrequestContext[2m:[0m {
-      [0maccountId[2m:[0m [0m[32m[0m[32m"123456789012"[0m[0m[0m[2m,[0m
-      [0mapiId[2m:[0m [0m[32m[0m[32m"1234"[0m[0m[0m[2m,[0m
-      [0mauthorizer[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-      [0midentity[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mprotocol[2m:[0m [0m[32m[0m[32m"HTTP/1.1"[0m[0m[0m[2m,[0m
-      [0mrequestId[2m:[0m [0m[32m[0m[32m"c6af9ac6-7b61-11e6-9a41-93e8deadbeef"[0m[0m[0m[2m,[0m
-      [0mrequestTimeEpoch[2m:[0m [0m[33m1428582896000[0m[0m[2m,[0m
-      [0mresourceId[2m:[0m [0m[32m[0m[32m"123456"[0m[0m[0m[2m,[0m
-      [0mresourcePath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mstage[2m:[0m [0m[32m[0m[32m"dev"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m
-    [0mresource[2m:[0m [0m[32m""[0m[0m[2m,[0m
-    [0mstageVariables[2m:[0m {}[0m[2m,[0m
-    [0mbody[2m:[0m [0m[32m[0m[32m"{"events":[{"type":"message","message":{"type":"text","text":"Hello"},"replyToken":"test-reply-token","source":{"type":"user","userId":"test-user-id"},"timestamp":1755733480535,"mode":"active"}]}"[0m[0m[0m[2m,[0m
-  }[0m[2m,[0m
-}
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-{
-  [0mevent[2m:[0m {
-    [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-    [0mbody[2m:[0m [0m[32m[0m[32m"{"events":[{"type":"message","message":{"type":"text","text":"カレンダー追加"},"replyToken":"reply-token","source":{"type":"user","userId":"user-id"},"timestamp":1234567890,"mode":"active"}]}"[0m[0m[0m[2m,[0m
-    [0mheaders[2m:[0m {
-      [0m[32m"x-line-signature"[0m[2m:[0m [0m[32m[0m[32m"valid-signature"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m
-    [0misBase64Encoded[2m:[0m [0m[33mfalse[0m[0m[2m,[0m
-    [0mmultiValueHeaders[2m:[0m {}[0m[2m,[0m
-    [0mmultiValueQueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-    [0mpathParameters[2m:[0m {}[0m[2m,[0m
-    [0mqueryStringParameters[2m:[0m {}[0m[2m,[0m
-    [0mrequestContext[2m:[0m {
-      [0maccountId[2m:[0m [0m[32m[0m[32m"123456789012"[0m[0m[0m[2m,[0m
-      [0mapiId[2m:[0m [0m[32m[0m[32m"1234"[0m[0m[0m[2m,[0m
-      [0mauthorizer[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mhttpMethod[2m:[0m [0m[32m[0m[32m"post"[0m[0m[0m[2m,[0m
-      [0midentity[2m:[0m [0m[36m[Object ...][0m[0m[2m,[0m
-      [0mpath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mprotocol[2m:[0m [0m[32m[0m[32m"HTTP/1.1"[0m[0m[0m[2m,[0m
-      [0mrequestId[2m:[0m [0m[32m[0m[32m"c6af9ac6-7b61-11e6-9a41-93e8deadbeef"[0m[0m[0m[2m,[0m
-      [0mrequestTimeEpoch[2m:[0m [0m[33m1428582896000[0m[0m[2m,[0m
-      [0mresourceId[2m:[0m [0m[32m[0m[32m"123456"[0m[0m[0m[2m,[0m
-      [0mresourcePath[2m:[0m [0m[32m[0m[32m"/webhook"[0m[0m[0m[2m,[0m
-      [0mstage[2m:[0m [0m[32m[0m[32m"dev"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m
-    [0mresource[2m:[0m [0m[32m""[0m[0m[2m,[0m
-    [0mstageVariables[2m:[0m {}[0m[2m,[0m
-  }[0m[2m,[0m
-}
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-{
-  [0mto[2m:[0m [0m[32m[0m[32m"userId"[0m[0m[0m[2m,[0m
-  [0mmessages[2m:[0m [
-    {
-      [0mtype[2m:[0m [0m[32m[0m[32m"text"[0m[0m[0m[2m,[0m
-      [0mtext[2m:[0m [0m[32m[0m[32m"text1"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m {
-      [0mtype[2m:[0m [0m[32m[0m[32m"text"[0m[0m[0m[2m,[0m
-      [0mtext[2m:[0m [0m[32m[0m[32m"text2"[0m[0m[0m[2m,[0m
-    }
-  ][0m[2m,[0m
-}
-{}
-{
-  [0mreplyToken[2m:[0m [0m[32m[0m[32m"reply-token"[0m[0m[0m[2m,[0m
-  [0mmessages[2m:[0m [
-    {
-      [0mtype[2m:[0m [0m[32m[0m[32m"text"[0m[0m[0m[2m,[0m
-      [0mtext[2m:[0m [0m[32m[0m[32m"text1"[0m[0m[0m[2m,[0m
-    }[0m[2m,[0m {
-      [0mtype[2m:[0m [0m[32m[0m[32m"text"[0m[0m[0m[2m,[0m
-      [0mtext[2m:[0m [0m[32m[0m[32m"text2"[0m[0m[0m[2m,[0m
-    }
-  ][0m[2m,[0m
-}
-{}
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Start calendar events handler
-End calendar events handler
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Start calendar events handler
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Start OAuth callback handler
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Start OAuth callback handler
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
-Configuration initialized. ParameterFetcher: ParameterFetcherMock
+    - `bun run type_check`
+    - `bun run test`
 11. ドキュメント更新（任意）
     - 開発者向け README に「コマンド追加手順」を追記
 12. コミット/プッシュ/PR
-    - [feat/command-routing-phase7 a1dc43e] feat(commands): Phase 7 step-by-step plan and scaffolding docs
- 1 file changed, 136 insertions(+), 38 deletions(-)
-    - branch 'feat/command-routing-phase7' set up to track 'origin/feat/command-routing-phase7'.
-    - PR を作成（ベース: ）
+    - `git add -A && git commit -m "feat(commands): Phase 7 step-by-step plan and scaffolding docs"`
+    - `git push -u origin HEAD`
+    - PR を作成（ベース: `main`）
