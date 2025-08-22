@@ -93,3 +93,85 @@
 4. `CalendarAddCommand`/`CalendarDeleteCommand` 実装 + 統合テスト
 5. フォールバック/ヘルプ、ロギング/メトリクス
 6. 機能フラグ導入、ドキュメント更新、最終検証
+
+## PR分割計画（5本）
+
+### PR1: 基盤導入（非挙動変更）
+- 目的: コマンド基盤を追加しつつアプリ挙動を変えない
+- 変更範囲:
+  - `types/command.ts`（`CommandHandler`, `CommandContext`, `CommandResult`）
+  - `usecases/commands/registry.ts`（`CommandRegistry`）
+  - `usecases/commands/router.ts`（`MessageRouter`）
+- 手順:
+  - [ ] 型・IFを追加（JSDoc含む）
+  - [ ] レジストリ/ルーターのスケルトン実装（検索/解決/未登録時の扱い）
+  - [ ] 単体テスト作成（正規化・登録・検索・未登録）
+- コマンド:
+  - [ ] `bun run type_check`
+  - [ ] `bun run test`
+- 完了条件:
+  - [ ] 既存コードへ未配線（機能フラグ未導入）
+  - [ ] テストグリーン、挙動変更なし
+
+### PR2: ルーター配線 + 一覧コマンド
+- 目的: フラグ配下でメッセージ委譲を有効化し一覧を新経路で提供
+- 変更範囲:
+  - `usecases/line-webhook-usecase.ts`（機能フラグでメッセージ→ルーター委譲）
+  - `usecases/commands/calendar-list.ts`（`CalendarListCommand`）
+  - 設定/環境: `command_routing_enabled`
+- 手順:
+  - [ ] `CalendarListCommand` 実装（従来の文言/Quick Reply を再現）
+  - [ ] 機能フラグ導入（既定: OFF）
+  - [ ] 統合テスト（一覧経路の等価性）
+- コマンド:
+  - [ ] `bun run type_check`
+  - [ ] `bun run test`
+- 完了条件:
+  - [ ] フラグOFFで従来、ONで新経路（一覧のみ）
+  - [ ] 既存の一覧体験が等価
+
+### PR3: 追加/削除コマンド
+- 目的: 追加・削除をコマンド化し新経路で等価動作
+- 変更範囲:
+  - `usecases/commands/calendar-add.ts`（`CalendarAddCommand`）
+  - `usecases/commands/calendar-delete.ts`（`CalendarDeleteCommand`）
+- 手順:
+  - [ ] `CalendarAddCommand` 実装（postback 発火含む）
+  - [ ] `CalendarDeleteCommand` 実装
+  - [ ] 統合テスト（追加/削除の等価性）
+- コマンド:
+  - [ ] `bun run type_check`
+  - [ ] `bun run test`
+- 完了条件:
+  - [ ] フラグONで一覧/追加/削除すべて新経路で等価
+
+### PR4: フォールバック/ヘルプ + 例外・ロギング統一
+- 目的: 未知入力の案内と失敗時の処理方針統一
+- 変更範囲:
+  - `usecases/commands/help.ts`（任意）
+  - 共通ロギング/エラーハンドリング適用
+- 手順:
+  - [ ] 未知入力→フォールバック/`help` の実装
+  - [ ] ログへ文脈（`userId`, `action`, `calendarId`）付与を統一
+  - [ ] 失敗時 `success: false` の戻りを統一
+- コマンド:
+  - [ ] `bun run type_check`
+  - [ ] `bun run test`
+- 完了条件:
+  - [ ] 未知入力時の文言が後方互換
+  - [ ] 例外時のログ/戻りが統一
+
+### PR5: メトリクス/ドキュメント/有効化
+- 目的: 運用可視化とドキュメント整備、段階的有効化
+- 変更範囲:
+  - メトリクス記録（コマンド名/処理時間/失敗率）
+  - ドキュメント整備
+- 手順:
+  - [ ] メトリクスの発行ポイント追加
+  - [ ] ドキュメント更新：新コマンド追加手順/機能フラグ切替手順
+  - [ ] 検証後に既定ON（段階ロールアウト）
+- コマンド:
+  - [ ] `bun run type_check`
+  - [ ] `bun run test`
+- 完了条件:
+  - [ ] ドキュメント反映・既定ONで安定稼働

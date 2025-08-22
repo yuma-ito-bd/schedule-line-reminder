@@ -53,6 +53,7 @@
   - `CommandHandler` インターフェース
   - `CalendarListCommand`, `CalendarAddCommand`, `CalendarDeleteCommand`
 - 新コマンド追加時に `LineWebhookUseCase` 非改変で拡張可能に
+- 実装は5つのPRに分割: `docs/development/line-webhook-usecase-phase7-breakdown.md` の「PR分割計画（5本）」を参照
 
 ## テスト計画
 - 既存 `__tests__/line-webhook-usecase.test.ts` は維持
