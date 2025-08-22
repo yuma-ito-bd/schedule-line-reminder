@@ -73,17 +73,22 @@
 - 結合
   - モックで Google/LINE クライアントを差し替え、E2Eに近いフローを検証
 
+6) ヘルプコマンド更新
+- 変更: `src/usecases/messages.ts` の `helpText` に以下を追記
+  - `- 通知テスト: 定時配信のプレビューを返信`
+
 ## 変更箇所（想定）
 - 追加: `src/usecases/calendar-preview-usecase.ts`
 - 変更: `src/usecases/line-webhook-usecase.ts`（テキスト判定・分岐追加）
 - 既存流用: `src/calendar-events-notifier.ts`（期間計算の整合）/ `src/calendar-message-builder.ts`
-- 必要に応じてメッセージ: `src/usecases/messages.ts`
+- 変更: `src/usecases/messages.ts`（ヘルプに「通知テスト」を追加）
 
 ## 受け入れ条件（Acceptance Criteria）
 - ユーザーが「通知テスト」を送信すると、定時配信と同一フォーマットのメッセージが1通返信される。
 - イベントが0件の日でも、定時配信と同じ「予定なし」構成で日付枠が並ぶ。
 - 未認可ユーザーには認可ガイダンスを返す。
 - 実装は既存の定時配信ロジックと整合し、差異がない。
+- ヘルプメッセージに「通知テスト」が表示される。
 
 ## テスト観点
 - フォーマット一致: `CalendarMessageBuilder` の出力が定時配信時と同一
@@ -91,6 +96,7 @@
 - 終日/営業時間内イベントのフォーマット差異
 - 大量イベント時のメッセージ長（分割方針があればそれに従う）
 - 例外時のハンドリング（Google API/LINE API 失敗）
+- ヘルプ文言に「通知テスト」行が含まれること
 
 ## セキュリティ・権限・構成
 - Webhook Lambda 権限は既に `OAuthTokensTable`/`UserCalendarsTable` 参照が可能
