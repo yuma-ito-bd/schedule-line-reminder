@@ -10,6 +10,7 @@ import type { Schema$GoogleCalendarApiAdapter } from "../types/google-calendar-a
 import { ADD_CALENDAR_SELECT, DELETE_CALENDAR_SELECT, isAddCalendarPostback, isDeleteCalendarPostback } from "../types/postback";
 import { createCalendarQuickReplyItems } from "./helpers/quick-reply";
 import { MessageTemplates } from "./messages";
+import { CalendarPreviewUseCase } from "./calendar-preview-usecase";
 
 
 // Narrowed event types derived from the discriminated union
@@ -264,6 +265,29 @@ export class LineWebhookUseCase {
     }
   }
 
+  private async handlePreview(userId: string, replyToken: string): Promise<WebhookUseCaseResult> {
+    try {
+      const preview = await new CalendarPreviewUseCase(
+        this.tokenRepository,
+        this.userCalendarRepository
+      ).generate(userId);
+
+      if (!preview) {
+        // 認可未完了
+        await this.lineClient.replyTextMessages(replyToken, [MessageTemplates.tokenFetchFailure]);
+        return { success: true, message: "プレビュー送信対象ユーザー未認可" } as const;
+      }
+
+      await this.lineClient.replyTextMessages(replyToken, [preview]);
+      console.info({ action: "preview", userId, result: "success" });
+      return { success: true, message: "プレビューを返信しました" };
+    } catch (error) {
+      console.error("Failed to send preview", { action: "preview", userId, error });
+      await this.lineClient.replyTextMessages(replyToken, ["プレビューの送信に失敗しました"]);
+      return { success: false, message: "プレビューの送信に失敗しました" };
+    }
+  }
+
   private async handleMessage(webhookEvent: MessageEventType): Promise<WebhookUseCaseResult | null> {
     if (webhookEvent.message.type !== "text") return null;
     const text = webhookEvent.message.text;
@@ -279,6 +303,9 @@ export class LineWebhookUseCase {
     }
     if (/^(?:ヘルプ|help)$/i.test(text)) {
       return this.handleHelp(webhookEvent.source.userId, webhookEvent.replyToken);
+    }
+    if (text === "通知テスト") {
+      return this.handlePreview(webhookEvent.source.userId, webhookEvent.replyToken);
     }
 
     return null;

@@ -482,5 +482,61 @@ describe("LineWebhookUseCase", () => {
       expect(replyTextSpy).toHaveBeenCalledWith("test-reply-token", [expect.any(String)]);
       expect(result).toEqual({ success: false, message: "ヘルプメッセージの送信に失敗しました" });
     });
+
+    test("通知テスト メッセージの場合、プレビューを返信する（認可済み）", async () => {
+      // Given
+      const event = createTextMessageEvent("通知テスト");
+      const replyTextSpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // Create a use case with a stubbed calendar api and token repository returning token
+      const useCaseWithToken = new LineWebhookUseCase(
+        mockLineClient,
+        mockAuthUrlGenerator,
+        mockStateRepository,
+        {
+          ...mockTokenRepository,
+          async getToken() {
+            return { userId: "test-user-id", accessToken: "a", refreshToken: "r" } as any;
+          },
+        } as any,
+        new DummyUserCalendarRepository() as any,
+        () => ({
+          async fetchEvents() { return []; },
+          async fetchCalendarList() { return []; },
+        }) as any
+      );
+
+      // When
+      const result = await useCaseWithToken.handleWebhookEvent(event);
+
+      // Then
+      expect(replyTextSpy).toHaveBeenCalledWith("test-reply-token", [expect.stringContaining("明日から1週間の予定です。")]);
+      expect(result).toEqual({ success: true, message: "プレビューを返信しました" });
+    });
+
+    test("通知テスト メッセージの場合、未認可ならガイダンス（tokenFetchFailure）を返信する", async () => {
+      // Given
+      const event = createTextMessageEvent("通知テスト");
+      const replyTextSpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // Token repo returns null
+      const useCaseNoToken = new LineWebhookUseCase(
+        mockLineClient,
+        mockAuthUrlGenerator,
+        mockStateRepository,
+        {
+          ...mockTokenRepository,
+          async getToken() { return null; },
+        } as any,
+        new DummyUserCalendarRepository() as any
+      );
+
+      // When
+      const result = await useCaseNoToken.handleWebhookEvent(event);
+
+      // Then
+      expect(replyTextSpy).toHaveBeenCalledWith("test-reply-token", [expect.stringContaining("認可状態の取得に失敗しました")]);
+      expect(result.success).toBe(true);
+    });
   });
 });
