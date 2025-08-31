@@ -12,6 +12,8 @@ export class Config {
   GOOGLE_REDIRECT_URI: string = "";
   LINE_CHANNEL_ACCESS_TOKEN: string = "";
   LINE_CHANNEL_SECRET: string = "";
+  /** Feature flag: command routing for message handling */
+  COMMAND_ROUTING_ENABLED: boolean = false;
 
   static getInstance() {
     if (!this.instance) {
@@ -54,6 +56,8 @@ export class Config {
     this.GOOGLE_REDIRECT_URI = google_redirect_uri;
     this.LINE_CHANNEL_ACCESS_TOKEN = line_channel_access_token;
     this.LINE_CHANNEL_SECRET = line_channel_secret;
+    // Feature flag default: OFF. Enable via env COMMAND_ROUTING_ENABLED=true
+    this.COMMAND_ROUTING_ENABLED = (/^(?:1|true|on)$/i).test(process.env.COMMAND_ROUTING_ENABLED || "");
     this.logInitialization();
   }
 
