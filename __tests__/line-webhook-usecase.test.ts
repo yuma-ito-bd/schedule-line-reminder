@@ -271,6 +271,70 @@ describe("LineWebhookUseCase", () => {
       });
     });
 
+    test("[flag ON] カレンダー一覧はルーター経由でも等価に返信される", async () => {
+      // Given
+      process.env.COMMAND_ROUTING_ENABLED = "true";
+      const event = createTextMessageEvent("カレンダー一覧");
+      const mockUserCalendarRepository = {
+        async getUserCalendars(userId: string) {
+          expect(userId).toBe("test-user-id");
+          return [
+            { userId: "test-user-id", calendarId: "cal-1", calendarName: "仕事", createdAt: new Date(), updatedAt: new Date() },
+            { userId: "test-user-id", calendarId: "cal-2", calendarName: "プライベート", createdAt: new Date(), updatedAt: new Date() },
+          ];
+        },
+      } as any;
+      const useCaseWithCalendars = new LineWebhookUseCase(
+        mockLineClient,
+        mockAuthUrlGenerator,
+        mockStateRepository,
+        mockTokenRepository,
+        mockUserCalendarRepository
+      );
+      const replyTextMessagesSpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // When
+      const result = await useCaseWithCalendars.handleWebhookEvent(event);
+
+      // Then
+      expect(replyTextMessagesSpy).toHaveBeenCalledWith(
+        "test-reply-token",
+        [[
+          "購読中のカレンダー:",
+          "- 仕事 (cal-1)",
+          "- プライベート (cal-2)",
+        ].join("\n")]
+      );
+      expect(result).toEqual({ success: true, message: "カレンダー一覧を返信しました" });
+      delete process.env.COMMAND_ROUTING_ENABLED;
+    });
+
+    test("[flag ON] カレンダー（短縮）で未登録時は案内を返信する（ルーター経由）", async () => {
+      // Given
+      process.env.COMMAND_ROUTING_ENABLED = "1";
+      const event = createTextMessageEvent("カレンダー");
+      const mockUserCalendarRepository = { async getUserCalendars() { return []; } } as any;
+      const useCaseNoCalendars = new LineWebhookUseCase(
+        mockLineClient,
+        mockAuthUrlGenerator,
+        mockStateRepository,
+        mockTokenRepository,
+        mockUserCalendarRepository
+      );
+      const replyTextMessagesSpy = spyOn(mockLineClient, "replyTextMessages");
+
+      // When
+      const result = await useCaseNoCalendars.handleWebhookEvent(event);
+
+      // Then
+      expect(replyTextMessagesSpy).toHaveBeenCalledWith(
+        "test-reply-token",
+        ["購読中のカレンダーはありません。『カレンダー追加』で登録できます。"]
+      );
+      expect(result).toEqual({ success: true, message: "カレンダー一覧を返信しました" });
+      delete process.env.COMMAND_ROUTING_ENABLED;
+    });
+
     // New tests for calendar add quick reply flow (with factory DI)
     test("カレンダー追加: トークン登録済みならクイックリプライを送信し、ラベルは20文字に切り詰められる", async () => {
       // Given

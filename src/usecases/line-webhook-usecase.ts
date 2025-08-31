@@ -11,6 +11,10 @@ import { ADD_CALENDAR_SELECT, DELETE_CALENDAR_SELECT, isAddCalendarPostback, isD
 import { createCalendarQuickReplyItems } from "./helpers/quick-reply";
 import { MessageTemplates } from "./messages";
 import { CalendarPreviewUseCase } from "./calendar-preview-usecase";
+import { Config } from "../lib/config";
+import { CommandRegistry } from "./commands/registry";
+import { MessageRouter } from "./commands/router";
+import { CalendarListCommand } from "./commands/calendar-list";
 
 
 // Narrowed event types derived from the discriminated union
@@ -291,6 +295,20 @@ export class LineWebhookUseCase {
   private async handleMessage(webhookEvent: MessageEventType): Promise<WebhookUseCaseResult | null> {
     if (webhookEvent.message.type !== "text") return null;
     const text = webhookEvent.message.text;
+
+    // Feature-flagged routing: only delegate the list command in PR2
+    const config = Config.getInstance();
+    if (config.COMMAND_ROUTING_ENABLED) {
+      const registry = new CommandRegistry();
+      registry.register(new CalendarListCommand(this.lineClient, this.userCalendarRepository));
+      const router = new MessageRouter(registry);
+      const result = await router.route(text, {
+        userId: webhookEvent.source.userId,
+        replyToken: webhookEvent.replyToken,
+        logger: console,
+      });
+      if (result) return result as WebhookUseCaseResult;
+    }
 
     if (/^(?:カレンダー一覧|カレンダー)$/.test(text)) {
       return this.handleCalendarList(webhookEvent.source.userId, webhookEvent.replyToken);
