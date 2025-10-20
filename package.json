@@ -12,7 +12,7 @@
     "type_check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.150",
+    "@types/aws-lambda": "^8.10.156",
     "@types/bun": "latest",
     "aws-sdk-client-mock": "^4.1.0",
     "esbuild": "^0.25.9",
